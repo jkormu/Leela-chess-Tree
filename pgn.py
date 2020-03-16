@@ -9,6 +9,7 @@ import pandas as pd
 import chess
 import chess.svg
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
 import chess.pgn
 import base64
@@ -27,6 +28,7 @@ class GameData:
     def __init__(self):
         self.board = chess.Board()
         self.game_data = None
+        self.fen = self.board.fen()
 
 game_data = GameData()
 
@@ -100,14 +102,20 @@ def parse_pgn(contents, filename):#, date):
             #df = pd.read_csv(
             #    io.StringIO(decoded.decode('utf-8')))
         else:
-            return(None)#f'{filename} is not a pgn file')
+            #raise PreventUpdate
+            return(dash.no_update)
+            #return(None)#f'{filename} is not a pgn file')
     except Exception as e:
         print(e)
         return('There was an error processing this file.')
 
-    data = {'ply': [0], 'move': ['-']}
+    #start_ply = int(first_game.headers.get('PlyCount', 0)) #['PlyCount']
     board = first_game.board()
+    fen = board.fen()
     game_data.board = board
+    #print('halfmove:', start_ply)
+    #print(type(start_ply))
+    data = {'ply': [0], 'move': ['-']}
     for ply, move in enumerate(first_game.mainline_moves()):
         san = board.san(move)
         data['move'].append(san)
@@ -117,6 +125,7 @@ def parse_pgn(contents, filename):#, date):
 
     data = pd.DataFrame(data)
     game_data.game_data = data
+    game_data.fen = fen
     return(data.to_dict('records'))
     #return(' '.join(data['move']))
 
@@ -172,7 +181,7 @@ def row_highlight_test(active_cell):
     Output('board', 'src'),
     [Input('move-table', 'active_cell'),])
 def update_board_imgage2(active_cell):
-    game_data.board.reset()
+    game_data.board.set_fen(game_data.fen)#reset()
     board = game_data.board
     print(active_cell)
     if active_cell is None:
@@ -184,7 +193,16 @@ def update_board_imgage2(active_cell):
     for i in range(1, selected_row_ids + 1):
         move = game_data.game_data['move'][i]
         last_move = board.push_san(move)
-    svg_str = str(chess.svg.board(board, size=400, lastmove=last_move))
+    svg_str = str(chess.svg.board(board, size=200, lastmove=last_move))
+    svg_str = svg_str.replace('height="200"', 'height="100%"')
+    svg_str = svg_str.replace('width="200"', 'width="100%"')
+
+    #test = svg_str.split(' ')
+    #test.insert(2, 'width="80%"')
+    #test.insert(2, 'height="80%"')
+    #svg_str = " ".join(test)
+    print(svg_str)
+
     svg_byte = svg_str.encode()
     encoded = base64.b64encode(svg_byte)
     svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
