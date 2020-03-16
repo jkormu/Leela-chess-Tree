@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 from plotly import subplots
 from datacreate import DataCreator
+
+import chess.svg
 import base64
 
 RIGHT_TITLE_SIZE = 15
@@ -22,10 +25,9 @@ ROOT_NODE_COLOR = 'red'
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MOVED_PIECE_COLOR = 'rgb(210,105,30)'
 MAX_ALLOWED_NODES = 200000
-MARKER_SIZE = 4.0
+MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
 
-app = dash.Dash(__name__)  # ,external_stylesheets=external_stylesheets)
 
 data_creator = DataCreator('', '', [])
 data_creator.create_demo_data()
@@ -78,30 +80,64 @@ def get_data(data, visible):
 #radar_logo = '/home/jusufe/tmp/download.png'
 #encode_logo = base64.b64encode(open(radar_logo, 'rb').read()).decode('ascii')
 
-svg_file = '/home/jusufe/tmp/board_img.svg'
-encoded = base64.b64encode(open(svg_file,'rb').read())
+
+svg_str = str(chess.svg.board(data_creator.board, size=300))
+svg_byte = svg_str.encode()
+encoded = base64.b64encode(svg_byte)
+#svg_file = '/home/jusufe/tmp/board_img.svg'
+#encoded = base64.b64encode(open(svg_file,'rb').read())
+#encoded = base64.b64encode(svg_str).read()
+
 svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
+#svg = 'data:image/svg+xml;base64,{}'.format(svg_str)
+#svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 #test_base64 = base64.b64encode(open(testa_pnga, 'rb').read()).decode('ascii')
 
+
+body = dbc.Container(fluid=True, children=
+    [
+        dbc.Row(id='row1', children=
+            [
+                dbc.Col(id='row1_col2', children=
+                        [
+                            dcc.Graph(
+                                id='graph',
+                                figure={
+                                    'layout': {'title': ''}
+                                }
+                            ),
+                            dcc.Slider(
+                                id='slider1',
+                                min=0,
+                                max=1,
+                                value=0,
+                                marks={str(i): str(i) for i in range(2)},
+                                step=None,
+                                updatemode='drag',
+                            )
+                        ]
+                    ),
+                dbc.Col(id='row1_col1', md=2, children=
+                [
+                    html.Img(id='board',
+                             src=svg)
+                ],
+                        ),
+            ]
+        )
+    ]
+)
+
+a="""
 app.layout = html.Div(children=[
     html.H1(children='Hello Dash'),
-
-    html.Div(children='''
-        Test, test, test...
-    '''),
-    html.Img(id='board',
-             src=svg),#'data:image/svg;base64,{}'.format(encode_logo)),
+    html.Div(children='''Test, test, test...'''),
+    html.Img(id='board', src=svg),#'data:image/svg;base64,{}'.format(encode_logo)),
     dcc.Graph(
         id='graph',
         figure={
-            #'data': [
-                #{'x': [1, 2, 3], 'y': [4, 3, 2], 'type': 'bar', 'name': 'SF'},
-            #    {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-           # ],
-            'layout': {
-                'title': ''
-            }
+            'layout': {'title': ''}
         }
     ),
     dcc.Slider(
@@ -113,7 +149,18 @@ app.layout = html.Div(children=[
         step=None,
         updatemode='drag',
     )
-])
+]
+)
+"""
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])  # ,external_stylesheets=external_stylesheets)
+
+app.layout = html.Div(children=[
+    html.H1(children='Hello Dash'),
+    html.Div(children='''Test, test, test...'''),
+    body
+]
+)
 
 @app.callback(
     Output('graph', 'figure'),
@@ -191,7 +238,7 @@ def update_data(selected_value):
     print('y_hist', y_hist)
     print('y2_tick_labels', y2_tick_labels)
 
-    layout = go.Layout(title=dict(text='Leela tree Visualization', x=0.5, xanchor="center"),
+    layout = go.Layout(#title=dict(text='Leela tree Visualization', x=0.5, xanchor="center"),
                        annotations=[
                                     dict(
                                         x=1.025,
@@ -228,7 +275,8 @@ def update_data(selected_value):
                                'domain': [0.93, 1.0],
                                'range': y2_range},
                        hovermode='closest',
-                       plot_bgcolor=PLOT_BACKGROUND_COLOR
+                       plot_bgcolor=PLOT_BACKGROUND_COLOR,
+        height=900
                        )
     figure = subplots.make_subplots(rows=1, cols=2,
                                     specs=[[{}, {}]],
