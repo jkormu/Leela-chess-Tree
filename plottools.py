@@ -43,9 +43,10 @@ def get_pos(G):
     x_list,y_list = list(zip(*list(pos.values())))
     max_x, max_y = max(x_list), max(y_list)
     min_x, min_y = min(x_list), min(y_list)
-    for n in pos:
-        x,y = pos[n]
-        pos[n] = ((x-min_x)/(max_x-min_x), (y-min_y)/(max_y-min_y))
+    if min_x != max_x and min_y != max_y:
+        for n in pos:
+            x,y = pos[n]
+            pos[n] = ((x-min_x)/(max_x-min_x), (y-min_y)/(max_y-min_y))
     print('Layout algorithm excecuted in:', time.time() - start, 's')
     return(pos)
 
@@ -188,6 +189,8 @@ def get_pv_nodes(G):
     node = get_root(G)
     i = 0
     pv_nodes = []
+    if len(G.edges()) == 0:
+        return(pv_nodes)
     while True:
         edges = G.out_edges(node)
         if edges == []:

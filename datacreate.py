@@ -5,24 +5,63 @@ import os
 import graphtools as gt
 import plottools as pt
 import chess
+from lc0tools import leela, get_board
+import chess.engine
+import time
 
 class DataCreator:
-    def __init__(self, engine_path, weight_path, init_moves):
+    def __init__(self, engine_path, weight_path):
+        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUXXXXXXXXXXXXXXXXXXXXXX')
+        self.engine_path = engine_path
+        self.weight_path = weight_path
         self.args = [engine_path, '--weights='+weight_path]
-        self.G_list = []
+        self.G_list = {} #{position_index1: [], position_index2: []....}
         self.data = {}
         self.data_depth = {}
-        self.moves = init_moves
         self.board = chess.Board()
+        self.parameters = None
 
-    def run_search(self, parameters, nodes):
-        play(self.args + parameters, nodes, moves=self.moves)
+        self.x_range = {}
+        self.y_range = {}
+        self.y_tick_labels = {}
+        self.y_tick_values = {}
+        self.y2_range = {}
+
+    def reset(self):
+        self.__init__(self.engine_path, self.weight_path)
+
+    #def run_search(self, position_index, parameters, moves, nodes):
+    def run_search(self, position_index, parameters, board, nodes):
+        if parameters != self.parameters:
+            print('new parameter', parameters)
+            print('old parameter', self.parameters)
+            try:
+                self.lc0.engine.quit()
+            except:
+                pass
+            self.lc0 = leela(self.args + parameters)
+            self.parameters = parameters
+        else:
+            self.lc0.protocol.send_line('ucinewgame')
+        #board = get_board(moves)
+        print('starting search, nodes= ', str(nodes))
+        print(board)
+        start = time.time()
+        self.lc0.play(board, chess.engine.Limit(nodes=nodes))
+        #play(self.args + parameters, nodes, moves=self.moves)
+        print('search completed in time: ', time.time() - start)
         g = nx.readwrite.gml.read_gml('tree.gml', label='id')
+        #print('position index')
         os.remove('tree.gml')
-        self.G_list.append(g)
 
-    def create_data(self):
-        G_merged, G_list = gt.merge_graphs(self.G_list)
+        if position_index in self.G_list:
+            self.G_list[position_index].append(g)
+        else:
+            self.G_list[position_index] = [g]
+
+    def create_data(self, position_index, moves):
+        print('G_LIST', self.G_list)
+        G_merged, G_list = gt.merge_graphs(self.G_list[position_index])
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
             if parent is None:
@@ -50,7 +89,7 @@ class DataCreator:
                     if node not in data:
                         parent = gt.get_parent(G, node)
                         parent_point = [None, None] if parent is None else pos[parent]
-                        miniboard = pt.get_miniboard_unicode(G, node, self.board, self.moves).replace('\n', '<br>')
+                        miniboard = pt.get_miniboard_unicode(G, node, self.board, moves).replace('\n', '<br>')
                         miniboard += pt.get_node_metric_text(G, node)
                         data[node] = {'point': branch[node],
                                       'parent': parent_point,
@@ -68,21 +107,21 @@ class DataCreator:
                     elif i%2 == 1:
                         type = 'odd'
                     data[node]['visible'][owner] = {'type': (type, edge_type), 'metric': (1, 2, 3)}
-        self.data = data
+        self.data[position_index] = data
         y_tick_labels, y_tick_values = pt.get_y_ticks(pos)
         y_range = [-1, len(y_tick_values)]
         x_range = pt.get_x_range(pos)
-        self.x_range = x_range
-        self.y_range = y_range
-        self.y_tick_labels = y_tick_labels
-        self.y_tick_values = y_tick_values
+        self.x_range[position_index] = x_range
+        self.y_range[position_index] = y_range
+        self.y_tick_labels[position_index] = y_tick_labels
+        self.y_tick_values[position_index] = y_tick_values
 
 
         max_len = max([len(nc) for nc in node_counts])
         node_counts = [['0'] * (max_len - len(nc)) + nc for nc in node_counts]
         y2_max = max(max([int(x) for x in nc]) for nc in node_counts)
-        self.y2_range = [0, y2_max]
-        self.data_depth = {i: (list(range(len(node_count))), list(map(int, node_count))) for i, node_count in enumerate(node_counts)}
+        self.y2_range[position_index] = [0, y2_max]
+        self.data_depth[position_index] = {i: (list(range(len(node_count))), list(map(int, node_count))) for i, node_count in enumerate(node_counts)}
 
 
         #data_tick_labels = []
@@ -102,10 +141,13 @@ class DataCreator:
 
         param1 = ['--cpuct=2.147']
         param2 = ['--cpuct=4.147']
-        nodes = 800
+        nodes = 20
 
-        self.run_search(param1, nodes)
-        self.run_search(param2, nodes)
-        self.create_data()
+        position_index = 0
+        moves = []
+        board = chess.Board()
+        self.run_search(position_index, param1, board, nodes)
+        self.run_search(position_index, param2, board, nodes)
+        self.create_data(position_index, moves)
 
 #print(data_creator.data)

@@ -79,8 +79,14 @@ def calc_shared_nodes(G1, G2):
 
 def merge_graphs(G_list):
     G_merged = nx.DiGraph()
+    #root_node = get_root(G_list[0])#G_list[0].nodes[get_root(G_list[0])]
+    #print('root node and type:', root_node, type(root_node))
+    #print(G_list[0])
     G_list = [relabel(G) for G in G_list]
-    
+    G_merged.add_node(get_root(G_list[0]))  # add root node in case there are no edges
+
+    print('Number of nodes:', [len([n for n in g]) for g in G_list])
+
     for G in G_list:
         for edge in G.edges():
             if edge not in G_merged.edges():
@@ -91,7 +97,8 @@ def merge_graphs(G_list):
     for n in G_merged:
         visits.append(get_visits(G_merged, n))
         nodes.append(n)
-        
+    #if len(nodes) < 20:
+    #print(nodes, visits)
     visits, nodes = zip(*sorted(zip(visits, nodes), reverse=True))
     
     G_merged_ordered = nx.DiGraph()

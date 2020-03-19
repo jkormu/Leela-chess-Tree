@@ -3,13 +3,17 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly import subplots
 from datacreate import DataCreator
 
 import chess.svg
 import base64
+
+from pgn import pgn_layout, GameData
+
+from server import app
 
 RIGHT_TITLE_SIZE = 15
 FONT_SIZE = 13
@@ -29,8 +33,9 @@ MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
 
 
-data_creator = DataCreator('', '', [])
+data_creator = DataCreator('', '')
 data_creator.create_demo_data()
+#game_data = GameData()
 
 
 def get_data(data, visible):
@@ -94,7 +99,7 @@ svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 #test_base64 = base64.b64encode(open(testa_pnga, 'rb').read()).decode('ascii')
 
-
+pgn_component, game_data = pgn_layout('100%')
 body = dbc.Container(fluid=True, children=
     [
         dbc.Row(id='row1', children=
@@ -120,8 +125,9 @@ body = dbc.Container(fluid=True, children=
                     ),
                 dbc.Col(id='row1_col1', md=2, children=
                 [
-                    html.Img(id='board',
-                             src=svg)
+                    pgn_component
+                    #html.Img(id='board',
+                    #         src=svg)
                 ],
                         ),
             ]
@@ -153,20 +159,77 @@ app.layout = html.Div(children=[
 )
 """
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])  # ,external_stylesheets=external_stylesheets)
+#app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])  # ,external_stylesheets=external_stylesheets)
 
 app.layout = html.Div(children=[
     html.H1(children='Hello Dash'),
-    html.Div(children='''Test, test, test...'''),
+    html.Div(children=html.Button('generate data', id='generate-data-button')),
     body
 ]
 )
 
 @app.callback(
+    Output('generate-data-button', 'children'),
+    [Input('generate-data-button', 'n_clicks')],
+    [State('slider1', 'marks')]
+)
+def generate_data(n_clicks, marks):
+    #data = pd.DataFrame(data)
+    print('n_clicks', n_clicks)
+    if n_clicks is None or n_clicks == 0:
+        return(dash.no_update)
+
+    data = game_data.game_data
+    if data is None: #game data not yet created, i.e. pgn not provided
+        print('Game data:', data)
+        return ("Generate data (pgn not yet loaded)" + str(n_clicks))
+    position_indices = data['ply']
+    nr_of_plies = len(position_indices )
+
+    net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
+    engine = '/home/jusufe/lc0_test4/build/release/lc0'
+    data_creator.args = [engine, '--weights=' + net]
+    param1 = ['--cpuct=2.147', '--minibatch-size=32']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    param2 = ['--cpuct=4.147', '--minibatch-size=32']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    moves = []
+    nodes = 400
+    test_arguments = [param1, param2]
+    board = game_data.board
+    data_creator.G_list = {}
+    for test_i in range(len(marks)):
+        board.set_fen(game_data.fen)
+        for position_index in position_indices:
+            print('running position', position_index)
+            data_creator.run_search(position_index, test_arguments[test_i], board, nodes)
+            if position_index < nr_of_plies - 1:
+                move = game_data.game_data['move'][position_index + 1]
+                board.push_san(move)
+
+    board.set_fen(game_data.fen)
+    #data_creator.reset()
+    data_creator.data = {}
+    for position_index in position_indices:
+        fen = board.fen()
+        print('CREATING GRAPH FOR', position_index)
+        data_creator.create_data(position_index, fen)
+        if position_index < nr_of_plies - 1:
+            move = game_data.game_data['move'][position_index + 1]
+            board.push_san(move)
+
+    return('test'+str(nr_of_plies))
+
+@app.callback(
     Output('graph', 'figure'),
-    [Input('slider1', 'value')])
-def update_data(selected_value):
-    data = data_creator.data
+    [Input('slider1', 'value'),
+     Input('move-table', 'active_cell')])
+def update_data(selected_value, active_cell):
+    if active_cell is None:
+        position_index = 0
+    else:
+        position_index = active_cell['row']
+    print('UPDATING FOR POSTION_INDEX:', position_index)
+    print('DATA:', data_creator.data)
+    data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
     trace_node_odd = go.Scatter(dict(x=x_odd, y=y_odd),
@@ -215,16 +278,18 @@ def update_data(selected_value):
               trace_node_even,
               trace_node_root]
 
-    x_hist, y_hist = data_creator.data_depth[selected_value]
+    x_hist, y_hist = data_creator.data_depth[position_index][selected_value]
+
+    #print(x_hist, y_hist)
 
     trace_depth_histogram = go.Bar(x=y_hist, y=x_hist, orientation='h',
                                    showlegend=False, hoverinfo='none',
                                    marker=dict(color=BAR_COLOR))
 
-    x_range = data_creator.x_range
-    y_range = data_creator.y_range
-    y_tick_values = data_creator.y_tick_values
-    y_tick_labels = data_creator.y_tick_labels
+    x_range = data_creator.x_range[position_index]
+    y_range = data_creator.y_range[position_index]
+    y_tick_values = data_creator.y_tick_values[position_index]
+    y_tick_labels = data_creator.y_tick_labels[position_index]
 
     y_hist_labels = ['0' for _ in range(len(y_tick_labels) - len(y_hist))] + list(map(str, y_hist))
     max_y2_label_len = max(map(len, y_hist_labels))
@@ -232,7 +297,7 @@ def update_data(selected_value):
     print([max_y2_label_len - len(label) for label in y_hist_labels])
     y2_tick_labels = [label.rjust(max_y2_label_len, ' ') for label in y_hist_labels]
 
-    y2_range = data_creator.y2_range
+    y2_range = data_creator.y2_range[position_index]
     print('y2_range', y2_range)
     print('x_hist', x_hist)
     print('y_hist', y_hist)
@@ -276,7 +341,8 @@ def update_data(selected_value):
                                'range': y2_range},
                        hovermode='closest',
                        plot_bgcolor=PLOT_BACKGROUND_COLOR,
-        height=900
+                       height=900,
+        margin={'t': 0}
                        )
     figure = subplots.make_subplots(rows=1, cols=2,
                                     specs=[[{}, {}]],
@@ -289,29 +355,8 @@ def update_data(selected_value):
     figure.append_trace(trace_depth_histogram, 1, 2)
     figure['layout'].update(layout)
 
-    a = """
-    figure = {
-            'data': traces,
-            'layout': dict(
-                title='Dash Data Visualization',
-                xaxis={'title': 'X - test',
-                       'range': x_range,
-                       'zeroline': False,
-                       'showgrid': False},
-                yaxis={'title': 'Y - test',
-                       'range': y_range,
-                       'title': 'Depth',
-                       'ticktext': y_tick_labels,
-                       'tickvals': y_tick_values,
-                       'zeroline': False,
-                       'showgrid': True,
-                       'gridcolor': GRID_COLOR},
-                hovermode='closest',
-            )
-        }
-    """
     return figure
 
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+#if __name__ == '__main__':
+#    app.run_server(debug=True)
