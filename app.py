@@ -51,10 +51,11 @@ def get_data(data, visible):
             continue
 
         type, edge_type = node_state_info['type']
+        node_metrics = node_state_info['metric']
 
         point = node['point']
         x_parent, y_parent = node['parent']
-        node_text = node['miniboard']
+        node_text = node['miniboard'] + node_metrics
 
         if type == 'odd':
             points_odd.append(point)
@@ -72,8 +73,8 @@ def get_data(data, visible):
             x_edges += [point[0], x_parent, None]
             y_edges += [point[1], y_parent, None]
 
-    x_odd, y_odd = zip(*points_odd)
-    x_even, y_even = zip(*points_even)
+    x_odd, y_odd = zip(*points_odd) if points_odd != [] else ([], [])
+    x_even, y_even = zip(*points_even) if points_even != [] else ([], [])
     x_root, y_root = zip(*points_root)
 
     return (x_odd, y_odd, node_text_odd,
@@ -109,9 +110,9 @@ body = dbc.Container(fluid=True, children=
                             dcc.Graph(
                                 id='graph',
                                 figure={
-                                    'layout': {'title': ''}
-                                }
-                            ),
+                                    'layout': {'title': ''},
+                                }, #style={'height':'100%'}
+                            ), html.Div(
                             dcc.Slider(
                                 id='slider1',
                                 min=0,
@@ -120,7 +121,7 @@ body = dbc.Container(fluid=True, children=
                                 marks={str(i): str(i) for i in range(2)},
                                 step=None,
                                 updatemode='drag',
-                            )
+                            ), style={'margin-top': '30px'})
                         ]
                     ),
                 dbc.Col(id='row1_col1', md=2, children=
@@ -134,6 +135,7 @@ body = dbc.Container(fluid=True, children=
         )
     ]
 )
+a = html.Div(children=body, style={'height': '75%'})
 
 a="""
 app.layout = html.Div(children=[
@@ -165,7 +167,7 @@ app.layout = html.Div(children=[
     html.H1(children='Hello Dash'),
     html.Div(children=html.Button('generate data', id='generate-data-button')),
     body
-]
+],  style={'height': '100vh'}
 )
 
 @app.callback(
@@ -187,12 +189,12 @@ def generate_data(n_clicks, marks):
     nr_of_plies = len(position_indices )
 
     net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
-    engine = '/home/jusufe/lc0_test4/build/release/lc0'
+    engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
     data_creator.args = [engine, '--weights=' + net]
-    param1 = ['--cpuct=2.147', '--minibatch-size=32']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
-    param2 = ['--cpuct=4.147', '--minibatch-size=32']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    param1 = ['--cpuct=2.147', '--minibatch-size=1', '--policy-temp-decay=-0.02931', '--policy-softmax-temp=1.30958', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    param2 = ['--cpuct=4.147', '--minibatch-size=1', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']#, '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
     moves = []
-    nodes = 400
+    nodes = 200
     test_arguments = [param1, param2]
     board = game_data.board
     data_creator.G_list = {}
@@ -215,7 +217,6 @@ def generate_data(n_clicks, marks):
         if position_index < nr_of_plies - 1:
             move = game_data.game_data['move'][position_index + 1]
             board.push_san(move)
-
     return('test'+str(nr_of_plies))
 
 @app.callback(
@@ -303,6 +304,10 @@ def update_data(selected_value, active_cell):
     print('y_hist', y_hist)
     print('y2_tick_labels', y2_tick_labels)
 
+    x_tick_labels = data_creator.x_tick_labels[position_index][selected_value]
+    x_tick_values = data_creator.x_tick_values[position_index]
+
+
     layout = go.Layout(#title=dict(text='Leela tree Visualization', x=0.5, xanchor="center"),
                        annotations=[
                                     dict(
@@ -316,11 +321,13 @@ def update_data(selected_value, active_cell):
                                         font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
                                     ),
                                 ],
-                       xaxis={'title': 'X - test',
+                       xaxis={'title': 'Visit distribution',
                               'range': x_range,
                               'zeroline': False,
                               'showgrid': False,
-                              'domain': [0.0, 0.91]},
+                              'domain': [0.0, 0.91],
+                              'tickvals': x_tick_values,
+                              'ticktext': x_tick_labels},
                        yaxis={'title': 'Depth',
                               'range': y_range,
                               'ticktext': y_tick_labels,
@@ -341,8 +348,8 @@ def update_data(selected_value, active_cell):
                                'range': y2_range},
                        hovermode='closest',
                        plot_bgcolor=PLOT_BACKGROUND_COLOR,
-                       height=900,
-        margin={'t': 0}
+                       #height=900,
+        margin={'t': 0, 'b':0}
                        )
     figure = subplots.make_subplots(rows=1, cols=2,
                                     specs=[[{}, {}]],
@@ -355,7 +362,19 @@ def update_data(selected_value, active_cell):
     figure.append_trace(trace_depth_histogram, 1, 2)
     figure['layout'].update(layout)
 
-    return figure
+    return(figure)
+
+#@app.callback(
+#    [Input('slider1', 'value')])
+#def update_game_evals(visible):
+#    Q_values = []
+#    for position_index in game_data.game_data:
+#        root = data_creator.data[position_index]['root']
+#        evaluation = root['visible'][visible]['eval']
+#        Q = evaluation['Q']
+#        Q_values.append(Q)
+#    game_data.game_data['Q'] = Q_values
+
 
 
 #if __name__ == '__main__':

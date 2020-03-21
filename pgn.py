@@ -141,11 +141,11 @@ def pgn_layout(width):
     return(layout, game_data)
 
 def parse_pgn(contents, filename):#, date):
-    active_cell = {'row': 0, 'column': 0}
-    selected_cells = [active_cell]
+    #active_cell = {'row': 0, 'column': 0}
+    #selected_cells = [active_cell]
     if contents is None:
         dummy = {'ply': [0], 'move': ['-']}
-        return(pd.DataFrame(dummy).to_dict('records'), active_cell, selected_cells)
+        return(pd.DataFrame(dummy).to_dict('records'))
         #return('waiting for content')
     content_type, content_string = contents.split(',')
 
@@ -159,11 +159,11 @@ def parse_pgn(contents, filename):#, date):
             #    io.StringIO(decoded.decode('utf-8')))
         else:
             #raise PreventUpdate
-            return(dash.no_update, dash.no_update, dash.no_update)
+            return(dash.no_update)
             #return(None)#f'{filename} is not a pgn file')
     except Exception as e:
         print(e)
-        return(dash.no_update, dash.no_update, dash.no_update)
+        return(dash.no_update)
 
     board = first_game.board()
     fen = board.fen()
@@ -182,7 +182,7 @@ def parse_pgn(contents, filename):#, date):
     print(data)
     game_data.game_data = data
     game_data.fen = fen
-    return(data.to_dict('records'), active_cell, selected_cells)
+    return(data.to_dict('records'))
 
 
 #app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, '/home/jusufe/PycharmProjects/leela-tree-dash/assets/custom.css'])
@@ -234,15 +234,30 @@ def update_board_imgage(active_cell):
     svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
     return(svg)
 
+#@app.callback(
+#    [Output('move-table', 'data'),
+#     Output('move-table', 'active_cell'),
+#     Output('move-table', 'selected_cells')],
+#    [Input('upload-pgn', 'contents')],
+#    [State('upload-pgn', 'filename')]
+#)
 @app.callback(
-    [Output('move-table', 'data'),
-     Output('move-table', 'active_cell'),
-     Output('move-table', 'selected_cells')],
+    Output('move-table', 'data'),
     [Input('upload-pgn', 'contents')],
     [State('upload-pgn', 'filename')]
 )
 def update(content, filename):
     return(parse_pgn(content, filename))
+
+@app.callback([
+     Output('move-table', 'active_cell'),
+     Output('move-table', 'selected_cells')],
+    [Input('upload-pgn', 'contents'),
+     Input('generate-data-button', 'children')])
+def reset_selected_cells(*args):
+    active_cell = {'row': 0, 'column': 0}
+    selected_cells = [active_cell]
+    return(active_cell, selected_cells)
 
 #if __name__ == '__main__':
 #    app.run_server(debug=True)

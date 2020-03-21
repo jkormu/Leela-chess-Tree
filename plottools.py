@@ -58,6 +58,13 @@ def adjust_y(pos):
         pos[k] = (pos[k][0],set_y.index(pos[k][1]))
     return(pos)
 
+
+#def get_branch_parity(G):
+#    root = get_root(G)
+#    root_children = get_children(G, root)
+#    root_children = list(root_children)
+#    roo
+
 def pos_separation(G, pos):
     #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
     
@@ -165,6 +172,12 @@ def get_best_edge(G, edges):
         edge = max(edges, key=lambda e: float(G.nodes[e[1]]['Q']))
         return(edge)
 
+#for Dash implementation
+def get_node_eval(G, node):
+    Q = G.nodes[node]['Q']
+    D = G.nodes[node]['D'] if 'D' in G.nodes[node] else None
+    M = G.nodes[node]['M'] if 'M' in G.nodes[node] else None
+    return({'Q': Q, 'D': D, 'M': M})
 
 #for Dash implementation
 def get_node_metric_text(G, node):
