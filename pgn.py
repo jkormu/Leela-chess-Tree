@@ -144,8 +144,9 @@ def parse_pgn(contents, filename):#, date):
     #active_cell = {'row': 0, 'column': 0}
     #selected_cells = [active_cell]
     if contents is None:
-        dummy = {'ply': [0], 'move': ['-']}
-        return(pd.DataFrame(dummy).to_dict('records'))
+        return(dash.no_update)
+        #dummy = {'ply': [0], 'move': ['-']}
+        #return(pd.DataFrame(dummy).to_dict('records'), dash.no_update)
         #return('waiting for content')
     content_type, content_string = contents.split(',')
 
@@ -159,11 +160,11 @@ def parse_pgn(contents, filename):#, date):
             #    io.StringIO(decoded.decode('utf-8')))
         else:
             #raise PreventUpdate
-            return(dash.no_update)
+            return('Not a pgn')
             #return(None)#f'{filename} is not a pgn file')
     except Exception as e:
         print(e)
-        return(dash.no_update)
+        return('Upload failed')
 
     board = first_game.board()
     fen = board.fen()
@@ -182,7 +183,12 @@ def parse_pgn(contents, filename):#, date):
     print(data)
     game_data.game_data = data
     game_data.fen = fen
-    return(data.to_dict('records'))
+
+    game_info = f'**File**: {filename}\n'
+    game_info += f'**White**: {first_game.headers.get("White", "?")}\n'
+    game_info += f'**Black**: {first_game.headers.get("Black", "?")}'
+    game_info = dcc.Markdown(game_info, style={"white-space": "pre"})
+    return(game_info)
 
 
 #app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, '/home/jusufe/PycharmProjects/leela-tree-dash/assets/custom.css'])
@@ -242,12 +248,25 @@ def update_board_imgage(active_cell):
 #    [State('upload-pgn', 'filename')]
 #)
 @app.callback(
-    Output('move-table', 'data'),
+    #Output('move-table', 'data'),
+     Output('output-data-upload', 'children'),
     [Input('upload-pgn', 'contents')],
     [State('upload-pgn', 'filename')]
 )
-def update(content, filename):
+def update_pgn(content, filename):
     return(parse_pgn(content, filename))
+
+@app.callback(
+    Output('move-table', 'data'),
+    [Input('output-data-upload', 'children'),
+     Input('generate-data-button', 'children')],
+)
+def update_datatable(text, *args):
+    if text is None:
+        dummy = {'ply': [0], 'move': ['-']}
+        return(pd.DataFrame(dummy).to_dict('records'))
+    data = game_data.game_data
+    return(data.to_dict('records'))
 
 @app.callback([
      Output('move-table', 'active_cell'),
