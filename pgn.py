@@ -17,7 +17,7 @@ from server import app
 
 SELECTED_ROW_COLOR = 'rgb(23,178,207)'
 
-di = {'ply': [0], 'move': ['-'], 'Q': [0.0]}
+di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
 df = pd.DataFrame(di)
 board = chess.Board()
 svg_str = str(chess.svg.board(board, size=400))
@@ -118,9 +118,12 @@ def pgn_layout(width):
             id='move-table',
             columns=[{"name": 'ply', "id": 'ply'},
                      {"name": 'move', "id": 'move'},
-                     {"name": 'Q', "id": 'Q'}],
+                     {"name": 'Q', "id": 'Q'},
+                     {"name": 'W-%', "id": 'W'},
+                     {"name": 'D-%', "id": 'D'},
+                     {"name": 'B-%', "id": 'L'}],
             data=df.to_dict('records'),
-            style_cell={'textAlign': 'left', 'minWidth': '0px', 'width': '30px', 'maxWidth': '30px',
+            style_cell={'textAlign': 'left', 'minWidth': '0px', 'width': '20px', 'maxWidth': '20px',
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
             # row_selectable='single',
             style_as_list_view=True,
@@ -130,6 +133,24 @@ def pgn_layout(width):
                     'if': {'row_index': 'odd'},
                     'backgroundColor': 'rgb(248, 248, 248)'
                 }],
+            style_cell_conditional=[
+                {
+                    'if': {'column_id': 'Q'},
+                    'textAlign': 'right'
+                },
+                {
+                    'if': {'column_id': 'W'},
+                    'textAlign': 'right'
+                },
+                {
+                    'if': {'column_id': 'D'},
+                    'textAlign': 'right'
+                },
+                {
+                    'if': {'column_id': 'L'},
+                    'textAlign': 'right'
+                }
+            ],
             style_header={
                 'backgroundColor': 'rgb(230, 230, 230)',
                 'fontWeight': 'bold'
@@ -169,12 +190,13 @@ def parse_pgn(contents, filename):#, date):
     board = first_game.board()
     fen = board.fen()
     game_data.board = board
-    data = {'ply': [0], 'move': ['-']}
+    data = {'ply': [0], 'move': ['-'], 'turn': [board.turn]}
     for ply, move in enumerate(first_game.mainline_moves()):
         san = board.san(move)
         uci = board.uci(move).lower()
         data['move'].append(san)
         data['ply'].append(ply + 1)
+        data['turn'].append(board.turn)
         #data['move'].append(uci)
         board.push(move)
 
@@ -259,7 +281,8 @@ def update_pgn(content, filename):
 @app.callback(
     Output('move-table', 'data'),
     [Input('output-data-upload', 'children'),
-     Input('generate-data-button', 'children')],
+     #Input('generate-data-button', 'children'),
+     Input('hidden-div-slider-state', 'children')],
 )
 def update_datatable(text, *args):
     if text is None:

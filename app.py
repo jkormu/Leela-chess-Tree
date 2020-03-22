@@ -112,7 +112,7 @@ body = dbc.Container(fluid=True, children=
                                 figure={
                                     'layout': {'title': ''},
                                 }, #style={'height':'100%'}
-                            ), html.Div(
+                            ), html.Div(children=[
                             dcc.Slider(
                                 id='slider1',
                                 min=0,
@@ -121,7 +121,7 @@ body = dbc.Container(fluid=True, children=
                                 marks={str(i): str(i) for i in range(2)},
                                 step=None,
                                 updatemode='drag',
-                            ), style={'margin-top': '30px'})
+                            ), html.Div(id='hidden-div-slider-state', hidden='hidden', children='test')], style={'margin-top': '30px'})
                         ]
                     ),
                 dbc.Col(id='row1_col1', md=2, children=
@@ -137,35 +137,9 @@ body = dbc.Container(fluid=True, children=
 )
 a = html.Div(children=body, style={'height': '75%'})
 
-a="""
 app.layout = html.Div(children=[
     html.H1(children='Hello Dash'),
-    html.Div(children='''Test, test, test...'''),
-    html.Img(id='board', src=svg),#'data:image/svg;base64,{}'.format(encode_logo)),
-    dcc.Graph(
-        id='graph',
-        figure={
-            'layout': {'title': ''}
-        }
-    ),
-    dcc.Slider(
-        id='slider1',
-        min=0,
-        max=1,
-        value=0,
-        marks={str(i): str(i) for i in range(2)},
-        step=None,
-        updatemode='drag',
-    )
-]
-)
-"""
-
-#app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])  # ,external_stylesheets=external_stylesheets)
-
-app.layout = html.Div(children=[
-    html.H1(children='Hello Dash'),
-    html.Div(children=html.Button('generate data', id='generate-data-button')),
+    html.Div(children=html.Button('generate data', id='generate-data-button', title='Load pgn to analyze')),
     body
 ],  style={'height': '100vh'}
 )
@@ -177,13 +151,13 @@ app.layout = html.Div(children=[
 )
 def generate_data(n_clicks, marks):
     #data = pd.DataFrame(data)
-    print('n_clicks', n_clicks)
+    #print('n_clicks', n_clicks)
     if n_clicks is None or n_clicks == 0:
         return(dash.no_update)
 
     data = game_data.game_data
     if data is None: #game data not yet created, i.e. pgn not provided
-        print('Game data:', data)
+        #print('Game data:', data)
         return ("Generate data (pgn not yet loaded)" + str(n_clicks))
     position_indices = data['ply']
     nr_of_plies = len(position_indices )
@@ -228,8 +202,8 @@ def update_data(selected_value, active_cell):
         position_index = 0
     else:
         position_index = active_cell['row']
-    print('UPDATING FOR POSTION_INDEX:', position_index)
-    print('DATA:', data_creator.data)
+    #print('UPDATING FOR POSTION_INDEX:', position_index)
+   # print('DATA:', data_creator.data)
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
@@ -294,15 +268,15 @@ def update_data(selected_value, active_cell):
 
     y_hist_labels = ['0' for _ in range(len(y_tick_labels) - len(y_hist))] + list(map(str, y_hist))
     max_y2_label_len = max(map(len, y_hist_labels))
-    print('max_y2_label_len', max_y2_label_len)
-    print([max_y2_label_len - len(label) for label in y_hist_labels])
+    #print('max_y2_label_len', max_y2_label_len)
+    #print([max_y2_label_len - len(label) for label in y_hist_labels])
     y2_tick_labels = [label.rjust(max_y2_label_len, ' ') for label in y_hist_labels]
 
     y2_range = data_creator.y2_range[position_index]
-    print('y2_range', y2_range)
-    print('x_hist', x_hist)
-    print('y_hist', y_hist)
-    print('y2_tick_labels', y2_tick_labels)
+    #print('y2_range', y2_range)
+    #print('x_hist', x_hist)
+    #print('y_hist', y_hist)
+    #print('y2_tick_labels', y2_tick_labels)
 
     x_tick_labels = data_creator.x_tick_labels[position_index][selected_value]
     x_tick_values = data_creator.x_tick_values[position_index]
@@ -364,16 +338,38 @@ def update_data(selected_value, active_cell):
 
     return(figure)
 
-#@app.callback(
-#    [Input('slider1', 'value')])
-#def update_game_evals(visible):
-#    Q_values = []
-#    for position_index in game_data.game_data:
-#        root = data_creator.data[position_index]['root']
-#        evaluation = root['visible'][visible]['eval']
-#        Q = evaluation['Q']
-#        Q_values.append(Q)
-#    game_data.game_data['Q'] = Q_values
+@app.callback(
+    Output('hidden-div-slider-state', 'children'),
+    [Input('slider1', 'value'),
+     Input('generate-data-button', 'children')])
+def update_game_evals(visible, *args):
+    Q_values = []
+    W_values = []
+    D_values = []
+    L_values = []
+    if game_data.game_data is None:
+        return(dash.no_update)
+    for position_index in game_data.game_data['ply']:
+        root = data_creator.data[position_index]['root']
+        evaluation = root['visible'][visible]['eval']
+        Q = evaluation['Q']
+        W = evaluation['W']
+        D = evaluation['D']
+        L = evaluation['L']
+
+        #invert W and L for black
+        if not game_data.game_data['turn'][position_index]:
+            W = 100 - W - D
+            L = 100 - L - D
+        Q_values.append(Q)
+        W_values.append(W)
+        D_values.append(D)
+        L_values.append(L)
+    game_data.game_data['Q'] = Q_values
+    game_data.game_data['W'] = W_values
+    game_data.game_data['D'] = D_values
+    game_data.game_data['L'] = L_values
+    return(str(visible))
 
 
 

@@ -173,18 +173,38 @@ def get_best_edge(G, edges):
         return(edge)
 
 #for Dash implementation
+def get_WDL(q,d):
+    if d is None:
+        return(None, round(100 * d, 1), None)
+    l = 0.5*(1-q-d)
+    w = 0.5*(1+q-d)
+    w = round(100*w)
+    l = round(100 * l)
+    d = round(100 * d)
+    return(w,d,l)
+
+#for Dash implementation
 def get_node_eval(G, node):
     Q = G.nodes[node]['Q']
     D = G.nodes[node]['D'] if 'D' in G.nodes[node] else None
     M = G.nodes[node]['M'] if 'M' in G.nodes[node] else None
-    return({'Q': Q, 'D': D, 'M': M})
+
+    W, D, L = get_WDL(float(Q), float(D))
+
+    #if node == 'root':
+    Q = str(round(-1.0*float(Q), 3))
+    return({'Q': Q, 'W': W, 'D': D, 'L': L, 'M': M})
 
 #for Dash implementation
 def get_node_metric_text(G, node):
     t = '\n \n'
     t += 'Move: ' + G.nodes[node]['move'] + '\n'
     t += 'N: ' + G.nodes[node]['N'] + '\n'
-    t += 'Q: ' + G.nodes[node]['Q'] + '\n'
+    if node == 'root':
+        Q = str(-1.0*float(G.nodes[node]['Q']))
+    else:
+        Q = G.nodes[node]['Q']
+    t += 'Q: ' + Q + '\n'
     try:
         t += 'D: ' + G.nodes[node]['D'] + '\n'
     except:

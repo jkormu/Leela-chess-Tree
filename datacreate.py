@@ -14,7 +14,6 @@ BEST_MOVE_COLOR = 'rgb(178,34,34)'
 
 class DataCreator:
     def __init__(self, engine_path, weight_path):
-        print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUXXXXXXXXXXXXXXXXXXXXXX')
         self.engine_path = engine_path
         self.weight_path = weight_path
         self.args = [engine_path, '--weights='+weight_path]
@@ -39,11 +38,10 @@ class DataCreator:
     def reset(self):
         self.__init__(self.engine_path, self.weight_path)
 
-    #def run_search(self, position_index, parameters, moves, nodes):
     def run_search(self, position_index, parameters, board, nodes):
         if parameters != self.parameters:
-            print('new parameter', parameters)
-            print('old parameter', self.parameters)
+            #print('new parameter', parameters)
+            #print('old parameter', self.parameters)
             try:
                 self.lc0.engine.quit()
             except:
@@ -52,15 +50,12 @@ class DataCreator:
             self.parameters = parameters
         else:
             self.lc0.protocol.send_line('ucinewgame')
-        #board = get_board(moves)
         print('starting search, nodes= ', str(nodes))
         print(board)
         start = time.time()
         self.lc0.play(board, chess.engine.Limit(nodes=nodes))
-        #play(self.args + parameters, nodes, moves=self.moves)
         print('search completed in time: ', time.time() - start)
         g = nx.readwrite.gml.read_gml('tree.gml', label='id')
-        #print('position index')
         os.remove('tree.gml')
 
         if position_index in self.G_list:
@@ -69,7 +64,7 @@ class DataCreator:
             self.G_list[position_index] = [g]
 
     def create_data(self, position_index, moves):
-        print('G_LIST', self.G_list)
+        #print('G_LIST', self.G_list)
         G_merged, G_list = gt.merge_graphs(self.G_list[position_index])
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
@@ -86,22 +81,6 @@ class DataCreator:
 
         data = {}
         node_counts = []
-        #for node in pos:
-        #    parent = gt.get_parent(G_merged, node)
-        #    parent_point = [None, None] if parent is None else pos[parent]
-        #    miniboard = pt.get_miniboard_unicode(G_merged, node, self.board, moves).replace('\n', '<br>')
-        #    data[node] = {'point': pos[node],
-        #                  'parent': parent_point,
-        #                  'miniboard': miniboard,
-        #                  'visible': {}
-        #                  }
-#
-#        for owner, G in enumerate(G_list):
-#            G_pos = pt.get_own_pos(G, pos)
-#            pos_list = pt.pos_separation(G, G_pos)
-#            node_counts.append(gt.get_nodes_in_depth(G))
-#            pv_nodes = pt.get_pv_nodes(G)
-#            for node in G:
 
         root = gt.get_root(G_merged)  # X-label
         root_childern = list(gt.get_children(G_merged, root))  # X-label
@@ -192,16 +171,6 @@ class DataCreator:
         self.x_tick_labels[position_index] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_index] = x_label_vals
 
-        #data_tick_labels = []
-        #l = len(tick_labels)
-        #for nc in node_counts:
-        #    nc = ["0" for i in range(l - len(nc))] + nc
-        #    max_nc_len = max([len(c) for c in nc])
-        #    labels = [' ' * (max_nc_len - len(nc[i])) + nc[i] for i in range(l)]
-        #    data_tick_labels.append(labels)
-        #return (data_tick_labels)
-
-
     def create_demo_data(self):
         net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
         engine = '/home/jusufe/lc0_test4/build/release/lc0'
@@ -218,4 +187,3 @@ class DataCreator:
         self.run_search(position_index, param2, board, nodes)
         self.create_data(position_index, moves)
 
-#print(data_creator.data)
