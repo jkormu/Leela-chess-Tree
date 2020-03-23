@@ -31,9 +31,19 @@ class DataCreator:
         self.x_tick_labels = {}
         self.x_tick_values = {}
 
-        #self.Q_values = {}
-        #self.D_values = {}
-        #self.M_values = {}
+    def reset_data(self):
+        self.G_list = {}
+        self.data = {}
+        self.data_depth = {}
+        self.board = chess.Board()
+        self.parameters = None
+        self.x_range = {}
+        self.y_range = {}
+        self.y_tick_labels = {}
+        self.y_tick_values = {}
+        self.y2_range = {}
+        self.x_tick_labels = {}
+        self.x_tick_values = {}
 
     def reset(self):
         self.__init__(self.engine_path, self.weight_path)
@@ -187,3 +197,6 @@ class DataCreator:
         self.run_search(position_index, param2, board, nodes)
         self.create_data(position_index, moves)
 
+data_creator = DataCreator('', '')
+data_creator.create_demo_data()
+#data_creator.create_demo_data()

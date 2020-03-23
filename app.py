@@ -6,7 +6,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly import subplots
-from datacreate import DataCreator
+from datacreate import data_creator #DataCreator
 
 import chess.svg
 import base64
@@ -33,8 +33,9 @@ MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
 
 
-data_creator = DataCreator('', '')
-data_creator.create_demo_data()
+#data_creator = DataCreator('', '')
+#data_creator.create_demo_data()
+
 #game_data = GameData()
 
 
@@ -83,24 +84,20 @@ def get_data(data, visible):
             x_edges, y_edges,
             x_edges_pv, y_edges_pv)
 
-#radar_logo = '/home/jusufe/tmp/download.png'
-#encode_logo = base64.b64encode(open(radar_logo, 'rb').read()).decode('ascii')
+
+#svg_str = str(chess.svg.board(data_creator.board, size=300))
+#svg_byte = svg_str.encode()
+#encoded = base64.b64encode(svg_byte)
 
 
-svg_str = str(chess.svg.board(data_creator.board, size=300))
-svg_byte = svg_str.encode()
-encoded = base64.b64encode(svg_byte)
-#svg_file = '/home/jusufe/tmp/board_img.svg'
-#encoded = base64.b64encode(open(svg_file,'rb').read())
-#encoded = base64.b64encode(svg_str).read()
-
-svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
+#svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 #svg = 'data:image/svg+xml;base64,{}'.format(svg_str)
 #svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 #test_base64 = base64.b64encode(open(testa_pnga, 'rb').read()).decode('ascii')
 
 pgn_component, game_data = pgn_layout('100%')
+a = """
 body = dbc.Container(fluid=True, children=
     [
         dbc.Row(id='row1', children=
@@ -135,13 +132,37 @@ body = dbc.Container(fluid=True, children=
         )
     ]
 )
-a = html.Div(children=body, style={'height': '75%'})
+"""
+#a = html.Div(children=body, style={'height': '75%'})
 
-app.layout = html.Div(children=[
-    html.H1(children='Hello Dash'),
-    html.Div(children=html.Button('generate data', id='generate-data-button', title='Load pgn to analyze')),
-    body
-],  style={'height': '100vh'}
+body = html.Div(
+    children=[html.Div(id='graph-container',
+                       children=[dcc.Graph(id='graph',
+                                           figure={'layout': {'title': ''}},
+                                           style={'height': '100%', 'marginTop': '0'}),
+                                 dcc.Slider(id='slider1',
+                                            min=0,
+                                            max=1,
+                                            value=0,
+                                            marks={str(i): str(i) for i in range(2)},
+                                            step=None,
+                                            updatemode='drag'),
+                                 html.Div(id='hidden-div-slider-state', hidden='hidden', children='test')
+                                 ],
+                       style={'height': '100%', 'width': '80%', 'float': 'left'}
+                       ),
+              html.Div(id='pgn-container',
+                       children=[pgn_component],
+                       style={'height': '100%', 'width': '16%', 'float': 'right'})
+              ],
+    style={'height': '60%', 'width': '100%'}
+)
+
+app.layout = html.Div(
+    children=[
+        html.Div(children=html.Button('generate data', id='generate-data-button', title='Load pgn to analyze')),
+        body,
+],  style={'height': '100vh', 'width': '100vw'}
 )
 
 @app.callback(
@@ -204,6 +225,8 @@ def update_data(selected_value, active_cell):
         position_index = active_cell['row']
     #print('UPDATING FOR POSTION_INDEX:', position_index)
    # print('DATA:', data_creator.data)
+    if position_index not in data_creator.data:
+        return(dash.no_update)
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
@@ -323,7 +346,7 @@ def update_data(selected_value, active_cell):
                        hovermode='closest',
                        plot_bgcolor=PLOT_BACKGROUND_COLOR,
                        #height=900,
-        margin={'t': 0, 'b':0}
+        margin={'t': 0, 'b': 0}
                        )
     figure = subplots.make_subplots(rows=1, cols=2,
                                     specs=[[{}, {}]],

@@ -15,6 +15,8 @@ import chess.pgn
 import base64
 from server import app
 
+from datacreate import data_creator
+
 SELECTED_ROW_COLOR = 'rgb(23,178,207)'
 
 di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
@@ -32,58 +34,6 @@ class GameData:
         self.board = chess.Board()
         self.game_data = None#{'ply': [0], 'move': ['-']}
         self.fen = self.board.fen()
-
-a = """
-game_data = GameData()
-
-layout = html.Div([
-    dcc.Upload(
-        id='upload-pgn',
-        children=html.Div([
-            'Drag and Drop pgn file or ',
-            html.A('Select File')
-        ]),
-        style={
-            #'width': '80%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            #'margin': '10px'
-        },
-        # Only one pgn allowed
-        multiple=False
-    ),
-    html.Img(id='board',
-             src=svg),
-    html.Div(id='output-data-upload'),
-    html.Div(id='test', children=
-    [dash_table.DataTable(
-        id='move-table',
-        columns=[{"name": 'ply', "id": 'ply'},
-                 {"name": 'move', "id": 'move'},
-                 {"name": 'Q', "id": 'Q'}],
-        data=df.to_dict('records'),
-        style_cell={'textAlign': 'left', 'minWidth': '0px', 'width':'30px', 'maxWidth': '30px', 'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
-        #row_selectable='single',
-        style_as_list_view=True,
-        style_table={'width': '85%', 'margin-left':'30px'},#, 'maxHeight': '300px', 'overflowY': 'scroll'},#
-        style_data_conditional=[
-            {
-                'if': {'row_index': 'odd'},
-                'backgroundColor': 'rgb(248, 248, 248)'
-            }],
-        style_header={
-                'backgroundColor': 'rgb(230, 230, 230)',
-                'fontWeight': 'bold'
-            },
-
-)], style={'width': '100%', 'margin-right': 'auto', 'margin-top': '10px',
-           'max-height': '500px', 'overflowY': 'scroll'})
-], style={'width': '400px'})
-"""
 
 def pgn_layout(width):
     #define global variable holding the game data accessible by the callbacks
@@ -116,18 +66,21 @@ def pgn_layout(width):
         html.Div(id='test', children=
         [dash_table.DataTable(
             id='move-table',
-            columns=[{"name": 'ply', "id": 'ply'},
+            columns=[{"name": '', "id": 'dummy_left'},
+                     {"name": 'ply', "id": 'ply'},
                      {"name": 'move', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
                      {"name": 'W-%', "id": 'W'},
                      {"name": 'D-%', "id": 'D'},
-                     {"name": 'B-%', "id": 'L'}],
+                     {"name": 'B-%', "id": 'L'},
+                     {"name": '', "id": 'dummy_right'}],
             data=df.to_dict('records'),
-            style_cell={'textAlign': 'left', 'minWidth': '0px', 'width': '20px', 'maxWidth': '20px',
+            fixed_rows={'headers': True, 'data': 0},
+            style_cell={'textAlign': 'left', 'minWidth': '5px', 'width': '20px', 'maxWidth': '20px',
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
             # row_selectable='single',
             style_as_list_view=True,
-            style_table={'width': '85%', 'margin-left': '30px'},  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#
+            style_table={'width': '100%', 'margin-left': '0px', 'overflowY': 'auto'},  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#
             style_data_conditional=[
                 {
                     'if': {'row_index': 'odd'},
@@ -157,7 +110,7 @@ def pgn_layout(width):
             },
 
         )], style={'width': '100%', 'margin-right': 'auto', 'margin-top': '10px',
-                   'max-height': '500px', 'overflowY': 'scroll'})
+                   'max-height': '100%'})#, 'overflowY': 'scroll'})#
     ], style={'width': width})
     return(layout, game_data)
 
@@ -190,7 +143,7 @@ def parse_pgn(contents, filename):#, date):
     board = first_game.board()
     fen = board.fen()
     game_data.board = board
-    data = {'ply': [0], 'move': ['-'], 'turn': [board.turn]}
+    data = {'dummy_left': '', 'ply': [0], 'move': ['-'], 'turn': [board.turn], 'dummy_right': ''}
     for ply, move in enumerate(first_game.mainline_moves()):
         san = board.san(move)
         uci = board.uci(move).lower()
@@ -210,6 +163,9 @@ def parse_pgn(contents, filename):#, date):
     game_info += f'**White**: {first_game.headers.get("White", "?")}\n'
     game_info += f'**Black**: {first_game.headers.get("Black", "?")}'
     game_info = dcc.Markdown(game_info, style={"white-space": "pre"})
+
+    #reset analysis of previous pgn
+    data_creator.reset_data()
     return(game_info)
 
 
