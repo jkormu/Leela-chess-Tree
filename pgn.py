@@ -108,6 +108,7 @@ def pgn_layout(width):
                 'backgroundColor': 'rgb(230, 230, 230)',
                 'fontWeight': 'bold'
             },
+            css=[{"selector": ".dash-spreadsheet-container", "rule": "accent: #e1e1e1 !important;"}],
 
         )], style={'width': '100%', 'margin-right': 'auto', 'margin-top': '10px',
                    'max-height': '100%'})#, 'overflowY': 'scroll'})#
