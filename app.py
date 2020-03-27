@@ -17,7 +17,7 @@ from server import app
 
 RIGHT_TITLE_SIZE = 15
 FONT_SIZE = 13
-FONT_COLOR = '#7f7f7f'
+FONT_COLOR = '#2a3f5f' #'rgb(50, 50, 50)' #'#7f7f7f'
 GRID_COLOR = 'rgba(127,127,127, 0.25)'
 PV_COLOR = 'rgb(23,178,207)'
 BRANCH_COLORS = ['rgb(31,119,180)', 'rgb(255,127,14)']
@@ -31,6 +31,8 @@ MOVED_PIECE_COLOR = 'rgb(210,105,30)'
 MAX_ALLOWED_NODES = 200000
 MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
+GRAPH_WIDTH = 84
+PGN_WIDTH = 100 - GRAPH_WIDTH
 
 
 #data_creator = DataCreator('', '')
@@ -133,7 +135,6 @@ body = dbc.Container(fluid=True, children=
     ]
 )
 """
-#a = html.Div(children=body, style={'height': '75%'})
 
 body = html.Div(
     children=[html.Div(id='graph-container',
@@ -149,11 +150,11 @@ body = html.Div(
                                             updatemode='drag'),
                                  html.Div(id='hidden-div-slider-state', hidden='hidden', children='test')
                                  ],
-                       style={'height': '100%', 'width': '80%', 'float': 'left'}
+                       style={'height': '100%', 'width': f'{GRAPH_WIDTH}%', 'float': 'left'}
                        ),
               html.Div(id='pgn-container',
                        children=[pgn_component],
-                       style={'height': '100%', 'width': '16%', 'float': 'right'})
+                       style={'height': '100%', 'width': f'{PGN_WIDTH}%', 'float': 'right'})
               ],
     style={'height': '60%', 'width': '100%'}
 )
@@ -223,10 +224,59 @@ def update_data(selected_value, active_cell):
         position_index = 0
     else:
         position_index = active_cell['row']
-    #print('UPDATING FOR POSTION_INDEX:', position_index)
-   # print('DATA:', data_creator.data)
+
+    #Show empty graph if position is not yet analyzed
     if position_index not in data_creator.data:
-        return(dash.no_update)
+        figure = subplots.make_subplots(rows=1, cols=2,
+                                        specs=[[{}, {}]],
+                                        shared_xaxes=True,
+                                        shared_yaxes=False,
+                                        vertical_spacing=0.001)
+        layout = go.Layout(
+            annotations=[
+                dict(
+                    x=1.025,
+                    y=0.5,
+                    showarrow=False,
+                    text='Nodes per depth',
+                    xref='paper',
+                    yref='paper',
+                    textangle=90,
+                    font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
+                ),
+            ],
+            xaxis={'title': 'Visit distribution',
+                   'range': [0, 1],
+                   'zeroline': False,
+                   'showgrid': False,
+                   'domain': [0.0, 0.91],
+                   'tickvals': [],
+                   'ticktext': []},
+            yaxis={'title': 'Depth',
+                   'range': [-1, 10],
+                   'ticktext': [str(i) for i in range(10)],
+                   'tickvals': [i for i in range(10)][::-1],
+                   'zeroline': False,
+                   'showgrid': True,
+                   'gridcolor': GRID_COLOR},
+            yaxis2={'title': '',
+                    'range': [0, 1],
+                    'showticklabels': True,
+                    'side': 'left',
+                    'ticktext': [0],
+                    'tickvals': [i for i in range(10)][::-1]},
+            xaxis2={'zeroline': False,
+                    'showgrid': False,
+                    'showticklabels': False,
+                    'domain': [0.93, 1.0],
+                    'range': [-1, 10]},
+            hovermode='closest',
+            plot_bgcolor=PLOT_BACKGROUND_COLOR,
+            # height=900,
+            margin={'t': 0, 'b': 0}
+        )
+        figure['layout'].update(layout)
+        return(figure)
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 

@@ -175,15 +175,21 @@ def get_config_table(lc0_engine):
     config_data.data = df
 
 
-    number_of_configs_dropdown = dcc.Dropdown(
+    number_of_configs_dropdown = html.Div(children=[html.P(''),
+                                                    dcc.Dropdown(
         id='number-of-configs-dropdown',
         options=[
             {'label': i, 'value': i} for i in range(1, MAX_NUMBER_OF_CONFIGS + 1)
         ],
         value=2,
         clearable=False,
-        style={'width': '50px'}
-    )
+        style={'width': '50px'},
+                                                    )
+                                                    ],
+                                          style={'display': 'flex',
+                                                 'flex-direction': 'row',
+                                                 'align-items:': 'flex-end'}
+                                          )
 
 
 

@@ -17,7 +17,7 @@ from server import app
 
 from datacreate import data_creator
 
-SELECTED_ROW_COLOR = 'rgb(23,178,207)'
+SELECTED_ROW_COLOR = 'rgba(23,178,207,0.5)'
 
 di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
 df = pd.DataFrame(di)
