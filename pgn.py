@@ -229,10 +229,12 @@ def update_datatable(text, *args):
      Output('move-table', 'active_cell'),
      Output('move-table', 'selected_cells')],
     [Input('upload-pgn', 'contents'),
-     #Input('generate-data-button', 'title'),
-     ])
-def reset_selected_cells(*args):
-    active_cell = {'row': 0, 'column': 0}
+     Input('generate-data-button', 'title'),
+     ],
+    [State('move-table', 'active_cell')])
+def reset_selected_cells(arg1, arg2, active_cell):
+    if active_cell is None:
+        active_cell = {'row': 0, 'column': 0}
     selected_cells = [active_cell]
     return(active_cell, selected_cells)
 

@@ -1,4 +1,3 @@
-import networkx as nx
 from networkx.algorithms.dag import topological_sort
 import os
 import graphtools as gt
@@ -9,12 +8,14 @@ import chess.engine
 import time
 import numpy as np
 import pandas as pd
+from leela import leela_engine
+
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 
-def leela(args):
-    lc0 = chess.engine.SimpleEngine.popen_uci(args)
-    return(lc0)
+#def leela(args):
+#    lc0 = chess.engine.SimpleEngine.popen_uci(args)
+#    return(lc0)
 
 class GameData:
     def __init__(self):
@@ -36,15 +37,16 @@ class ConfigData:
         return(self.data.equals(self.data_analyzed))
 
 class DataCreator:
-    def __init__(self, engine_path, weight_path):
-        self.engine_path = engine_path
-        self.weight_path = weight_path
-        self.args = [engine_path, '--weights='+weight_path]
+    def __init__(self, lc0):#, engine_path, weight_path):
+        #self.engine_path = engine_path
+        #self.weight_path = weight_path
+        #self.args = [engine_path, '--weights='+weight_path]
+        self.lc0 = lc0
         self.G_list = {} #{position_index1: [], position_index2: []....}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
-        self.parameters = None
+        #self.parameters = None
 
         self.x_range = {}
         self.y_range = {}
@@ -59,7 +61,7 @@ class DataCreator:
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
-        self.parameters = None
+        #self.parameters = None
         self.x_range = {}
         self.y_range = {}
         self.y_tick_labels = {}
@@ -68,28 +70,30 @@ class DataCreator:
         self.x_tick_labels = {}
         self.x_tick_values = {}
 
-    def reset(self):
-        self.__init__(self.engine_path, self.weight_path)
+    #def reset(self):
+    #    self.__init__(self.engine_path, self.weight_path)
 
     def run_search(self, position_index, parameters, board, nodes):
-        if parameters != self.parameters:
+        self.lc0.configure(parameters)
+
             #print('new parameter', parameters)
             #print('old parameter', self.parameters)
-            try:
-                self.lc0.engine.quit()
-            except:
-                pass
-            self.lc0 = leela(self.args + parameters)
-            self.parameters = parameters
-        else:
-            self.lc0.protocol.send_line('ucinewgame')
-        print('starting search, nodes= ', str(nodes))
-        print(board)
+
+            #try:
+            #    self.lc0.engine.quit()
+            #except:
+            #    pass
+            #self.lc0 = leela(self.args + parameters)
+            #self.parameters = parameters
+        #else:
+        #    self.lc0.protocol.send_line('ucinewgame')
+        #print('starting search, nodes= ', str(nodes))
+        #print(board)
         start = time.time()
-        self.lc0.play(board, chess.engine.Limit(nodes=nodes))
-        print('search completed in time: ', time.time() - start)
-        g = nx.readwrite.gml.read_gml('tree.gml', label='id')
-        os.remove('tree.gml')
+        g = self.lc0.play(board, nodes)
+        #print('search completed in time: ', time.time() - start)
+        #g = nx.readwrite.gml.read_gml('tree.gml', label='id')
+        #os.remove('tree.gml')
 
         if position_index in self.G_list:
             self.G_list[position_index].append(g)
@@ -209,10 +213,16 @@ class DataCreator:
         engine = '/home/jusufe/lc0_test4/build/release/lc0'
         self.args = [engine, '--weights=' + net]
 
-        param1 = ['--cpuct=2.147', '--minibatch-size=1', '--threads=1',
-                  '--max-collision-events=1', '--max-collision-visits=1']
-        param2 = ['--cpuct=4.147', '--minibatch-size=1', '--threads=1',
-                  '--max-collision-events=1', '--max-collision-visits=1']
+        #param1 = ['--cpuct=2.147', '--minibatch-size=1', '--threads=1',
+                  #'--max-collision-events=1', '--max-collision-visits=1']
+        #param2 = ['--cpuct=4.147', '--minibatch-size=1', '--threads=1',
+                  #'--max-collision-events=1', '--max-collision-visits=1']
+
+        param1 = {'CPuct': '2.147', 'MinibatchSize': '1', 'Threads': '1',
+                          'MaxCollisionEvents': '1', 'MaxCollisionVisits': '1', }
+        param2 = {'CPuct': '4.147', 'MinibatchSize': '1', 'Threads': '1',
+                          'MaxCollisionEvents': '1', 'MaxCollisionVisits': '1', }
+
         nodes = 20
 
         position_index = 0
@@ -222,13 +232,13 @@ class DataCreator:
         self.run_search(position_index, param2, board, nodes)
         self.create_data(position_index, moves)
 
+net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
+engine = '/home/jusufe/lc0_test4/build/release/lc0'
+args = [engine, '--weights=' + net]
+lc0 = leela_engine(args)#leela(args)
 
-data_creator = DataCreator('', '')
+data_creator = DataCreator(lc0)
 data_creator.create_demo_data()
 game_data = GameData()
 config_data = ConfigData()
 
-net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
-engine = '/home/jusufe/lc0_test4/build/release/lc0'
-args = [engine, '--weights=' + net]
-lc0 = leela(args)

@@ -129,6 +129,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     is_analyze_selected = False
     if n_clicks_selected_timestamp > n_clicks_all_timestamp:
         is_analyze_selected = True
+        print('ACTIVEEEEEEEEEEEEEEEEEEE', active_cell)
         position_indices = [active_cell['row']]
     else:
         position_indices = data['ply']
@@ -137,9 +138,15 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
     data_creator.args = [engine, '--weights=' + net]
-    param1 = ['--cpuct=2.147', '--minibatch-size=1', '--policy-temp-decay=-0.02931', '--policy-softmax-temp=1.30958', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
-    param2 = ['--cpuct=4.147', '--minibatch-size=1', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
-    moves = []
+    #param1 = ['--cpuct=2.147', '--minibatch-size=1', '--policy-temp-decay=-0.02931', '--policy-softmax-temp=1.30958', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    #param2 = ['--cpuct=4.147', '--minibatch-size=1', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
+    param1 = {'CPuct': 2.147, 'MinibatchSize': 1, 'Threads': 1,
+              'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
+              'SmartPruningFactor': '0.0'}
+    param2 = {'CPuct': 4.147, 'MinibatchSize': 1, 'Threads': 1,
+              'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
+              'SmartPruningFactor': 0.0}
+
     nodes = 200
     test_arguments = [param1, param2]
     board = game_data.board
