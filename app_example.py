@@ -190,11 +190,6 @@ def get_config_table(lc0_engine):
                                                  'flex-direction': 'row',
                                                  'align-items:': 'flex-end'}
                                           )
-
-
-
-
-
     config_table = html.Div([
         dash_table.DataTable(
             id='config-table',
@@ -228,7 +223,6 @@ def get_config_table(lc0_engine):
         html.Div(id='config-table-dummy-div'),
         ],
         style={'width': '100%'})
-
     #config_component = html.Div(
     #    config_component,
     #    style={'height': '100vh'}
@@ -236,9 +230,30 @@ def get_config_table(lc0_engine):
 
     return(config_component, config_data)
 
+
+
+
 config_component, config_data = get_config_table(lc0)
+body = html.Div(
+    children=[config_component],
+    style={'height': '40%', 'width': '100%'})
+
+html.Div(
+    children=[
+        #html.Div(children=html.Button('generate data', id='generate-data-button', title='Load pgn to analyze')),
+        body,
+    ],
+    style={'height': '100vh', 'width': '100vw'}
+)
+
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.layout = config_component
+app.layout = html.Div(
+    children=[
+        #html.Div(children=html.Button('generate data', id='generate-data-button', title='Load pgn to analyze')),
+        body,
+    ],
+    style={'height': '100vh', 'width': '100vw'}
+)
 
 
 @app.callback(

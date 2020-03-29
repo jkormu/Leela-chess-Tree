@@ -79,9 +79,7 @@ def get_data(data, visible):
 def get_graph_component():
     graph_component = html.Div(
         children=[html.Div(id='graph-container',
-                           children=[html.Div(children=html.Button('generate data',
-                                                                   id='generate-data-button',
-                                                                   title='Load pgn to analyze')),
+                           children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
                                                style={'height': '90%', 'marginTop': '0'},
@@ -106,22 +104,35 @@ def get_graph_component():
 
 
 @app.callback(
-    Output('generate-data-button', 'children'),
-    [Input('generate-data-button', 'n_clicks')],
-    [State('slider1', 'marks')]
+    Output('generate-data-button', 'title'),
+    [Input('generate-data-button', 'n_clicks_timestamp'),
+     Input('generate-data-selected-button', 'n_clicks_timestamp')],
+    [State('slider1', 'marks'),
+     State('move-table', 'active_cell')]
 )
-def generate_data(n_clicks, marks):
+def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell):
     #data = pd.DataFrame(data)
-    #print('n_clicks', n_clicks)
-    if n_clicks is None or n_clicks == 0:
+    print('TIMESTAMP', n_clicks_selected_timestamp)
+    print('TIMESTAMP_ALL', n_clicks_all_timestamp)
+    if n_clicks_selected_timestamp is None:
+        n_clicks_selected_timestamp = -1
+    if n_clicks_all_timestamp is None:
+        n_clicks_all_timestamp = -1
+    if n_clicks_all_timestamp == -1 and n_clicks_selected_timestamp == -1:
         return(dash.no_update)
 
     data = game_data.game_data
-    if data is None: #game data not yet created, i.e. pgn not provided
+    if data is None:
         #print('Game data:', data)
-        return ("Generate data (pgn not yet loaded)" + str(n_clicks))
-    position_indices = data['ply']
-    nr_of_plies = len(position_indices )
+        return ("Generate data (pgn not yet loaded)")
+
+    is_analyze_selected = False
+    if n_clicks_selected_timestamp > n_clicks_all_timestamp:
+        is_analyze_selected = True
+        position_indices = [active_cell['row']]
+    else:
+        position_indices = data['ply']
+    nr_of_plies = len(position_indices)
 
     net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
@@ -144,7 +155,8 @@ def generate_data(n_clicks, marks):
 
     board.set_fen(game_data.fen)
     #data_creator.reset()
-    data_creator.data = {}
+    if not is_analyze_selected:
+        data_creator.data = {}
     for position_index in position_indices:
         fen = board.fen()
         print('CREATING GRAPH FOR', position_index)
@@ -152,7 +164,9 @@ def generate_data(n_clicks, marks):
         if position_index < nr_of_plies - 1:
             move = game_data.game_data['move'][position_index + 1]
             board.push_san(move)
-    return('test'+str(nr_of_plies))
+    if is_analyze_selected:
+        return('')
+    return(f'All {str(nr_of_plies)} positions analyzed')
 
 @app.callback(
     Output('graph', 'figure'),
@@ -353,7 +367,7 @@ def update_data(selected_value, active_cell):
 @app.callback(
     Output('hidden-div-slider-state', 'children'),
     [Input('slider1', 'value'),
-     Input('generate-data-button', 'children')])
+     Input('generate-data-button', 'title')])
 def update_game_evals(visible, *args):
     Q_values = []
     W_values = []
@@ -362,17 +376,20 @@ def update_game_evals(visible, *args):
     if game_data.game_data is None:
         return(dash.no_update)
     for position_index in game_data.game_data['ply']:
-        root = data_creator.data[position_index]['root']
-        evaluation = root['visible'][visible]['eval']
-        Q = evaluation['Q']
-        W = evaluation['W']
-        D = evaluation['D']
-        L = evaluation['L']
+        if position_index not in data_creator.data:
+            Q, W, D, L = None, None, None, None
+        else:
+            root = data_creator.data[position_index]['root']
+            evaluation = root['visible'][visible]['eval']
+            Q = evaluation['Q']
+            W = evaluation['W']
+            D = evaluation['D']
+            L = evaluation['L']
 
-        #invert W and L for black
-        if not game_data.game_data['turn'][position_index]:
-            W = 100 - W - D
-            L = 100 - L - D
+            #invert W and L for black
+            if not game_data.game_data['turn'][position_index]:
+                W = 100 - W - D
+                L = 100 - L - D
         Q_values.append(Q)
         W_values.append(W)
         D_values.append(D)
