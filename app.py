@@ -17,12 +17,20 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from graph import get_graph_component
-
-APP_CONTAINER_BG = 'rgba(116, 153, 46, 0.2)' #ugly green
-LEFT_CONTAINER_BG = 'rgba(46, 148, 153, 0.2)' #teal
-RIGHT_CONTAINER_BG = 'rgba(212, 57, 181, 0.2)' #pink
-GRAPH_CONTAINER_BG = 'rgba(212, 163, 57, 0.7)' #orange-brown
-CONFIG_CONTAINER_BG = 'rgba(57, 106, 212, 0.2)'  #blue
+DEBUG = False
+if DEBUG:
+    APP_CONTAINER_BG = 'rgba(116, 153, 46, 0.2)' #ugly green
+    LEFT_CONTAINER_BG = 'rgba(46, 148, 153, 0.2)' #teal
+    RIGHT_CONTAINER_BG = 'rgba(212, 57, 181, 0.2)' #pink
+    GRAPH_CONTAINER_BG = 'rgba(212, 163, 57, 0.7)' #orange-brown
+    CONFIG_CONTAINER_BG = 'rgba(57, 106, 212, 0.2)'  #blue
+else:
+    WHITE = 'rgb(255, 255, 255)'
+    APP_CONTAINER_BG = WHITE
+    LEFT_CONTAINER_BG = WHITE
+    RIGHT_CONTAINER_BG = WHITE
+    GRAPH_CONTAINER_BG = WHITE
+    CONFIG_CONTAINER_BG = WHITE
 LEFT_PANE_WIDTH = 84
 RIGHT_PANE_WIDTH = 100 - LEFT_PANE_WIDTH
 GRAPH_PANE_HEIGHT = 60

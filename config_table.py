@@ -12,7 +12,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
 MAX_NUMBER_OF_CONFIGS = 10
-EDITED_CELL_COLOR = 'rgba(255,127,14,0.5)'
+EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 
 class ConfigData:
     def __init__(self):
