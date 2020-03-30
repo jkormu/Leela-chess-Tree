@@ -1,20 +1,8 @@
 # -*- coding: utf-8 -*-
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
-from plotly import subplots
-from data_holders import data_creator, game_data
+
 from config_table import get_config_table
-
-import chess.engine
-
 from pgn import pgn_layout
 from server import app
-
-import dash
-import dash_core_components as dcc
 import dash_html_components as html
 from graph import get_graph_component
 DEBUG = False

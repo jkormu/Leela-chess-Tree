@@ -14,18 +14,18 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 MAX_NUMBER_OF_CONFIGS = 10
 EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 
-class ConfigData:
-    def __init__(self):
-        self.data = pd.DataFrame()
-        self.data_analyzed = pd.DataFrame()
-
-    def update_data(self, data):
-        nr_of_rows = data.shape[0]
-        self.data[:nr_of_rows] = data
-        return(self.is_data_equal_to_analyzed())
-
-    def is_data_equal_to_analyzed(self):
-        return(self.data.equals(self.data_analyzed))
+#class ConfigData:
+#    def __init__(self):
+#        self.data = pd.DataFrame()
+#        self.data_analyzed = pd.DataFrame()
+#
+#    def update_data(self, data):
+#        nr_of_rows = data.shape[0]
+#        self.data[:nr_of_rows] = data
+#        return(self.is_data_equal_to_analyzed())
+#
+#    def is_data_equal_to_analyzed(self):
+#        return(self.data.equals(self.data_analyzed))
 
 
 filter_out_options = ['WeightsFile',
@@ -228,7 +228,10 @@ def copy_table(data):
     return(dash.no_update)
 
 @app.callback(
-    Output("config-table", "data"),
+    [Output("config-table", "data"),
+     Output("slider1", "marks"),
+     Output("slider1", "max"),
+     Output("slider1", "style")],
     [Input("number-of-configs-dropdown", "value")],
     [State("config-table", "dropdown")]
 )
@@ -236,10 +239,15 @@ def set_number_of_rows(nr_of_rows, dd):
     print('DROPDOWN:')
     print(dd)
     print(nr_of_rows)
+    slider_marks = {str(i): str(i+1) for i in range(nr_of_rows)}
+    slider_max = nr_of_rows - 1
+    slider_style = {}
+    if nr_of_rows == 1:
+        slider_style = {"visibility": "hidden"}
     data = config_data.data[:nr_of_rows]
     print(data)
     data = data.to_dict('records')
-    return(data)
+    return(data, slider_marks, slider_max, slider_style)
 
 #if __name__ == '__main__':
 #    app.run_server(debug=True)

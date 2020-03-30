@@ -36,6 +36,21 @@ class ConfigData:
     def is_data_equal_to_analyzed(self):
         return(self.data.equals(self.data_analyzed))
 
+    def get_row(self, row_ind):
+        row = self.data.iloc[row_ind]
+        return(row)
+
+    def get_configurations(self, row_ind, only_non_default=False):
+        row = self.get_row(row_ind)
+        config = {}
+        for option_name in row.index:
+            if option_name.endswith('_default'):
+                continue
+            option_value = row[option_name]
+            if not only_non_default or option_value != row[option_name + '_default']:
+                config = {option_name: option_value}
+        return(config)
+
 class DataCreator:
     def __init__(self, lc0):#, engine_path, weight_path):
         #self.engine_path = engine_path

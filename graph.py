@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly import subplots
-from data_holders import data_creator, game_data
+from data_holders import data_creator, game_data, config_data
 
 from server import app
 
@@ -28,6 +28,58 @@ FONT_FAMILY = 'monospace'
 GRAPH_WIDTH = 84
 PGN_WIDTH = 100 - GRAPH_WIDTH
 
+
+def get_empty_figure():
+    figure = subplots.make_subplots(rows=1, cols=2,
+                                    specs=[[{}, {}]],
+                                    shared_xaxes=True,
+                                    shared_yaxes=False,
+                                    vertical_spacing=0.001)
+    layout = go.Layout(
+        annotations=[
+            dict(
+                x=1.025,
+                y=0.5,
+                showarrow=False,
+                text='Nodes per depth',
+                xref='paper',
+                yref='paper',
+                textangle=90,
+                font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
+            ),
+        ],
+        xaxis={'title': 'Visit distribution',
+               'range': [0, 1],
+               'zeroline': False,
+               'showgrid': False,
+               'domain': [0.0, 0.91],
+               'tickvals': [],
+               'ticktext': []},
+        yaxis={'title': 'Depth',
+               'range': [-1, 10],
+               'ticktext': [str(i) for i in range(10)],
+               'tickvals': [i for i in range(10)][::-1],
+               'zeroline': False,
+               'showgrid': True,
+               'gridcolor': GRID_COLOR},
+        yaxis2={'title': '',
+                'range': [0, 1],
+                'showticklabels': True,
+                'side': 'left',
+                'ticktext': [0],
+                'tickvals': [i for i in range(10)][::-1]},
+        xaxis2={'zeroline': False,
+                'showgrid': False,
+                'showticklabels': False,
+                'domain': [0.93, 1.0],
+                'range': [-1, 10]},
+        hovermode='closest',
+        plot_bgcolor=PLOT_BACKGROUND_COLOR,
+        # height=900,
+        margin={'t': 0, 'b': 0}
+    )
+    figure['layout'].update(layout)
+    return(figure)
 
 
 def get_data(data, visible):
@@ -67,7 +119,7 @@ def get_data(data, visible):
 
     x_odd, y_odd = zip(*points_odd) if points_odd != [] else ([], [])
     x_even, y_even = zip(*points_even) if points_even != [] else ([], [])
-    x_root, y_root = zip(*points_root)
+    x_root, y_root = zip(*points_root) if points_root != [] else ([], [])
 
     return (x_odd, y_odd, node_text_odd,
             x_even, y_even, node_text_even,
@@ -78,7 +130,7 @@ def get_data(data, visible):
 
 def get_graph_component():
     graph_component = html.Div(
-        children=[html.Div(id='graph-container',
+        children=[html.Div(id='config_info'), html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
@@ -176,10 +228,16 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     return(f'All {str(nr_of_plies)} positions analyzed')
 
 @app.callback(
-    Output('graph', 'figure'),
+    [Output('graph', 'figure'),
+     Output('config_info', 'children')],
     [Input('slider1', 'value'),
      Input('move-table', 'active_cell')])
 def update_data(selected_value, active_cell):
+
+    configurations = config_data.get_configurations(selected_value, only_non_default=True)
+    print('KONFIGURAATIOT', configurations)
+    tooltip = ','.join([f'{option}: {configurations[option]}' for option in configurations])
+
     if active_cell is None:
         position_index = 0
     else:
@@ -187,58 +245,15 @@ def update_data(selected_value, active_cell):
 
     #Show empty graph if position is not yet analyzed
     if position_index not in data_creator.data:
-        figure = subplots.make_subplots(rows=1, cols=2,
-                                        specs=[[{}, {}]],
-                                        shared_xaxes=True,
-                                        shared_yaxes=False,
-                                        vertical_spacing=0.001)
-        layout = go.Layout(
-            annotations=[
-                dict(
-                    x=1.025,
-                    y=0.5,
-                    showarrow=False,
-                    text='Nodes per depth',
-                    xref='paper',
-                    yref='paper',
-                    textangle=90,
-                    font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
-                ),
-            ],
-            xaxis={'title': 'Visit distribution',
-                   'range': [0, 1],
-                   'zeroline': False,
-                   'showgrid': False,
-                   'domain': [0.0, 0.91],
-                   'tickvals': [],
-                   'ticktext': []},
-            yaxis={'title': 'Depth',
-                   'range': [-1, 10],
-                   'ticktext': [str(i) for i in range(10)],
-                   'tickvals': [i for i in range(10)][::-1],
-                   'zeroline': False,
-                   'showgrid': True,
-                   'gridcolor': GRID_COLOR},
-            yaxis2={'title': '',
-                    'range': [0, 1],
-                    'showticklabels': True,
-                    'side': 'left',
-                    'ticktext': [0],
-                    'tickvals': [i for i in range(10)][::-1]},
-            xaxis2={'zeroline': False,
-                    'showgrid': False,
-                    'showticklabels': False,
-                    'domain': [0.93, 1.0],
-                    'range': [-1, 10]},
-            hovermode='closest',
-            plot_bgcolor=PLOT_BACKGROUND_COLOR,
-            # height=900,
-            margin={'t': 0, 'b': 0}
-        )
-        figure['layout'].update(layout)
-        return(figure)
+        return(get_empty_figure(), tooltip)
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
+
+    #if there is no root node, then slider is set to value (configuration set) that has not been analyzed yet
+    if x_root == []:
+        return(get_empty_figure(), tooltip)
+
+
 
     trace_node_odd = go.Scatter(dict(x=x_odd, y=y_odd),
                                 mode='markers',
@@ -369,7 +384,7 @@ def update_data(selected_value, active_cell):
     figure.append_trace(trace_depth_histogram, 1, 2)
     figure['layout'].update(layout)
 
-    return(figure)
+    return(figure, tooltip)
 
 @app.callback(
     Output('hidden-div-slider-state', 'children'),
