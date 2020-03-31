@@ -143,7 +143,7 @@ def get_graph_component():
                                                 value=0,
                                                 marks={str(i): str(i) for i in range(2)},
                                                 step=None,
-                                                updatemode='drag'),
+                                                ),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', hidden='hidden', children='test')
                                      ],
                            style={'height': '100%', 'width': '100%', 'float': 'left'}
@@ -165,9 +165,6 @@ def get_graph_component():
      State('nodes_input', 'value')]
 )
 def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes):
-    #data = pd.DataFrame(data)
-    print('TIMESTAMP', n_clicks_selected_timestamp)
-    print('TIMESTAMP_ALL', n_clicks_all_timestamp)
     if n_clicks_selected_timestamp is None:
         n_clicks_selected_timestamp = -1
     if n_clicks_all_timestamp is None:
@@ -183,7 +180,6 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     is_analyze_selected = False
     if n_clicks_selected_timestamp > n_clicks_all_timestamp:
         is_analyze_selected = True
-        print('ACTIVEEEEEEEEEEEEEEEEEEE', active_cell)
         position_indices = [active_cell['row']]
     else:
         position_indices = data['ply']
@@ -208,8 +204,11 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     for test_i in range(len(marks)):
         board.set_fen(game_data.fen)
         for position_index in position_indices:
+            configurations = config_data.get_configurations(test_i)
+            print(configurations)
             print('running position', position_index)
-            data_creator.run_search(position_index, test_arguments[test_i], board, nodes)
+            #data_creator.run_search(position_index, test_arguments[test_i], board, nodes)
+            data_creator.run_search(position_index, configurations, board, nodes)
             if position_index < nr_of_plies - 1:
                 move = game_data.game_data['move'][position_index + 1]
                 board.push_san(move)
@@ -236,7 +235,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
      Input('move-table', 'active_cell')])
 def update_data(selected_value, active_cell):
     configurations = config_data.get_configurations(selected_value, only_non_default=True)
-    print('KONFIGURAATIOT', configurations)
+    #print('KONFIGURAATIOT', configurations)
     tooltip = ','.join([f'{option}: {configurations[option]}' for option in configurations])
 
     if active_cell is None:

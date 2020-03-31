@@ -50,7 +50,6 @@ filter_out_options = ['WeightsFile',
                       'UCI_Chess960',
                       'UCI_ShowWDL',
                       'ConfigFile',
-                      'SmartPruningFactor',
                       'RamLimitMb',
                       'MoveOverheadMs',
                       'Slowmover',
@@ -86,7 +85,8 @@ misc = ['CacheHistoryLength',
         'StickyEndgames']
 
 selfplay_parameters = ['KLDGainAverageInterval',
-                       'MinimumKLDGainPerNode']
+                       'MinimumKLDGainPerNode',
+                       'SmartPruningFactor']
 
 groups = {'cpuct': cpuct,
           'fpu': fpu,
@@ -94,7 +94,7 @@ groups = {'cpuct': cpuct,
           'search enhancements': search_enhancements,
           'draw score': draw_score,
           'misc': misc,
-          'self-play parameters': selfplay_parameters,
+          'early stop': selfplay_parameters,
           'threading and batching': threading_and_batching}
 
 column_order = cpuct + fpu + policy_temp + search_enhancements + draw_score + misc + selfplay_parameters + threading_and_batching
@@ -123,7 +123,8 @@ def create_column(option, df_dict, columns, dropdowns, category_groups):
     default = option.default
     if option_type == 'check':
         default = str(default)
-    default = try_to_round(default, 3)
+    if option_type != "spin":
+        default = try_to_round(default, 3) #TODO: don't round here, rather edit datatable formatting
     name = option.name
     df_dict[name] = [default]
     df_dict[name+'_default'] = [default]
@@ -161,7 +162,7 @@ def get_config_table():
     df = pd.concat([df]*MAX_NUMBER_OF_CONFIGS, ignore_index=True)
     config_data.data = df
 
-    settings_bar = html.Div(style={'display': 'flex', 'background-color': 'rgb(116, 153, 46)'})
+    settings_bar = html.Div(style={'display': 'flex'})#'background-color': 'rgb(116, 153, 46)'
 
     nodes_input = html.Div(children=[html.Label('Nodes: '),
                                      dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1, inputMode='numeric',

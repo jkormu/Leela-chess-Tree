@@ -42,13 +42,14 @@ class ConfigData:
 
     def get_configurations(self, row_ind, only_non_default=False):
         row = self.get_row(row_ind)
+        print('config row', row)
         config = {}
         for option_name in row.index:
             if option_name.endswith('_default'):
                 continue
             option_value = row[option_name]
             if not only_non_default or option_value != row[option_name + '_default']:
-                config = {option_name: option_value}
+                config[option_name] = option_value
         return(config)
 
 class DataCreator:
