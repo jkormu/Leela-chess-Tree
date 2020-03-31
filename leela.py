@@ -16,6 +16,11 @@ class leela_engine:
             self.configuration[opt] = value
 
     def play(self, board, nodes):
+        if board.is_game_over():
+            #TODO: return only root node, manually crete one
+            #currently hits error if game over position
+            pass
+
         self.analyzed_count += 1
         start = time.time()
         self.lc0.play(board, chess.engine.Limit(nodes=nodes), game=self.analyzed_count)

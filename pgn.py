@@ -8,14 +8,28 @@ import pandas as pd
 import chess
 import chess.svg
 from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
 
 import chess.pgn
 import base64
 from server import app
 
 from data_holders import data_creator, game_data
+from dash_table.Format import Format, Symbol, Scheme
 
+COMPONENT_WIDTH = '98%'
+WHITE_WIN_COLOR = 'rgb(255, 255, 255)'
+DRAW_COLOR ='rgb(154, 154, 154)'
+BLACK_WIN_COLOR = 'rgb(0, 0, 0)'
 SELECTED_ROW_COLOR = 'rgba(23,178,207,0.5)'
+BAR_LINE_COLOR = 'rgb(100, 100, 100)'
+WHITE_WIN_BAR_LINE_COLOR = BAR_LINE_COLOR#'rgb(0, 0, 0)'
+DRAW_BAR_LINE_COLOR = BAR_LINE_COLOR#'rgb(0, 0, 0)'
+BLACK_WIN_BAR_LINE_COLOR = BAR_LINE_COLOR#'rgb(255, 255, 255)'
+BAR_LINE_WIDTH = 1
+RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
+SHOW_BOARD_COORDINATES = False
+
 
 di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
 df = pd.DataFrame(di)
@@ -24,6 +38,65 @@ svg_str = str(chess.svg.board(board, size=400))
 svg_byte = svg_str.encode()
 encoded = base64.b64encode(svg_byte)
 svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
+
+
+
+
+def get_score_bar_figure(W, D, B):
+    W = go.Bar(name='White win-%', y=[''], x=[W],
+               orientation='h',
+               marker=dict(color=WHITE_WIN_COLOR,
+                           line=dict(color=WHITE_WIN_BAR_LINE_COLOR,
+                                     width=BAR_LINE_WIDTH)))
+               #marker_color=WHITE_WIN_COLOR,)
+               #orientation='h')
+    D = go.Bar(name='Draw-%', y=[''], x=[D],
+               orientation='h',
+               marker=dict(color=DRAW_COLOR,
+                           line=dict(color=DRAW_BAR_LINE_COLOR,
+                                     width=BAR_LINE_WIDTH)))
+              # orientation='h')
+    B = go.Bar(name='Black win-%', y=[''], x=[B],
+               orientation='h',
+               marker=dict(color=BLACK_WIN_COLOR,
+                           line=dict(color=BLACK_WIN_BAR_LINE_COLOR,
+                                     width=BAR_LINE_WIDTH)))
+              # orientation='h')
+    fig = go.Figure(data=[W, D, B])
+    #Change the bar mode
+    xaxis = {'range': [0,100],
+             #'zeroline': False,
+             'showgrid': False,
+             #'ticks': 'outside',
+             'showticklabels': False}
+    fig.update_layout(barmode='stack',
+                      showlegend=False,
+                      margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
+                      xaxis=xaxis,
+                      #height=50,
+                      plot_bgcolor='rgb(255, 255, 255)')
+    return(fig)
+
+def score_bar():
+    fig = get_score_bar_figure(20, 30, 50)
+
+    #the height of the component is set relative to it's width
+    #this is achieved by the padding hack from
+    #https://stackoverflow.com/questions/8894506/can-i-scale-a-divs-height-proportionally-to-its-width-using-css
+    component = dcc.Graph(id='score-bar',
+                          figure=fig,
+                          style={'width': '100%','height': '100%',
+                                 'position': 'absolute', 'left': 0},#{'height': '50px'},#, 'marginTop': '0'},
+                          config={'displayModeBar': False}
+                          )
+    container = html.Div(style={
+        'position': 'relative',
+        'width': '100%',
+        'padding-bottom': RELATIVE_HEIGHT_OF_SCORE_BAR,
+        'float': 'left',
+        'height': 0})
+    container.children = component
+    return(container)
 
 
 def pgn_layout():
@@ -48,17 +121,19 @@ def pgn_layout():
             multiple=False
         )
     img = html.Img(id='board', src=svg)
-    upload_out_put = html.Div(id='output-data-upload')
+    upload_output = html.Div(id='output-data-upload')
 
     buttons = html.Div(children=[
         html.Button('Analyze all',
                     id='generate-data-button',
                     title='Load pgn to analyze',
-                    style={'flex': '1', 'padding': '5px', 'margin': '5px'}),
+                    style={'flex': '1', 'padding': '5px', 'margin-right': '5px',
+                           'margin-top': '8px', 'margin-bottom': '5px'}),
         html.Button('Analyze selected',
                     id='generate-data-selected-button',
                     title='',
-                    style={'flex': '1', 'padding': '5px', 'margin': '5px'})],
+                    style={'flex': '1', 'padding': '5px', 'margin-left': '5px',
+                           'margin-top': '8px', 'margin-bottom': '5px'})],
     style={'display': 'flex', 'flex-direction': 'row'})
 
     data_table = dash_table.DataTable(
@@ -67,9 +142,9 @@ def pgn_layout():
                      {"name": 'ply', "id": 'ply'},
                      {"name": 'move', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
-                     {"name": 'W-%', "id": 'W'},
-                     {"name": 'D-%', "id": 'D'},
-                     {"name": 'B-%', "id": 'L'},
+                     {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+                     {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+                     {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": '', "id": 'dummy_right'}],
             data=df.to_dict('records'),
             fixed_rows={'headers': True, 'data': 0},
@@ -111,8 +186,8 @@ def pgn_layout():
         )
     container_table = html.Div(children=data_table,
     style={'flex': '1', 'overflow': 'auto',})
-    container = html.Div(style={'height': '100%', 'width': '100%', 'display': 'flex', 'flex-direction': 'column',})
-    content = [upload, img, upload_out_put, buttons, container_table]#container_table]
+    container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column',})
+    content = [upload, img, score_bar(), upload_output, buttons, container_table]#container_table]
     container.children = content
     return(container)
 
@@ -196,7 +271,7 @@ def update_board_imgage(active_cell):
     for i in range(1, selected_row_ids + 1):
         move = game_data.game_data['move'][i]
         last_move = board.push_san(move)
-    svg_str = str(chess.svg.board(board, size=200, lastmove=last_move))
+    svg_str = str(chess.svg.board(board, size=200, lastmove=last_move, coordinates=SHOW_BOARD_COORDINATES))
     svg_str = svg_str.replace('height="200"', 'height="100%"')
     svg_str = svg_str.replace('width="200"', 'width="100%"')
     svg_byte = svg_str.encode()
@@ -250,6 +325,25 @@ def set_state_of_analyze_selected_button(active_cell):
         disabled = False
         title = 'Analyze selected position'
     return(disabled, title)
+
+@app.callback(
+    [Output('score-bar', 'figure'),
+     Output('score-bar', 'style')],
+    [Input('hidden-div-slider-state', 'children'),
+     Input('move-table', 'active_cell')])
+def update_score_bar(value, active_cell):
+    style = {'width': '100%','height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
+    print('SLIDER VALUE', value)
+    if active_cell is None or game_data.game_data is None or active_cell['row'] not in data_creator.data:#game_data.game_data['ply']:
+        style['visibility'] = 'hidden'
+        return(dash.no_update, style)
+
+    row = active_cell['row']
+    W = game_data.game_data['W'][row]
+    D = game_data.game_data['D'][row]
+    B = game_data.game_data['L'][row]
+    fig = get_score_bar_figure(W, D, B)
+    return(fig, style)
 
 #if __name__ == '__main__':
 #    app.run_server(debug=True)

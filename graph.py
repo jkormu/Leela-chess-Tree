@@ -233,7 +233,6 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     [Input('slider1', 'value'),
      Input('move-table', 'active_cell')])
 def update_data(selected_value, active_cell):
-
     configurations = config_data.get_configurations(selected_value, only_non_default=True)
     print('KONFIGURAATIOT', configurations)
     tooltip = ','.join([f'{option}: {configurations[option]}' for option in configurations])

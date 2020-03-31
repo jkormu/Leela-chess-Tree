@@ -105,6 +105,7 @@ class DataCreator:
         #print('starting search, nodes= ', str(nodes))
         #print(board)
         start = time.time()
+
         g = self.lc0.play(board, nodes)
         #print('search completed in time: ', time.time() - start)
         #g = nx.readwrite.gml.read_gml('tree.gml', label='id')

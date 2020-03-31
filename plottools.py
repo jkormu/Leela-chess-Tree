@@ -173,14 +173,14 @@ def get_best_edge(G, edges):
         return(edge)
 
 #for Dash implementation
-def get_WDL(q,d):
+def get_WDL(q,d, precision = 5):
     if d is None:
-        return(None, round(100 * d, 1), None)
+        return(round(100*(0.5*(1+q)), precision), None, round(100*(0.5*(1-q))))
     l = 0.5*(1-q-d)
     w = 0.5*(1+q-d)
-    w = round(100*w)
-    l = round(100 * l)
-    d = round(100 * d)
+    w = round(100* w, precision)
+    l = round(100 * l, precision)
+    d = round(100 * d, precision)
     return(w,d,l)
 
 #for Dash implementation
