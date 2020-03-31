@@ -173,29 +173,26 @@ def get_config_table():
                             value=2, debounce=False),
                                      ])
 
-    number_of_configs_dropdown = html.Div(children=[html.Label('#configurations '),
-                                                    dcc.Dropdown(
-        id='number-of-configs-input',
-        options=[
-            {'label': i, 'value': i} for i in range(1, MAX_NUMBER_OF_CONFIGS + 1)
-        ],
-        value=2,
-        clearable=False,
-        optionHeight=25,
-        style={'width': '50px', 'display': 'inline-block'},#, 'height': '30px', 'padding': 0}#'padding': 0}, 'height': '30px'
-                                                    )
-                                                    ],
-                                          style={'display': 'flex',
-                                                 'flex-direction': 'row',
-                                                 'align-items:': 'flex-start',
-                                                 #'height': '30px',
-                                                 }
-                                          )
+    #number_of_configs_dropdown = html.Div(children=[html.Label('#configurations '),
+    #                                                dcc.Dropdown(
+    #    id='number-of-configs-input',
+    #    options=[
+    #        {'label': i, 'value': i} for i in range(1, MAX_NUMBER_OF_CONFIGS + 1)
+    #    ],
+    #    value=2,
+    #    clearable=False,
+    #    optionHeight=25,
+    #    style={'width': '50px', 'display': 'inline-block'},#, 'height': '30px', 'padding': 0}#'padding': 0}, 'height': '30px'
+    #                                                )
+    #                                                ],
+    #                                      style={'display': 'flex',
+    #                                             'flex-direction': 'row',
+    #                                             'align-items:': 'flex-start',
+    #                                             #'height': '30px',
+    #                                             }
+    #                                      )
 
     settings_bar.children = [number_of_configs_input, nodes_input]
-
-    #settings_bar = html.Div(style={'display': 'flex'})
-
 
     config_table = html.Div([
         settings_bar,

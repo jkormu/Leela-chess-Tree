@@ -7,6 +7,7 @@ import io
 import pandas as pd
 import chess
 import chess.svg
+import python_chess_customized_svg as svg
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 
@@ -34,10 +35,10 @@ SHOW_BOARD_COORDINATES = False
 di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
 df = pd.DataFrame(di)
 board = chess.Board()
-svg_str = str(chess.svg.board(board, size=400))
+svg_str = str(svg.board(board, size=400))
 svg_byte = svg_str.encode()
 encoded = base64.b64encode(svg_byte)
-svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
+svg_board = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 
 
@@ -120,7 +121,7 @@ def pgn_layout():
             # Only one pgn allowed
             multiple=False
         )
-    img = html.Img(id='board', src=svg)
+    img = html.Img(id='board', src=svg_board)
     upload_output = html.Div(id='output-data-upload')
 
     buttons = html.Div(children=[
@@ -272,13 +273,13 @@ def update_board_imgage(active_cell):
     for i in range(1, selected_row_ids + 1):
         move = game_data.game_data['move'][i]
         last_move = board.push_san(move)
-    svg_str = str(chess.svg.board(board, size=200, lastmove=last_move, coordinates=SHOW_BOARD_COORDINATES))
+    svg_str = str(svg.board(board, size=200, lastmove=last_move, coordinates=SHOW_BOARD_COORDINATES))
     svg_str = svg_str.replace('height="200"', 'height="100%"')
     svg_str = svg_str.replace('width="200"', 'width="100%"')
     svg_byte = svg_str.encode()
     encoded = base64.b64encode(svg_byte)
-    svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
-    return(svg)
+    svg_board = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
+    return(svg_board)
 
 @app.callback(
     #Output('move-table', 'data'),

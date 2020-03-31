@@ -89,6 +89,10 @@ class DataCreator:
     #def reset(self):
     #    self.__init__(self.engine_path, self.weight_path)
 
+    def get_best_moves(self, position_index, slider_value, type, max_moves):
+        children = gt.get_children(self.G_list[position_index][slider_value], 'root')
+
+
     def run_search(self, position_index, parameters, board, nodes):
         self.lc0.configure(parameters)
 
