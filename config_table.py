@@ -167,10 +167,14 @@ def get_config_table():
                                      dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1, inputMode='numeric',
                             value=200),
                                      ])
+    number_of_configs_input = html.Div(children=[html.Label('Configurations: '),
+                                     dcc.Input(id='number-of-configs-input', type="number", min=1, max=10, step=1, inputMode='numeric',
+                            value=2, debounce=False),
+                                     ])
 
     number_of_configs_dropdown = html.Div(children=[html.Label('#configurations '),
                                                     dcc.Dropdown(
-        id='number-of-configs-dropdown',
+        id='number-of-configs-input',
         options=[
             {'label': i, 'value': i} for i in range(1, MAX_NUMBER_OF_CONFIGS + 1)
         ],
@@ -187,7 +191,7 @@ def get_config_table():
                                                  }
                                           )
 
-    settings_bar.children = [number_of_configs_dropdown, nodes_input]
+    settings_bar.children = [number_of_configs_input, nodes_input]
 
     #settings_bar = html.Div(style={'display': 'flex'})
 
@@ -230,7 +234,7 @@ def get_config_table():
 @app.callback(
     Output("config-table-dummy-div", "children"),
     [Input("config-table", "data")],
-#    [State("number-of-configs-dropdown", "value")]
+#    [State("number-of-configs-input", "value")]
 )
 def copy_table(data):
     data = pd.DataFrame(data)
@@ -243,13 +247,19 @@ def copy_table(data):
      Output("slider1", "marks"),
      Output("slider1", "max"),
      Output("slider1", "style")],
-    [Input("number-of-configs-dropdown", "value")],
+    [Input("number-of-configs-input", "value")],
     [State("config-table", "dropdown")]
 )
 def set_number_of_rows(nr_of_rows, dd):
     print('DROPDOWN:')
     print(dd)
     print(nr_of_rows)
+    try:
+        nr_of_rows = int(nr_of_rows)
+        nr_of_rows = min(MAX_NUMBER_OF_CONFIGS, nr_of_rows)
+        nr_of_rows = max(1, nr_of_rows)
+    except:
+        return(dash.no_update, dash.no_update, dash.no_update, dash.no_update)
     slider_marks = {str(i): str(i+1) for i in range(nr_of_rows)}
     slider_max = nr_of_rows - 1
     slider_style = {}

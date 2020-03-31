@@ -177,7 +177,7 @@ def get_config_table(lc0_engine):
 
     number_of_configs_dropdown = html.Div(children=[html.P(''),
                                                     dcc.Dropdown(
-        id='number-of-configs-dropdown',
+        id='number-of-configs-input',
         options=[
             {'label': i, 'value': i} for i in range(1, MAX_NUMBER_OF_CONFIGS + 1)
         ],
@@ -259,7 +259,7 @@ app.layout = html.Div(
 @app.callback(
     Output("config-table-dummy-div", "children"),
     [Input("config-table", "data")],
-#    [State("number-of-configs-dropdown", "value")]
+#    [State("number-of-configs-input", "value")]
 )
 def copy_table(data):
     data = pd.DataFrame(data)
@@ -269,7 +269,7 @@ def copy_table(data):
 
 @app.callback(
     Output("config-table", "data"),
-    [Input("number-of-configs-dropdown", "value")]
+    [Input("number-of-configs-input", "value")]
 )
 def set_number_of_rows(nr_of_rows):
     print(nr_of_rows)
