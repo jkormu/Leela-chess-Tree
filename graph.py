@@ -158,11 +158,13 @@ def get_graph_component():
 @app.callback(
     Output('generate-data-button', 'title'),
     [Input('generate-data-button', 'n_clicks_timestamp'),
-     Input('generate-data-selected-button', 'n_clicks_timestamp')],
+     Input('generate-data-selected-button', 'n_clicks_timestamp'),
+     ],
     [State('slider1', 'marks'),
-     State('move-table', 'active_cell')]
+     State('move-table', 'active_cell'),
+     State('nodes_input', 'value')]
 )
-def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell):
+def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes):
     #data = pd.DataFrame(data)
     print('TIMESTAMP', n_clicks_selected_timestamp)
     print('TIMESTAMP_ALL', n_clicks_all_timestamp)
@@ -199,7 +201,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
               'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
               'SmartPruningFactor': 0.0}
 
-    nodes = 200
+    nodes = nodes
     test_arguments = [param1, param2]
     board = game_data.board
     data_creator.G_list = {}

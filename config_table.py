@@ -161,8 +161,14 @@ def get_config_table():
     df = pd.concat([df]*MAX_NUMBER_OF_CONFIGS, ignore_index=True)
     config_data.data = df
 
+    settings_bar = html.Div(style={'display': 'flex', 'background-color': 'rgb(116, 153, 46)'})
 
-    number_of_configs_dropdown = html.Div(children=[html.P(''),
+    nodes_input = html.Div(children=[html.Label('Nodes: '),
+                                     dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1, inputMode='numeric',
+                            value=200),
+                                     ])
+
+    number_of_configs_dropdown = html.Div(children=[html.Label('#configurations '),
                                                     dcc.Dropdown(
         id='number-of-configs-dropdown',
         options=[
@@ -170,20 +176,25 @@ def get_config_table():
         ],
         value=2,
         clearable=False,
-        style={'width': '50px'},
+        optionHeight=25,
+        style={'width': '50px', 'display': 'inline-block'},#, 'height': '30px', 'padding': 0}#'padding': 0}, 'height': '30px'
                                                     )
                                                     ],
                                           style={'display': 'flex',
                                                  'flex-direction': 'row',
-                                                 'align-items:': 'flex-end'}
+                                                 'align-items:': 'flex-start',
+                                                 #'height': '30px',
+                                                 }
                                           )
 
+    settings_bar.children = [number_of_configs_dropdown, nodes_input]
 
-
+    #settings_bar = html.Div(style={'display': 'flex'})
 
 
     config_table = html.Div([
-        number_of_configs_dropdown,
+        settings_bar,
+        #number_of_configs_dropdown,
         dash_table.DataTable(
             id='config-table',
             data=df.to_dict('records'),

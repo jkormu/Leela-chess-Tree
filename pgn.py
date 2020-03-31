@@ -19,7 +19,7 @@ from dash_table.Format import Format, Symbol, Scheme
 
 COMPONENT_WIDTH = '98%'
 WHITE_WIN_COLOR = 'rgb(255, 255, 255)'
-DRAW_COLOR ='rgb(154, 154, 154)'
+DRAW_COLOR ='rgb(184, 184, 184)'
 BLACK_WIN_COLOR = 'rgb(0, 0, 0)'
 SELECTED_ROW_COLOR = 'rgba(23,178,207,0.5)'
 BAR_LINE_COLOR = 'rgb(100, 100, 100)'
@@ -152,7 +152,8 @@ def pgn_layout():
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
             # row_selectable='single',
             style_as_list_view=True,
-            style_table={'width': '100%', 'margin-left': '0px', 'overflowY': 'auto'},  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#'height': '750px'
+            style_table={'width': '100%', 'margin-left': '0px', 'overflowY': 'auto',
+                         'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'},  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#'height': '750px'
             style_data_conditional=[
                 {
                     'if': {'row_index': 'odd'},
@@ -185,8 +186,8 @@ def pgn_layout():
 
         )
     container_table = html.Div(children=data_table,
-    style={'flex': '1', 'overflow': 'auto',})
-    container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column',})
+    style={'flex': '1', 'overflow': 'auto'})
+    container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
     content = [upload, img, score_bar(), upload_output, buttons, container_table]#container_table]
     container.children = content
     return(container)

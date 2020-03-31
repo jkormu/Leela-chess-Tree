@@ -48,7 +48,8 @@ config_container.children = [config_component]
 left_container.children = [graph_container, config_container]
 
 right_container = html.Div(
-    style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'background-color': RIGHT_CONTAINER_BG}
+    style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'background-color': RIGHT_CONTAINER_BG,
+           'margin-left': 5}
 )
 
 right_container.children = [pgn_component]
