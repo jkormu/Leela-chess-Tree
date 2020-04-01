@@ -184,7 +184,9 @@ def pgn_layout():
             # row_selectable='single',
             style_as_list_view=True,
             style_table={'width': '100%', 'margin-left': '0px', 'overflowY': 'auto',
-                         'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'},  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#'height': '750px'
+                         #'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}',
+                         #'box-sizing': 'border-box', 'display:': 'inline-block'
+                         },  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#'height': '750px'
             style_data_conditional=[
                 {
                     'if': {'row_index': 'odd'},
@@ -216,8 +218,8 @@ def pgn_layout():
             css=[{"selector": "table", "rule": "width: 100%;"},{"selector": ".dash-spreadsheet.dash-freeze-top, .dash-spreadsheet .dash-virtualized", "rule": "max-height: none;"}],
 
         )
-    container_table = html.Div(children=data_table,
-    style={'flex': '1', 'overflow': 'auto'})
+    container_table = html.Div(html.Div(children=data_table, style={'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'}),
+    style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
     content = [upload, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table]
     container.children = content
