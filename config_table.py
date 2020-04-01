@@ -177,7 +177,7 @@ def get_config_table():
     df = pd.concat([df]*MAX_NUMBER_OF_CONFIGS, ignore_index=True)
     config_data.data = df
 
-    settings_bar = html.Div(style={'display': 'flex'})#'background-color': 'rgb(116, 153, 46)'
+    #'background-color': 'rgb(116, 153, 46)'
 
     nodes_input = html.Div(children=[html.Label('Nodes: '),
                                      dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1, inputMode='numeric',
@@ -206,11 +206,11 @@ def get_config_table():
     #                                             #'height': '30px',
     #                                             }
     #                                      )
-
+    settings_bar = html.Div(style={'display': 'flex'})
     settings_bar.children = [number_of_configs_input, nodes_input]
 
     config_table = html.Div([
-        settings_bar,
+        #settings_bar,
         #number_of_configs_dropdown,
         dash_table.DataTable(
             id='config-table',
@@ -227,18 +227,20 @@ def get_config_table():
             } for col in df.columns],
             merge_duplicate_headers=True,
             style_cell={'textAlign': 'center'},
+            style_table={'overflowX': 'auto', 'padding-bottom': '6em'}
         ),
         html.Div([html.Br() for _ in range(4)]),
         #html.Div('Dummy2 to take space')
     ],
-        style={'width': '100%', 'height': '100%', 'overflowX': 'auto'})
+        style={'width': '100%', 'height': '100%'})
 
     config_component = html.Div([
         #number_of_configs_dropdown,
+        settings_bar,
         config_table,
         html.Div(id='config-table-dummy-div'),
         ],
-        style={'width': '100%'})
+        style={'width': '100%', 'display': 'flex', 'flex-direction': 'column'})
 
 
     return(config_component)
