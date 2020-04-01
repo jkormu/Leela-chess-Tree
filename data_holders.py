@@ -22,6 +22,13 @@ class GameData:
         self.board = chess.Board()
         self.game_data = None
         self.fen = self.board.fen()
+    def set_board_position(self, position_index):
+        self.reset_board()
+        for move in self.game_data['move'][1:position_index + 1]:
+            self.board.push_san(move)
+    def reset_board(self):
+        self.board.set_fen(self.fen)
+
 
 class ConfigData:
     def __init__(self):
@@ -42,7 +49,7 @@ class ConfigData:
 
     def get_configurations(self, row_ind, only_non_default=False):
         row = self.get_row(row_ind)
-        print('config row', row)
+        #print('config row', row)
         config = {}
         for option_name in row.index:
             if option_name.endswith('_default'):
@@ -123,27 +130,9 @@ class DataCreator:
 
     def run_search(self, position_index, parameters, board, nodes):
         self.lc0.configure(parameters)
-
-            #print('new parameter', parameters)
-            #print('old parameter', self.parameters)
-
-            #try:
-            #    self.lc0.engine.quit()
-            #except:
-            #    pass
-            #self.lc0 = leela(self.args + parameters)
-            #self.parameters = parameters
-        #else:
-        #    self.lc0.protocol.send_line('ucinewgame')
-        #print('starting search, nodes= ', str(nodes))
-        #print(board)
         start = time.time()
-
         g = self.lc0.play(board, nodes)
-        #print('search completed in time: ', time.time() - start)
-        #g = nx.readwrite.gml.read_gml('tree.gml', label='id')
-        #os.remove('tree.gml')
-
+        print('search completed in time: ', time.time() - start)
         if position_index in self.G_list:
             self.G_list[position_index].append(g)
         else:
@@ -169,12 +158,12 @@ class DataCreator:
         node_counts = []
 
         root = gt.get_root(G_merged)  # X-label
-        root_childern = list(gt.get_children(G_merged, root))  # X-label
-        root_childern.sort(key=lambda n: pos[n][0])  # X-label
+        root_children = list(gt.get_children(G_merged, root))  # X-label
+        root_children.sort(key=lambda n: pos[n][0])  # X-label
         x_labels = []  # X-label
-        x_label_vals = list(np.linspace(0, 1, len(root_childern)))
+        x_label_vals = list(np.linspace(0, 1, len(root_children)))
         move_names = []
-        for child in root_childern:
+        for child in root_children:
             for G in G_list:
                 if child in G:
                     move_names.append(G.nodes[child]['move'])
@@ -190,7 +179,7 @@ class DataCreator:
             edges = G.out_edges(root)
             best_move = pt.get_best_edge(G, edges)[1]
 
-            for j, child in enumerate(root_childern):  # X-label
+            for j, child in enumerate(root_children):  # X-label
                 if best_move == move_names[j]:
                     val = '<a href="" style="color: ' + BEST_MOVE_COLOR + '"> <b>' + move_names[j] + '</b>' + '<br>'
                 else:

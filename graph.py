@@ -29,7 +29,7 @@ GRAPH_WIDTH = 84
 PGN_WIDTH = 100 - GRAPH_WIDTH
 
 
-def get_empty_figure():
+def empty_figure():
     figure = subplots.make_subplots(rows=1, cols=2,
                                     specs=[[{}, {}]],
                                     shared_xaxes=True,
@@ -164,6 +164,7 @@ def get_graph_component():
      State('move-table', 'active_cell'),
      State('nodes_input', 'value')]
 )
+
 def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes):
     if n_clicks_selected_timestamp is None:
         n_clicks_selected_timestamp = -1
@@ -188,42 +189,30 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
     data_creator.args = [engine, '--weights=' + net]
-    #param1 = ['--cpuct=2.147', '--minibatch-size=1', '--policy-temp-decay=-0.02931', '--policy-softmax-temp=1.30958', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
-    #param2 = ['--cpuct=4.147', '--minibatch-size=1', '--smart-pruning-factor=0.0', '--threads=1', '--max-collision-events=1', '--max-collision-visits=1']
-    param1 = {'CPuct': 2.147, 'MinibatchSize': 1, 'Threads': 1,
-              'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
-              'SmartPruningFactor': '0.0'}
-    param2 = {'CPuct': 4.147, 'MinibatchSize': 1, 'Threads': 1,
-              'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
-              'SmartPruningFactor': 0.0}
+
+    #param1 = {'CPuct': 2.147, 'MinibatchSize': 1, 'Threads': 1,
+    #          'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
+    #          'SmartPruningFactor': '0.0'}
+    #param2 = {'CPuct': 4.147, 'MinibatchSize': 1, 'Threads': 1,
+    #          'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
+    #          'SmartPruningFactor': 0.0}
 
     nodes = nodes
-    test_arguments = [param1, param2]
     board = game_data.board
     data_creator.G_list = {}
-    for test_i in range(len(marks)):
-        board.set_fen(game_data.fen)
+    for config_i in range(len(marks)):
         for position_index in position_indices:
-            configurations = config_data.get_configurations(test_i)
-            print(configurations)
-            print('running position', position_index)
-            #data_creator.run_search(position_index, test_arguments[test_i], board, nodes)
+            game_data.set_board_position(position_index)
+            configurations = config_data.get_configurations(config_i)
             data_creator.run_search(position_index, configurations, board, nodes)
-            if position_index < nr_of_plies - 1:
-                move = game_data.game_data['move'][position_index + 1]
-                board.push_san(move)
 
-    board.set_fen(game_data.fen)
-    #data_creator.reset()
     if not is_analyze_selected:
         data_creator.data = {}
     for position_index in position_indices:
+        game_data.set_board_position(position_index)
         fen = board.fen()
         print('CREATING GRAPH FOR', position_index)
         data_creator.create_data(position_index, fen)
-        if position_index < nr_of_plies - 1:
-            move = game_data.game_data['move'][position_index + 1]
-            board.push_san(move)
     if is_analyze_selected:
         return('')
     return(f'All {str(nr_of_plies)} positions analyzed')
@@ -245,13 +234,13 @@ def update_data(selected_value, active_cell):
 
     #Show empty graph if position is not yet analyzed
     if position_index not in data_creator.data:
-        return(get_empty_figure(), tooltip)
+        return(empty_figure(), tooltip)
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
     #if there is no root node, then slider is set to value (configuration set) that has not been analyzed yet
     if x_root == []:
-        return(get_empty_figure(), tooltip)
+        return(empty_figure(), tooltip)
 
 
 
