@@ -27,6 +27,17 @@ EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 #    def is_data_equal_to_analyzed(self):
 #        return(self.data.equals(self.data_analyzed))
 
+#deterministic search settings
+overridden_defaults = {
+    'Threads': 1,
+    'MinibatchSize': 1,
+    'MaxPrefetch': 1,
+    'MaxCollisionEvents': 1,
+    'MaxCollisionVisits': 1,
+    'OutOfOrderEval': 'False',
+    'MaxConcurrentSearchers': 1,
+    'SmartPruningFactor': 0
+}
 
 filter_out_options = ['WeightsFile',
                       'Backend',
@@ -126,7 +137,10 @@ def create_column(option, df_dict, columns, dropdowns, category_groups):
     if option_type != "spin":
         default = try_to_round(default, 3) #TODO: don't round here, rather edit datatable formatting
     name = option.name
-    df_dict[name] = [default]
+    if name in overridden_defaults:
+        df_dict[name] = overridden_defaults[name]
+    else:
+        df_dict[name] = [default]
     df_dict[name+'_default'] = [default]
 
     category = get_gategory(name, groups)
@@ -140,6 +154,7 @@ def create_column(option, df_dict, columns, dropdowns, category_groups):
         dropdown = {'options': [{'label': val, 'value': val} for val in var],
                     'clearable': False}
         dropdowns[name] = dropdown
+        print('DROPDOWNS', dropdowns)
     columns.append(col)
     #if option_type == 'spin':
     return(df_dict, columns, dropdowns)

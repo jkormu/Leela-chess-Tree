@@ -238,7 +238,7 @@ def update_data(selected_value, active_cell):
     data = data_creator.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
-    #if there is no root node, then slider is set to value (configuration set) that has not been analyzed yet
+    #if there is no root node, then slider is set to value that has not been analyzed yet
     if x_root == []:
         return(empty_figure(), tooltip)
 
