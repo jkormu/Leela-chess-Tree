@@ -294,7 +294,7 @@ Y = ['1', '2', '3', '4', '5', '6', '7', '8']
 move_table = {x+y: 8*Y.index(y)+X.index(x) for y in Y for x in X}
 
 def get_arrows(position_index, slider_value, type, nr_of_arrows):
-    if nr_of_arrows == 0:
+    if nr_of_arrows == 0 or nr_of_arrows is None:
         return([])
     moves, metrics = data_creator.get_best_moves(position_index=position_index,
                                                   slider_value=slider_value,
