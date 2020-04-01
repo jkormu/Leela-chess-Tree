@@ -33,8 +33,10 @@ BAR_LINE_WIDTH = 1
 RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
 SHOW_BOARD_COORDINATES = False
 
-ARROW_COLORS = {'p': (23, 178, 207),
-                'n': (0, 255, 0),
+ARROW_COLORS = {#'p': (23, 178, 207),
+                #'p': (0, 255, 255), #teal
+                'p': (183, 0, 255), #purple
+                'n': (0, 166, 255),#(0, 255, 0),
                 'q': (255, 0, 0)}
 
 
