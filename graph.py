@@ -130,7 +130,9 @@ def get_data(data, visible):
 
 def get_graph_component():
     graph_component = html.Div(
-        children=[html.Div(id='config_info'), html.Div(id='graph-container',
+        children=[html.Div(id='config_info',
+                           style={'text-align': 'center'}),
+                  html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
@@ -225,7 +227,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
 def update_data(selected_value, active_cell):
     configurations = config_data.get_configurations(selected_value, only_non_default=True)
     #print('KONFIGURAATIOT', configurations)
-    tooltip = ','.join([f'{option}: {configurations[option]}' for option in configurations])
+    tooltip = ', '.join([f'{option}={configurations[option]}' for option in configurations])
 
     if active_cell is None:
         position_index = 0
