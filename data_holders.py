@@ -90,8 +90,36 @@ class DataCreator:
     #    self.__init__(self.engine_path, self.weight_path)
 
     def get_best_moves(self, position_index, slider_value, type, max_moves):
-        children = gt.get_children(self.G_list[position_index][slider_value], 'root')
+        try:
+            tree = self.G_list[position_index][slider_value]
+        except KeyError:
+            #not yet analyzed
+            return([], [])
+        children = gt.get_children(tree, gt.get_root(tree))
 
+        metrics = []
+        moves = []
+        for node in children:
+            if type == 'p':
+                metric = float(tree.nodes[node]['P'])
+            elif type == 'n':
+                metric = int(tree.nodes[node]['N'])
+            elif type == 'q':
+                metric = float(tree.nodes[node]['Q'])
+            metrics.append(metric)
+            moves.append(tree.nodes[node]['move'])
+
+        metrics, moves = zip(*sorted(zip(metrics, moves), reverse=True))
+
+        #convert absolute number of visits to ratios
+        if type == 'n':
+            total = sum(metrics)
+            metrics = [visits/total for visits in metrics]
+
+        nr_of_children = len(moves)
+        metrics = metrics[: min(max_moves, nr_of_children)]
+        moves = moves[: min(max_moves, nr_of_children)]
+        return(moves, metrics)
 
     def run_search(self, position_index, parameters, board, nodes):
         self.lc0.configure(parameters)

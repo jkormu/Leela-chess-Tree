@@ -59,12 +59,6 @@ def adjust_y(pos):
     return(pos)
 
 
-#def get_branch_parity(G):
-#    root = get_root(G)
-#    root_children = get_children(G, root)
-#    root_children = list(root_children)
-#    roo
-
 def pos_separation(G, pos):
     #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
     

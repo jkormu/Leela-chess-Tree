@@ -18,6 +18,8 @@ from server import app
 from data_holders import data_creator, game_data
 from dash_table.Format import Format, Symbol, Scheme
 
+from colors import rgb_adjust_saturation
+
 COMPONENT_WIDTH = '98%'
 WHITE_WIN_COLOR = 'rgb(255, 255, 255)'
 DRAW_COLOR ='rgb(184, 184, 184)'
@@ -30,6 +32,10 @@ BLACK_WIN_BAR_LINE_COLOR = BAR_LINE_COLOR#'rgb(255, 255, 255)'
 BAR_LINE_WIDTH = 1
 RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
 SHOW_BOARD_COORDINATES = False
+
+ARROW_COLORS = {'p': (23, 178, 207),
+                'n': (0, 255, 0),
+                'q': (255, 0, 0)}
 
 
 di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
@@ -121,6 +127,30 @@ def pgn_layout():
             # Only one pgn allowed
             multiple=False
         )
+
+    arrow_settings = html.Div(style={'display': 'flex',
+                                     'flex-direction': 'row',
+                                     'padding': '3px', 'padding-top': '5px'})
+    arrow_options = html.Div(children=[html.Label('Arrow type: '),
+        dcc.RadioItems(
+            id='arrow-type-selector',
+            options=[
+                {'label': 'Policy-%', 'value': 'p'},
+                {'label': 'Visits-%', 'value': 'n'},
+                {'label': 'Q-%', 'value': 'q'},
+            ],
+            value='n',
+            labelStyle={'padding-left': '3px'},
+            style={'flex': 1}
+    )],
+                             style={'flex': 1, 'display': 'flex', 'flex-direction': 'row'})
+    arrows_input = html.Div(children=[html.Label('#Arrows: '),
+                                      dcc.Input(id='nr_of_arrows_input', type="number",
+                                                min=0, max=100, step=1,
+                                                inputMode='numeric', value=3)])
+
+    arrow_settings.children = [arrow_options, arrows_input]
+
     img = html.Img(id='board', src=svg_board)
     upload_output = html.Div(id='output-data-upload')
 
@@ -189,7 +219,7 @@ def pgn_layout():
     container_table = html.Div(children=data_table,
     style={'flex': '1', 'overflow': 'auto'})
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
-    content = [upload, img, score_bar(), upload_output, buttons, container_table]#container_table]
+    content = [upload, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table]
     container.children = content
     return(container)
 
@@ -258,10 +288,47 @@ def row_highlight(active_cell):
     style_data_conditional.append(highligh)
     return(style_data_conditional)
 
+
+X = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+Y = ['1', '2', '3', '4', '5', '6', '7', '8']
+move_table = {x+y: 8*Y.index(y)+X.index(x) for y in Y for x in X}
+
+def get_arrows(position_index, slider_value, type, nr_of_arrows):
+    if nr_of_arrows == 0:
+        return([])
+    moves, metrics = data_creator.get_best_moves(position_index=position_index,
+                                                  slider_value=slider_value,
+                                                  type=type,
+                                                  max_moves=nr_of_arrows)
+    r,g,b = ARROW_COLORS[type]#POLICY_ARROW_COLOR#[23,178,207]#[0, 255, 0]
+    if metrics == []:
+        return([])
+    arrows = []
+    best_metric = metrics[0]
+    for move, metric in zip(moves, metrics):
+        from_square = move[:2]
+        to_square = move[2:4]
+        tail = move_table[from_square]
+        head = move_table[to_square]
+        #the worse the move is, the more desaturated the arrow color shall be
+        if type != 'q':
+            saturation_factor = (metric/best_metric)**0.618
+        else:
+            saturation_factor = ((1+metric)/(1+best_metric))**1.618
+        r,g,b = rgb_adjust_saturation(saturation_factor, r, g, b)
+        color = f"rgb({r}, {g}, {b})"#"rgb(0, 255, 0)"#"#FF0000"
+        annotation = f'{round(100*metric)}'
+        arrow = svg.Arrow(tail, head, color=color, annotation=annotation)
+        arrows.append(arrow)
+    return(arrows)
+
 @app.callback(
     Output('board', 'src'),
-    [Input('move-table', 'active_cell'),])
-def update_board_imgage(active_cell):
+    [Input('move-table', 'active_cell'),
+     Input('slider1', 'value'),
+     Input('arrow-type-selector', 'value'),
+     Input('nr_of_arrows_input', 'value')])
+def update_board_imgage(active_cell, slider_value, arrow_type, nr_of_arrows):
     game_data.board.set_fen(game_data.fen)#reset()
     board = game_data.board
     if active_cell is None:
@@ -273,7 +340,10 @@ def update_board_imgage(active_cell):
     for i in range(1, selected_row_ids + 1):
         move = game_data.game_data['move'][i]
         last_move = board.push_san(move)
-    svg_str = str(svg.board(board, size=200, lastmove=last_move, coordinates=SHOW_BOARD_COORDINATES))
+    arrows = get_arrows(selected_row_ids, slider_value, arrow_type, nr_of_arrows)
+    #reverse the order so that better moves are drawn above worse moves
+    arrows = arrows[::-1]
+    svg_str = str(svg.board(board, size=200, arrows=arrows, lastmove=last_move, coordinates=SHOW_BOARD_COORDINATES))
     svg_str = svg_str.replace('height="200"', 'height="100%"')
     svg_str = svg_str.replace('width="200"', 'width="100%"')
     svg_byte = svg_str.encode()

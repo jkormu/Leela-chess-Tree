@@ -287,26 +287,6 @@ def board(board: Optional[chess.BaseBoard] = None, *,
             x_annot = xhead - dx * 0.74 * SQUARE_SIZE / hypot  # - (xtip - xtail)*(SQUARE_SIZE/2)
             y_annot = yhead - dy * 0.74 * SQUARE_SIZE / hypot  # - (ytip - ytail)*(SQUARE_SIZE/2)
 
-            if annotation != '':
-                ET.SubElement(svg, "circle", {
-                    "cx": str(x_annot),
-                    "cy": str(y_annot),
-                    "r": str(SQUARE_SIZE * 0.175),
-                    "stroke-width": str(SQUARE_SIZE * 0.01),
-                    "stroke": '#000000',
-                    "fill": color,
-                    "opacity": "1.0",
-                    "class": "circle",
-                })
-
-                annot = ET.SubElement(svg, "text", {
-                    "x": str(x_annot),
-                    "y": str(y_annot),
-                    "font-size": str(SQUARE_SIZE * 0.16),  # max(1, int(min(SQUARE_SIZE, SQUARE_SIZE) * 0.3))),
-                    "text-anchor": "middle",
-                    "alignment-baseline": "middle"})
-                annot.text = annotation
-
             ET.SubElement(svg, "line", {
                 "x1": str(xtail),
                 "y1": str(ytail),
@@ -331,5 +311,59 @@ def board(board: Optional[chess.BaseBoard] = None, *,
                 "opacity": "0.5",
                 "class": "arrow",
             })
+
+    for arrow in arrows:
+        try:
+            tail, head, color, annotation = arrow.tail, arrow.head, arrow.color, arrow.annotation  # type: ignore
+        except AttributeError:
+            tail, head = arrow  # type: ignore
+            color = "#888"
+            annotation = ''
+
+        tail_file = chess.square_file(tail)
+        tail_rank = chess.square_rank(tail)
+        head_file = chess.square_file(head)
+        head_rank = chess.square_rank(head)
+
+        xtail = margin + (tail_file + 0.5 if not flipped else 7.5 - tail_file) * SQUARE_SIZE
+        ytail = margin + (7.5 - tail_rank if not flipped else tail_rank + 0.5) * SQUARE_SIZE
+        xhead = margin + (head_file + 0.5 if not flipped else 7.5 - head_file) * SQUARE_SIZE
+        yhead = margin + (7.5 - head_rank if not flipped else head_rank + 0.5) * SQUARE_SIZE
+
+        marker_size = 0.5 * SQUARE_SIZE
+        marker_margin = 0.05 * SQUARE_SIZE
+
+        dx, dy = xhead - xtail, yhead - ytail
+        hypot = math.hypot(dx, dy)
+
+        shaft_x = xhead - dx * (marker_size + marker_margin) / hypot
+        shaft_y = yhead - dy * (marker_size + marker_margin) / hypot
+
+        xtip = xhead - dx * marker_margin / hypot
+        ytip = yhead - dy * marker_margin / hypot
+
+        x_annot = xhead - dx * 0.74 * SQUARE_SIZE / hypot
+        y_annot = yhead - dy * 0.74 * SQUARE_SIZE / hypot
+
+        if annotation != '':
+            ET.SubElement(svg, "circle", {
+                "cx": str(x_annot),
+                "cy": str(y_annot),
+                "r": str(SQUARE_SIZE * 0.175),
+                #"r": str(SQUARE_SIZE * 0.2),
+                "stroke-width": str(SQUARE_SIZE * 0.01),
+                "stroke": '#000000',
+                "fill": color,
+                "opacity": "1.0",
+                "class": "circle",
+            })
+
+            annot = ET.SubElement(svg, "text", {
+                "x": str(x_annot),
+                "y": str(y_annot),
+                "font-size": str(SQUARE_SIZE * 0.2),  # max(1, int(min(SQUARE_SIZE, SQUARE_SIZE) * 0.3))),
+                "text-anchor": "middle",
+                "alignment-baseline": "middle"})
+            annot.text = annotation
 
     return SvgWrapper(ET.tostring(svg).decode("utf-8"))
