@@ -53,6 +53,9 @@ svg_board = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 def get_score_bar_figure(W, D, B):
     W = go.Bar(name='White win-%', y=[''], x=[W],
+               text=[f'{int(round(W))}%'],
+               textposition='auto',
+               hoverinfo='x',
                orientation='h',
                marker=dict(color=WHITE_WIN_COLOR,
                            line=dict(color=WHITE_WIN_BAR_LINE_COLOR,
@@ -60,12 +63,18 @@ def get_score_bar_figure(W, D, B):
                #marker_color=WHITE_WIN_COLOR,)
                #orientation='h')
     D = go.Bar(name='Draw-%', y=[''], x=[D],
+               text=[f'{int(round(D))}%'],
+               textposition='auto',
+               hoverinfo='x',
                orientation='h',
                marker=dict(color=DRAW_COLOR,
                            line=dict(color=DRAW_BAR_LINE_COLOR,
                                      width=BAR_LINE_WIDTH)))
               # orientation='h')
     B = go.Bar(name='Black win-%', y=[''], x=[B],
+               text=[f'{int(round(B))}%'],
+               textposition='auto',
+               hoverinfo='x',
                orientation='h',
                marker=dict(color=BLACK_WIN_COLOR,
                            line=dict(color=BLACK_WIN_BAR_LINE_COLOR,
@@ -77,11 +86,14 @@ def get_score_bar_figure(W, D, B):
              #'zeroline': False,
              'showgrid': False,
              #'ticks': 'outside',
-             'showticklabels': False}
+             'showticklabels': False,
+             'fixedrange': True}
+    yaxis = {'fixedrange': True}
     fig.update_layout(barmode='stack',
                       showlegend=False,
                       margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
                       xaxis=xaxis,
+                      yaxis=yaxis,
                       #height=50,
                       plot_bgcolor='rgb(255, 255, 255)')
     return(fig)
@@ -251,7 +263,8 @@ def parse_pgn(contents, filename):
         uci = board.uci(move).lower()
         data['move'].append(san)
         data['ply'].append(ply + 1)
-        data['turn'].append(board.turn)
+        data['turn'].append(not board.turn)
+        print('move', )
         board.push(move)
 
     data = pd.DataFrame(data)

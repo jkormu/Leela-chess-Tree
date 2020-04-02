@@ -186,10 +186,12 @@ def get_node_eval(G, node):
     D = G.nodes[node]['D'] if 'D' in G.nodes[node] else None
     M = G.nodes[node]['M'] if 'M' in G.nodes[node] else None
 
-    W, D, L = get_WDL(float(Q), float(D))
+    #filp root Q
+    Q = -float(Q)
+    W, D, L = get_WDL(Q, float(D))
 
     #if node == 'root':
-    Q = str(round(-1.0*float(Q), 3))
+    Q = str(round(Q, 3))
     return({'Q': Q, 'W': W, 'D': D, 'L': L, 'M': M})
 
 #for Dash implementation
