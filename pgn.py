@@ -166,7 +166,7 @@ def pgn_layout():
     arrow_settings.children = [arrow_options, arrows_input]
 
     img = html.Img(id='board', src=svg_board)
-    upload_output = html.Div(id='output-data-upload')
+    upload_output = html.Div(id='pgn-data-upload')
 
     buttons = html.Div(children=[
         html.Button('Analyze all',
@@ -370,7 +370,7 @@ def update_board_imgage(active_cell, slider_value, arrow_type, nr_of_arrows):
 
 @app.callback(
     #Output('move-table', 'data'),
-     Output('output-data-upload', 'children'),
+     Output('pgn-data-upload', 'children'),
     [Input('upload-pgn', 'contents')],
     [State('upload-pgn', 'filename')]
 )
@@ -379,14 +379,14 @@ def update_pgn(content, filename):
 
 @app.callback(
     Output('move-table', 'data'),
-    [Input('output-data-upload', 'children'),
+    [Input('pgn-data-upload', 'children'),
      Input('hidden-div-slider-state', 'children')],
 )
 def update_datatable(text, *args):
-    if text is None:
+    data = game_data.game_data
+    if text is None or data is None:
         dummy = {'ply': [0], 'move': ['-']}
         return(pd.DataFrame(dummy).to_dict('records'))
-    data = game_data.game_data
     return(data.to_dict('records'))
 
 @app.callback([
