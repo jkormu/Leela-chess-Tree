@@ -317,6 +317,8 @@ def get_arrows(position_index, slider_value, type, nr_of_arrows):
                                               slider_value=slider_value,
                                               type=type,
                                               max_moves=nr_of_arrows)
+
+    print('ARROW DATA', moves, metrics)
     r,g,b = ARROW_COLORS[type]#POLICY_ARROW_COLOR#[23,178,207]#[0, 255, 0]
     if metrics == []:
         return([])

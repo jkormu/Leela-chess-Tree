@@ -200,15 +200,15 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
 
     nodes = nodes
     board = game_data.board
-    tree_data.G_list = {}
+    if not is_analyze_selected:
+        tree_data.G_list = {}
+        tree_data.data = {}
     for config_i in range(len(marks)):
         for position_index in position_indices:
             game_data.set_board_position(position_index)
             configurations = config_data.get_configurations(config_i)
             tree_data.run_search(position_index, configurations, board, nodes)
 
-    if not is_analyze_selected:
-        tree_data.data = {}
     for position_index in position_indices:
         game_data.set_board_position(position_index)
         fen = board.fen()
