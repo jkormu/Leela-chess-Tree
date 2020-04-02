@@ -6,7 +6,7 @@ import dash_core_components as dcc
 import pandas as pd
 import dash_table
 from server import app
-from data_holders import config_data, lc0
+from global_data import config_data, lc0
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 

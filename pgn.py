@@ -15,7 +15,7 @@ import chess.pgn
 import base64
 from server import app
 
-from data_holders import data_creator, game_data
+from global_data import tree_data, game_data
 from dash_table.Format import Format, Symbol, Scheme
 
 from colors import rgb_adjust_saturation
@@ -266,7 +266,7 @@ def parse_pgn(contents, filename):
     game_info = dcc.Markdown(game_info, style={"white-space": "pre"})
 
     #reset analysis of previous pgn
-    data_creator.reset_data()
+    tree_data.reset_data()
     return(game_info)
 
 
@@ -300,10 +300,10 @@ move_table = {x+y: 8*Y.index(y)+X.index(x) for y in Y for x in X}
 def get_arrows(position_index, slider_value, type, nr_of_arrows):
     if nr_of_arrows == 0 or nr_of_arrows is None:
         return([])
-    moves, metrics = data_creator.get_best_moves(position_index=position_index,
-                                                  slider_value=slider_value,
-                                                  type=type,
-                                                  max_moves=nr_of_arrows)
+    moves, metrics = tree_data.get_best_moves(position_index=position_index,
+                                              slider_value=slider_value,
+                                              type=type,
+                                              max_moves=nr_of_arrows)
     r,g,b = ARROW_COLORS[type]#POLICY_ARROW_COLOR#[23,178,207]#[0, 255, 0]
     if metrics == []:
         return([])
@@ -410,7 +410,7 @@ def set_state_of_analyze_selected_button(active_cell):
 def update_score_bar(value, active_cell):
     style = {'width': '100%','height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
     print('SLIDER VALUE', value)
-    if active_cell is None or game_data.game_data is None or active_cell['row'] not in data_creator.data:#game_data.game_data['ply']:
+    if active_cell is None or game_data.game_data is None or active_cell['row'] not in tree_data.data:#game_data.game_data['ply']:
         style['visibility'] = 'hidden'
         return(dash.no_update, style)
 

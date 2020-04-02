@@ -59,7 +59,7 @@ class ConfigData:
                 config[option_name] = option_value
         return(config)
 
-class DataCreator:
+class TreeData:
     def __init__(self, lc0):#, engine_path, weight_path):
         #self.engine_path = engine_path
         #self.weight_path = weight_path
@@ -275,8 +275,8 @@ engine = '/home/jusufe/lc0_test4/build/release/lc0'
 args = [engine, '--weights=' + net]
 lc0 = leela_engine(args)#leela(args)
 
-data_creator = DataCreator(lc0)
-data_creator.create_demo_data()
+tree_data = TreeData(lc0)
+tree_data.create_demo_data()
 game_data = GameData()
 config_data = ConfigData()
 

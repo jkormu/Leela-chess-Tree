@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly import subplots
-from data_holders import data_creator, game_data, config_data
+from global_data import tree_data, game_data, config_data
 
 from server import app
 
@@ -190,7 +190,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
 
     net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
-    data_creator.args = [engine, '--weights=' + net]
+    tree_data.args = [engine, '--weights=' + net]
 
     #param1 = {'CPuct': 2.147, 'MinibatchSize': 1, 'Threads': 1,
     #          'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
@@ -201,20 +201,20 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
 
     nodes = nodes
     board = game_data.board
-    data_creator.G_list = {}
+    tree_data.G_list = {}
     for config_i in range(len(marks)):
         for position_index in position_indices:
             game_data.set_board_position(position_index)
             configurations = config_data.get_configurations(config_i)
-            data_creator.run_search(position_index, configurations, board, nodes)
+            tree_data.run_search(position_index, configurations, board, nodes)
 
     if not is_analyze_selected:
-        data_creator.data = {}
+        tree_data.data = {}
     for position_index in position_indices:
         game_data.set_board_position(position_index)
         fen = board.fen()
         print('CREATING GRAPH FOR', position_index)
-        data_creator.create_data(position_index, fen)
+        tree_data.create_data(position_index, fen)
     if is_analyze_selected:
         return('')
     return(f'All {str(nr_of_plies)} positions analyzed')
@@ -235,9 +235,9 @@ def update_data(selected_value, active_cell):
         position_index = active_cell['row']
 
     #Show empty graph if position is not yet analyzed
-    if position_index not in data_creator.data:
+    if position_index not in tree_data.data:
         return(empty_figure(), tooltip)
-    data = data_creator.data[position_index]
+    data = tree_data.data[position_index]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
     #if there is no root node, then slider is set to value that has not been analyzed yet
@@ -292,7 +292,7 @@ def update_data(selected_value, active_cell):
               trace_node_even,
               trace_node_root]
 
-    x_hist, y_hist = data_creator.data_depth[position_index][selected_value]
+    x_hist, y_hist = tree_data.data_depth[position_index][selected_value]
 
     #print(x_hist, y_hist)
 
@@ -300,10 +300,10 @@ def update_data(selected_value, active_cell):
                                    showlegend=False, hoverinfo='none',
                                    marker=dict(color=BAR_COLOR))
 
-    x_range = data_creator.x_range[position_index]
-    y_range = data_creator.y_range[position_index]
-    y_tick_values = data_creator.y_tick_values[position_index]
-    y_tick_labels = data_creator.y_tick_labels[position_index]
+    x_range = tree_data.x_range[position_index]
+    y_range = tree_data.y_range[position_index]
+    y_tick_values = tree_data.y_tick_values[position_index]
+    y_tick_labels = tree_data.y_tick_labels[position_index]
 
     y_hist_labels = ['0' for _ in range(len(y_tick_labels) - len(y_hist))] + list(map(str, y_hist))
     max_y2_label_len = max(map(len, y_hist_labels))
@@ -311,14 +311,14 @@ def update_data(selected_value, active_cell):
     #print([max_y2_label_len - len(label) for label in y_hist_labels])
     y2_tick_labels = [label.rjust(max_y2_label_len, ' ') for label in y_hist_labels]
 
-    y2_range = data_creator.y2_range[position_index]
+    y2_range = tree_data.y2_range[position_index]
     #print('y2_range', y2_range)
     #print('x_hist', x_hist)
     #print('y_hist', y_hist)
     #print('y2_tick_labels', y2_tick_labels)
 
-    x_tick_labels = data_creator.x_tick_labels[position_index][selected_value]
-    x_tick_values = data_creator.x_tick_values[position_index]
+    x_tick_labels = tree_data.x_tick_labels[position_index][selected_value]
+    x_tick_values = tree_data.x_tick_values[position_index]
 
 
     layout = go.Layout(#title=dict(text='Leela tree Visualization', x=0.5, xanchor="center"),
@@ -389,10 +389,10 @@ def update_game_evals(visible, *args):
     if game_data.game_data is None:
         return(dash.no_update)
     for position_index in game_data.game_data['ply']:
-        if position_index not in data_creator.data:
+        if position_index not in tree_data.data:
             Q, W, D, L = None, None, None, None
         else:
-            root = data_creator.data[position_index]['root']
+            root = tree_data.data[position_index]['root']
             evaluation = root['visible'][visible]['eval']
             Q = evaluation['Q']
             W = evaluation['W']
