@@ -161,7 +161,10 @@ def get_xy(G, pos, show_miniboard, init_moves):
     return(x,y,text)
 
 def get_best_edge(G, edges):
-        maxN = max([int(G.nodes[e[1]]['N']) for e in edges])
+        node_counts = [int(G.nodes[e[1]]['N']) for e in edges]
+        if node_counts == []:
+            return([None, None])
+        maxN = max(node_counts)
         edges = [e for e in edges if int(G.nodes[e[1]]['N']) == maxN]
         edge = max(edges, key=lambda e: float(G.nodes[e[1]]['Q']))
         return(edge)

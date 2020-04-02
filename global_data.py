@@ -49,7 +49,6 @@ class ConfigData:
 
     def get_configurations(self, row_ind, only_non_default=False):
         row = self.get_row(row_ind)
-        #print('config row', row)
         config = {}
         for option_name in row.index:
             if option_name.endswith('_default'):
@@ -116,6 +115,9 @@ class TreeData:
             metrics.append(metric)
             moves.append(tree.nodes[node]['move'])
 
+        if moves == []:
+            return([], [])
+
         metrics, moves = zip(*sorted(zip(metrics, moves), reverse=True))
 
         #convert absolute number of visits to ratios
@@ -130,16 +132,13 @@ class TreeData:
 
     def run_search(self, position_index, parameters, board, nodes):
         self.lc0.configure(parameters)
-        start = time.time()
         g = self.lc0.play(board, nodes)
-        print('search completed in time: ', time.time() - start)
         if position_index in self.G_list:
             self.G_list[position_index].append(g)
         else:
             self.G_list[position_index] = [g]
 
     def create_data(self, position_index, moves):
-        #print('G_LIST', self.G_list)
         G_merged, G_list = gt.merge_graphs(self.G_list[position_index])
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
@@ -153,7 +152,6 @@ class TreeData:
                 G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
         pos = pt.get_pos(G_merged)
         pos = pt.adjust_y(pos)
-
         data = {}
         node_counts = []
 
@@ -168,6 +166,7 @@ class TreeData:
                 if child in G:
                     move_names.append(G.nodes[child]['move'])
                     break
+
         for owner, G in enumerate(G_list):
 
             #########################
@@ -201,7 +200,8 @@ class TreeData:
             node_counts.append(gt.get_nodes_in_depth(G))
 
             pv_nodes = pt.get_pv_nodes(G)
-
+            miniboard_time = 0
+            node_metric_time = 0
             for i, branch in enumerate(pos_list):
                 for node in branch:
                     if node not in data:

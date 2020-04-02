@@ -16,14 +16,14 @@ class leela_engine:
             self.configuration[opt] = value
 
     def play(self, board, nodes):
-        if board.is_game_over():
-            #TODO: return only root node, manually crete one
-            #currently hits error if game over position
-            pass
-
         self.analyzed_count += 1
         start = time.time()
-        self.lc0.play(board, chess.engine.Limit(nodes=nodes), game=self.analyzed_count)
+        try:
+            self.lc0.play(board, chess.engine.Limit(nodes=nodes), game=self.analyzed_count)
+        except chess.engine.EngineError:#ValueError:
+            #we have hit terminal and lc0 responded "a1a1" as null move, python chess expects 0000
+            #we can safely carry on reading the tree file with just one node
+            pass
         print('search completed in time: ', time.time() - start)
         g = nx.readwrite.gml.read_gml('tree.gml', label='id')
         os.remove('tree.gml')
