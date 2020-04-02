@@ -95,7 +95,12 @@ def get_score_bar_figure(W, D, B):
                       xaxis=xaxis,
                       yaxis=yaxis,
                       #height=50,
-                      plot_bgcolor='rgb(255, 255, 255)')
+                      plot_bgcolor='rgb(255, 255, 255)',
+                      transition={
+                          'duration': 500,
+                          'easing': 'cubic-in-out'
+                      }
+    )
     return(fig)
 
 def score_bar():
