@@ -127,16 +127,16 @@ def get_data(data, visible):
             x_edges, y_edges,
             x_edges_pv, y_edges_pv)
 
-
 def get_graph_component():
-    graph_component = html.Div(
-        children=[html.Div(id='config_info',
-                           style={'text-align': 'center'}),
-                  html.Div(id='graph-container',
+    graph_component = html.Div(style={'height': '100%', 'width': '100%'})
+    loading_component = html.Div(dcc.Loading(children=[html.Div(id='loading_trigger', style={'display': 'none'})], style={'flex': 1}),
+                                 style={'height': '3%', 'overflow': 'auto', 'display': 'flex', 'flex-direction': 'column'})
+    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '2%'})
+    graph_container = html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
-                                               style={'height': '90%', 'marginTop': '0'},
+                                               style={'height': '95%', 'marginTop': '0'},
                                                config={'displayModeBar': False},
                                                ),
                                      dcc.Slider(id='slider1',
@@ -146,19 +146,18 @@ def get_graph_component():
                                                 marks={str(i): str(i) for i in range(2)},
                                                 step=None,
                                                 ),#updatemode='drag'
-                                     html.Div(id='hidden-div-slider-state', hidden='hidden', children='test')
+                                     html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
-                           style={'height': '100%', 'width': '100%', 'float': 'left'}
-                           ),
-                  ],
-        style={'height': '100%', 'width': '100%'}
-    )
+                           style={'height': '95%', 'width': '100%', 'float': 'left'}
+                           )
+    graph_component.children = [loading_component, config_info, graph_container]
     return(graph_component)
 
 
 
 @app.callback(
-    Output('generate-data-button', 'title'),
+    [Output('generate-data-button', 'title'),
+    Output('loading_trigger', 'children')],
     [Input('generate-data-button', 'n_clicks_timestamp'),
      Input('generate-data-selected-button', 'n_clicks_timestamp'),
      ],
@@ -173,12 +172,12 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     if n_clicks_all_timestamp is None:
         n_clicks_all_timestamp = -1
     if n_clicks_all_timestamp == -1 and n_clicks_selected_timestamp == -1:
-        return(dash.no_update)
+        return(dash.no_update, dash.no_update)
 
     data = game_data.game_data
     if data is None:
         #print('Game data:', data)
-        return ("Generate data (pgn not yet loaded)")
+        return ("Generate data (pgn not yet loaded)", dash.no_update)
 
     is_analyze_selected = False
     if n_clicks_selected_timestamp > n_clicks_all_timestamp:
@@ -216,8 +215,8 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
         print('CREATING GRAPH FOR', position_index)
         tree_data.create_data(position_index, fen)
     if is_analyze_selected:
-        return('')
-    return(f'All {str(nr_of_plies)} positions analyzed')
+        return('', str(nr_of_plies))
+    return(f'All {str(nr_of_plies)} positions analyzed', str(nr_of_plies))
 
 @app.callback(
     [Output('graph', 'figure'),

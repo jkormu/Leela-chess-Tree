@@ -5,6 +5,7 @@ from pgn import pgn_layout
 from server import app
 import dash_html_components as html
 from graph import get_graph_component
+import dash_core_components as dcc
 DEBUG = False
 if DEBUG:
     APP_CONTAINER_BG = 'rgba(116, 153, 46, 0.2)' #ugly green
