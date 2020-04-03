@@ -1,0 +1,25 @@
+.dash-spreadsheet-container table {
+    --accent: #e1e1e1 !important;
+    --selected-background: rgba(23, 179, 207, 0.5) !important;
+    --selected-color: #3C3C3C !important;
+}
+
+#config-table table {
+    --accent: #323232 !important;
+    --selected-background: #17b3cf !important;
+    --selected-color: #3C3C3C !important;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.dash-spinner.dash-default-spinner {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    padding: 0;
+}
+
