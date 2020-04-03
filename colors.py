@@ -1,8 +1,7 @@
 import math
 
-
 def rgb2hsv(r,g,b):
-    maxim = maxim = max(max(r, g), b)
+    maxim = max(max(r, g), b)
     minim = min(min(r, g), b)
     dif = maxim - minim
     h = 0

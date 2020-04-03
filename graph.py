@@ -191,13 +191,6 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
     tree_data.args = [engine, '--weights=' + net]
 
-    #param1 = {'CPuct': 2.147, 'MinibatchSize': 1, 'Threads': 1,
-    #          'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
-    #          'SmartPruningFactor': '0.0'}
-    #param2 = {'CPuct': 4.147, 'MinibatchSize': 1, 'Threads': 1,
-    #          'MaxCollisionEvents': 1, 'MaxCollisionVisits': 1,
-    #          'SmartPruningFactor': 0.0}
-
     nodes = nodes
     board = game_data.board
     if not is_analyze_selected:
@@ -304,18 +297,12 @@ def update_data(selected_value, active_cell):
     y_tick_values = tree_data.y_tick_values[position_index]
     y_tick_labels = tree_data.y_tick_labels[position_index]
 
+    #pad labels for nice alignment
     y_hist_labels = ['0' for _ in range(len(y_tick_labels) - len(y_hist))] + list(map(str, y_hist))
     max_y2_label_len = max(map(len, y_hist_labels))
-    #print('max_y2_label_len', max_y2_label_len)
-    #print([max_y2_label_len - len(label) for label in y_hist_labels])
     y2_tick_labels = [label.rjust(max_y2_label_len, ' ') for label in y_hist_labels]
 
     y2_range = tree_data.y2_range[position_index]
-    #print('y2_range', y2_range)
-    #print('x_hist', x_hist)
-    #print('y_hist', y_hist)
-    #print('y2_tick_labels', y2_tick_labels)
-
     x_tick_labels = tree_data.x_tick_labels[position_index][selected_value]
     x_tick_values = tree_data.x_tick_values[position_index]
 

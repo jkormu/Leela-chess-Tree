@@ -5,8 +5,9 @@ from pgn import pgn_layout
 from server import app
 import dash_html_components as html
 from graph import get_graph_component
-import dash_core_components as dcc
+
 DEBUG = False
+
 if DEBUG:
     APP_CONTAINER_BG = 'rgba(116, 153, 46, 0.2)' #ugly green
     LEFT_CONTAINER_BG = 'rgba(46, 148, 153, 0.2)' #teal
@@ -30,6 +31,13 @@ pgn_component = pgn_layout()
 config_component = get_config_table()
 graph_component = get_graph_component()
 
+#    layout
+#------------|-----|
+#    tree    |board|
+#    plot    | and |
+#------------| pos |
+# engine conf|list |
+#------------|-----|
 left_container = html.Div(
     style={'height': '100%', 'width': f'{LEFT_PANE_WIDTH}%', 'background-color': LEFT_CONTAINER_BG}
 )

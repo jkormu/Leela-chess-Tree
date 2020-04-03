@@ -1,21 +1,14 @@
 from networkx.algorithms.dag import topological_sort
-import os
 import graphtools as gt
 import plottools as pt
 import chess
-from lc0tools import leela
 import chess.engine
 import time
 import numpy as np
 import pandas as pd
 from leela import leela_engine
 
-
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
-
-#def leela(args):
-#    lc0 = chess.engine.SimpleEngine.popen_uci(args)
-#    return(lc0)
 
 class GameData:
     def __init__(self):
