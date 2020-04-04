@@ -27,6 +27,8 @@ MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
 GRAPH_WIDTH = 84
 PGN_WIDTH = 100 - GRAPH_WIDTH
+MONO_FONT_FAMILY = 'BundledDejavuSansMono'
+HOVER_FONT_SIZE = 15
 
 
 def empty_figure():
@@ -244,7 +246,7 @@ def update_data(selected_value, active_cell):
                                 text=node_text_odd,
                                 hoverinfo='text',
                                 textfont={"family": FONT_FAMILY},
-                                hoverlabel=dict(font=dict(family=FONT_FAMILY, size=15), bgcolor=HOVER_LABEL_COLOR),
+                                hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
                                 showlegend=False
                                 )
     trace_node_even = go.Scatter(dict(x=x_even, y=y_even),
@@ -253,7 +255,7 @@ def update_data(selected_value, active_cell):
                                  text=node_text_even,
                                  hoverinfo='text',
                                  textfont={"family": FONT_FAMILY},
-                                 hoverlabel=dict(font=dict(family=FONT_FAMILY, size=15), bgcolor=HOVER_LABEL_COLOR),
+                                 hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
                                  showlegend=False
                                  )
 
@@ -263,7 +265,7 @@ def update_data(selected_value, active_cell):
                                  text=node_text_root,
                                  hoverinfo='text',
                                  textfont={"family": FONT_FAMILY},
-                                 hoverlabel=dict(font=dict(family=FONT_FAMILY, size=15), bgcolor=HOVER_LABEL_COLOR),
+                                 hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
                                  showlegend=False
                                  )
 

@@ -187,6 +187,7 @@ def get_config_table():
                                      dcc.Input(id='number-of-configs-input', type="number", min=1, max=10, step=1, inputMode='numeric',
                             value=2, debounce=False),
                                      ])
+    #node_style = html.
 
     #number_of_configs_dropdown = html.Div(children=[html.Label('#configurations '),
     #                                                dcc.Dropdown(
@@ -239,9 +240,12 @@ def get_config_table():
         settings_bar,
         config_table,
         html.Div(id='config-table-dummy-div'),
+        #html.Div('Font1 .a.b.c.d.E.F.G', style={'font-family': 'sans-serif'}),
+        #html.Div('Font2 .a.b.c.d.E.F.G', style={'font-family': "'BundledMonoSpace'"}),
+        #html.Div('Font3 .a.b.c.d.E.F.G'),
+        #html.Div('Font4 .a.b.c.d.E.F.G', style={'font-family': "'BundledFreeMono'"})
         ],
         style={'width': '100%', 'display': 'flex', 'flex-direction': 'column'})
-
 
     return(config_component)
 

@@ -107,11 +107,13 @@ def get_miniboard_unicode(G, node, board, init_moves):
     board.pop()
     board_parent_uni = board.unicode()
     new_board = ''
+    #color the last moved piece and origin square
     for i in range(127):
         p0 = board_uni[i]
         if p0 != board_parent_uni[i]:
             p0 = COLOR_START + p0 + COLOR_END
         new_board += p0
+    #new_board = new_board.replace('.', 'O')
     return(new_board)
 
 def get_best_edge(G, edges):
