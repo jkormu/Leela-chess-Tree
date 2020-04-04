@@ -2,9 +2,15 @@ import chess.engine
 import time
 import networkx as nx
 import os
+from os.path import isfile, join
 
 class leela_engine:
-    def __init__(self, engine_path):
+    def __init__(self, engine_path = None):
+        if engine_path is None:
+            engine_path = self.find_engine()
+            net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
+            engine_path = [engine_path, '--weights=' + net]
+        print(engine_path)
         self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
         self.analyzed_count = 0 #used as unique id of position for SimpleEngine.play(), forces ucinewgame
         self.configuration = {}
@@ -14,6 +20,16 @@ class leela_engine:
                 continue
             value = self.options[opt].default
             self.configuration[opt] = value
+
+    def find_engine(self):
+        root = os.getcwd()
+        for r, d, files in os.walk(root):
+            for f in files:
+                if f.startswith('lc0_tree') and isfile(join(r, f)):
+                    return(join(r, f))
+        #path = os.getcwd()
+        #engine_path = [join(path, f) for f in os.listdir(path) if isfile(join(path, f)) and f.startswith('lc0_tree')][0]
+        return(None)
 
     def play(self, board, nodes):
         self.analyzed_count += 1

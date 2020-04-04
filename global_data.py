@@ -3,10 +3,11 @@ import graphtools as gt
 import plottools as pt
 import chess
 import chess.engine
-import time
 import numpy as np
 import pandas as pd
 from leela import leela_engine
+import os
+from os.path import isfile, join
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MAX_NUMBER_OF_CONFIGS = 10
@@ -123,6 +124,14 @@ class ConfigData:
         self.columns = []
         self.lc0 = lc0
         self.construct_config_data()
+        self.weights = []
+        self.find_weights()
+
+    def find_weights(self):
+        root =  os.getcwd()
+        weights_folder = os.path.join(root, 'weights')
+        weights_files = [join(weights_folder, f) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
+        self.weights = weights_files
 
     def construct_config_data(self):
         self.df_dict['Nodes'] = 200
@@ -201,10 +210,7 @@ class ConfigData:
         return(d)
 
 class TreeData:
-    def __init__(self, lc0):#, engine_path, weight_path):
-        #self.engine_path = engine_path
-        #self.weight_path = weight_path
-        #self.args = [engine_path, '--weights='+weight_path]
+    def __init__(self, lc0):
         self.lc0 = lc0
         self.G_list = {} #{position_index1: [], position_index2: []....}
         self.data = {}
@@ -234,8 +240,6 @@ class TreeData:
         self.x_tick_labels = {}
         self.x_tick_values = {}
 
-    #def reset(self):
-    #    self.__init__(self.engine_path, self.weight_path)
 
     def get_best_moves(self, position_index, slider_value, type, max_moves):
         try:
@@ -414,11 +418,13 @@ class TreeData:
 
 net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
 engine = '/home/jusufe/lc0_test4/build/release/lc0'
+engine = '/home/jusufe/PycharmProjects/leela-tree-dash/lc0_tree'
 args = [engine, '--weights=' + net]
-lc0 = leela_engine(args)#leela(args)
+#lc0 = leela_engine(args)
+lc0 = leela_engine(None)#leela(args)
 
 tree_data = TreeData(lc0)
-tree_data.create_demo_data()
+#tree_data.create_demo_data()
 game_data = GameData()
 config_data = ConfigData(lc0)
 
