@@ -377,7 +377,9 @@ def update_game_evals(visible, *args):
     if game_data.game_data is None:
         return(dash.no_update)
     for position_index in game_data.game_data['ply']:
-        if position_index not in tree_data.data:
+        if position_index not in tree_data.data: #position not yet evaluated
+            Q, W, D, L = None, None, None, None
+        elif visible not in tree_data.data[position_index]['root']['visible']: #engine config set not yet evaluated
             Q, W, D, L = None, None, None, None
         else:
             root = tree_data.data[position_index]['root']

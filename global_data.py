@@ -9,12 +9,92 @@ import pandas as pd
 from leela import leela_engine
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
+MAX_NUMBER_OF_CONFIGS = 10
+
+#deterministic search settings
+overridden_defaults = {
+    'Threads': 1,
+    'MinibatchSize': 1,
+    'MaxPrefetch': 1,
+    'MaxCollisionEvents': 1,
+    'MaxCollisionVisits': 1,
+    'OutOfOrderEval': 'False',
+    'MaxConcurrentSearchers': 1,
+    'SmartPruningFactor': 0
+}
+
+#Options user cannot change, mostly due to not having effect on search
+filter_out_options = ['WeightsFile',
+                      'Backend',
+                      'BackendOptions',
+                      'NNCacheSize',
+                      'Temperature',
+                      'TempDecayMoves',
+                      'TempCutoffMove',
+                      'TempEndgame',
+                      'TempValueCutoff',
+                      'TempVisitOffset',
+                      'DirichletNoise',
+                      'VerboseMoveStats',
+                      'SyzygyFastPlay',
+                      'MultiPV',
+                      'PerPVCounters',
+                      'ScoreType',
+                      'HistoryFill',
+                      'SyzygyPath',
+                      'Ponder',
+                      'UCI_Chess960',
+                      'UCI_ShowWDL',
+                      'ConfigFile',
+                      'RamLimitMb',
+                      'MoveOverheadMs',
+                      'Slowmover',
+                      'ImmediateTimeUse',
+                      'LogFile']
+
+#dictionary of option categorys and option names user can edit
+#this this dict also determines order of the groups and parameters (dicts are ordered in python 3.7)
+COLUMNS_PER_GROUP = {
+    'Nodes': ['Nodes'],
+    'Cpuct': ['CPuct',
+              'CPuctRootOffset',
+              'CPuctBase',
+              'CPuctFactor'],
+    'Fpu': ['FpuStrategy',
+            'FpuValue',
+            'FpuStrategyAtRoot',
+            'FpuValueAtRoot'],
+    'Policy temp': ['PolicyTemperature'],
+    'Search enhancements': ['LogitQ',
+                            'ShortSightedness'],
+    'Draw score': ['DrawScoreSideToMove',
+                   'DrawScoreOpponent',
+                   'DrawScoreWhite',
+                   'DrawScoreBlack'],
+    'Misc': ['CacheHistoryLength',
+             'StickyEndgames'],
+    'Early stop': ['KLDGainAverageInterval',
+                   'MinimumKLDGainPerNode',
+                   'SmartPruningFactor'],
+    'Threading and batching': ['Threads',
+                               'MinibatchSize',
+                               'MaxPrefetch',
+                               'MaxCollisionEvents',
+                               'MaxCollisionVisits',
+                               'OutOfOrderEval',
+                               'MaxConcurrentSearchers']
+}
+COLUMN_ORDER = [column for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]]
+GROUP_PER_COLUMN = {column: group for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]}
+    #{COLUMNS_PER_GROUP[group][column]:
+    #                    group for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]}
 
 class GameData:
     def __init__(self):
         self.board = chess.Board()
         self.game_data = None
         self.fen = self.board.fen()
+
     def set_board_position(self, position_index):
         self.reset_board()
         for move in self.game_data['move'][1:position_index + 1]:
@@ -23,10 +103,69 @@ class GameData:
         self.board.set_fen(self.fen)
 
 
+def try_to_round(value, precision):
+    #don't convert boolean values to floats
+    if isinstance(value, bool):
+        return value
+    try:
+        out = str(round(float(value), precision))
+        #print(value, out, type(value))
+    except ValueError:
+        out = value
+    return out
+
 class ConfigData:
-    def __init__(self):
+    def __init__(self, lc0):
         self.data = pd.DataFrame()
         self.data_analyzed = pd.DataFrame()
+        self.df_dict = {}
+        self.dropdowns = {}
+        self.columns = []
+        self.lc0 = lc0
+        self.construct_config_data()
+
+    def construct_config_data(self):
+        self.df_dict['Nodes'] = 200
+        self.df_dict['Nodes_default'] = 200
+        node_col = {'id': 'Nodes', 'name': ['', 'Nodes'], 'clearable': False}
+        self.columns.append(node_col)
+        for opt in self.lc0.options:
+            option = lc0.options[opt]
+            if opt not in filter_out_options:
+                group = GROUP_PER_COLUMN.get(opt, 'Misc')
+                self.add_column(option, group)
+
+        self.columns.sort(key=lambda x: COLUMN_ORDER.index(x['name'][1]) if x['name'][1] in COLUMN_ORDER else 999999)
+
+        df = pd.DataFrame(self.df_dict)
+        df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
+        self.data = df
+
+    def add_column(self, option, category):
+        option_type = option.type
+        default = option.default
+        if option_type == 'check':
+            default = str(default)
+        elif option_type != "spin":
+            default = try_to_round(default, 3)  # TODO: don't round here, rather edit datatable formatting
+        name = option.name
+        if name in overridden_defaults:
+            self.df_dict[name] = overridden_defaults[name]
+        else:
+            self.df_dict[name] = [default]
+        self.df_dict[name + '_default'] = [default]
+        col = {'id': name, 'name': [category, name], 'clearable': False}
+        if option_type == 'combo' or option_type == 'check':
+            col['presentation'] = 'dropdown'
+            if option_type == 'combo':
+                var = option.var
+            else:
+                var = ('True', 'False')
+            dropdown = {'options': [{'label': val, 'value': val} for val in var],
+                        'clearable': False}
+            self.dropdowns[name] = dropdown
+            print('DROPDOWNS', self.dropdowns)
+        self.columns.append(col)
 
     def update_data(self, data):
         nr_of_rows = data.shape[0]
@@ -44,12 +183,22 @@ class ConfigData:
         row = self.get_row(row_ind)
         config = {}
         for option_name in row.index:
-            if option_name.endswith('_default'):
+            if option_name.endswith('_default') or option_name == 'Nodes':
                 continue
             option_value = row[option_name]
             if not only_non_default or option_value != row[option_name + '_default']:
                 config[option_name] = option_value
         return(config)
+
+    def get_data(self, nr_of_rows):
+        return(config_data.data[:nr_of_rows])
+
+    def get_columns(self, with_nodes):
+        if not with_nodes:
+            d = [col for col in self.columns if col['id'] != 'Nodes']
+        else:
+            d = self.columns
+        return(d)
 
 class TreeData:
     def __init__(self, lc0):#, engine_path, weight_path):
@@ -91,9 +240,9 @@ class TreeData:
     def get_best_moves(self, position_index, slider_value, type, max_moves):
         try:
             tree = self.G_list[position_index][slider_value]
-        except KeyError:
-            #not yet analyzed
-            return([], [])
+        except (KeyError, IndexError) as e:
+            #position not yet analyzed or slider value set to config not yet analyzed
+            return ([], [])
         children = gt.get_children(tree, gt.get_root(tree))
 
         metrics = []
@@ -271,5 +420,5 @@ lc0 = leela_engine(args)#leela(args)
 tree_data = TreeData(lc0)
 tree_data.create_demo_data()
 game_data = GameData()
-config_data = ConfigData()
+config_data = ConfigData(lc0)
 
