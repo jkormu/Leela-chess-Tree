@@ -166,6 +166,7 @@ def pgn_layout():
     arrows_input = html.Div(children=[html.Label('#Arrows: '),
                                       dcc.Input(id='nr_of_arrows_input', type="number",
                                                 min=0, max=100, step=1,
+                                                size='3', #size has effect in firefox
                                                 inputMode='numeric', value=3)])
 
     arrow_settings.children = [arrow_options, arrows_input]

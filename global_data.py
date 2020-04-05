@@ -126,9 +126,10 @@ class ConfigData:
         self.construct_config_data()
         self.weights = []
         self.find_weights()
+        print('WEIGHTS', self.weights)
 
     def find_weights(self):
-        root =  os.getcwd()
+        root = os.getcwd()
         weights_folder = os.path.join(root, 'weights')
         weights_files = [join(weights_folder, f) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         self.weights = weights_files
