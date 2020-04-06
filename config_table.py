@@ -46,7 +46,8 @@ def get_config_table():
                                                    #style={'flex': 1},
                                                    #style={'display': 'inline-block'},
                                                    value=config_data.weight_paths[0],
-                                                   placeholder='mitähän vittua, sika pani kettua'),
+                                                   placeholder='',
+                                                   clearable=False),
                                       ],
                             #style={'display': 'flex'}
                             )
