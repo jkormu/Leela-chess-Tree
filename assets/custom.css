@@ -13,6 +13,8 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: 'BundledDejavuSans';
+  font-size: 14px;
 }
 
 .dash-spinner.dash-default-spinner {
@@ -26,4 +28,15 @@ body {
 @font-face {
     font-family: 'BundledDejavuSansMono';
     src: url('DejavuSansMono-5m7L.ttf');
+}
+
+@font-face {
+    font-family: 'BundledDejavuSans';
+    src: url('DejaVuSans.ttf');
+}
+
+@font-face {
+    font-family: 'BundledDejavuSans';
+    src: url('DejaVuSans-Bold.ttf');
+    font-weight: bold;
 }

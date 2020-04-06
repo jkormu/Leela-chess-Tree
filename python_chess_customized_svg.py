@@ -66,7 +66,6 @@ DEFAULT_COLORS = {
     "square light lastmove": "#cdd16a",
 }
 
-
 class Arrow:
     """Details of an arrow to be drawn."""
 
@@ -357,13 +356,15 @@ def board(board: Optional[chess.BaseBoard] = None, *,
                 "opacity": "1.0",
                 "class": "circle",
             })
-
+            #style = get_style("'BundledDejavuSans'", str(SQUARE_SIZE * 0.1))
             annot = ET.SubElement(svg, "text", {
                 "x": str(x_annot),
                 "y": str(y_annot),
                 "font-size": str(SQUARE_SIZE * 0.2),  # max(1, int(min(SQUARE_SIZE, SQUARE_SIZE) * 0.3))),
                 "text-anchor": "middle",
-                "alignment-baseline": "middle"})
+                "dominant-baseline": "middle"
+                #"alignment-baseline": "middle"
+            })
             annot.text = annotation
 
     return SvgWrapper(ET.tostring(svg).decode("utf-8"))
