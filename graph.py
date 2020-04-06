@@ -132,8 +132,8 @@ def get_data(data, visible):
 def get_graph_component():
     graph_component = html.Div(style={'height': '100%', 'width': '100%'})
     loading_component = html.Div(dcc.Loading(children=[html.Div(id='loading_trigger', style={'display': 'none'})], style={'flex': 1}),
-                                 style={'height': '3%', 'overflow': 'auto', 'display': 'flex', 'flex-direction': 'column'})
-    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '2%'})
+                                 style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flex-direction': 'column'})
+    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '5%'})
     graph_container = html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
@@ -150,7 +150,7 @@ def get_graph_component():
                                                 ),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
-                           style={'height': '95%', 'width': '100%', 'float': 'left'}
+                           style={'height': '90%', 'width': '100%', 'float': 'left'}
                            )
     graph_component.children = [loading_component, config_info, graph_container]
     return(graph_component)
