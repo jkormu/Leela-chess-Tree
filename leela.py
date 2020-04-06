@@ -9,7 +9,7 @@ class leela_engine:
         if engine_path is None:
             engine_path = self.find_engine()
             net = self.find_net()#'/home/jusufe/tmp/weights_run2_591226.pb.gz'
-            engine_path = [engine_path, '--weights=' + net]
+            engine_path = [engine_path, '--weights=' + net]#, '--logfile=lc0_log.txt']
         print(engine_path)
         self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
         self.analyzed_count = 0 #used as unique id of position for SimpleEngine.play(), forces ucinewgame
@@ -53,13 +53,19 @@ class leela_engine:
 
     def configure(self, options):
         #change configuration only if new options differ from old
-        print('CONFIGURING:', options)
         changed = False
+        boolean_conversion = {'False': False, 'True': True}
         for opt in options:
+            # Need to convert boolean strings to booleans
+            # since dash datatable works with strings and python chess with booleans
+            if options[opt] in ['True', 'False']:
+                options[opt] = boolean_conversion[options[opt]]
+
             if self.configuration[opt] != options[opt]:
                 self.configuration[opt] = options[opt]
                 changed = True
         if changed:
+            print('CONFIGURING:', options)
             print('setting parameters:', self.configuration)
             self.lc0.configure(self.configuration)
 
