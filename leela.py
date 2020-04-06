@@ -8,7 +8,7 @@ class leela_engine:
     def __init__(self, engine_path = None):
         if engine_path is None:
             engine_path = self.find_engine()
-            net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
+            net = self.find_net()#'/home/jusufe/tmp/weights_run2_591226.pb.gz'
             engine_path = [engine_path, '--weights=' + net]
         print(engine_path)
         self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
@@ -30,6 +30,12 @@ class leela_engine:
         #path = os.getcwd()
         #engine_path = [join(path, f) for f in os.listdir(path) if isfile(join(path, f)) and f.startswith('lc0_tree')][0]
         return(None)
+
+    def find_net(self):
+        root = os.getcwd()
+        weights_folder = os.path.join(root, 'weights')
+        net_path = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))][0]
+        return(net_path)
 
     def play(self, board, nodes):
         self.analyzed_count += 1

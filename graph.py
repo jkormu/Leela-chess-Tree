@@ -165,10 +165,12 @@ def get_graph_component():
      ],
     [State('slider1', 'marks'),
      State('move-table', 'active_cell'),
-     State('nodes_input', 'value')]
+     State('nodes-mode-selector', 'value'),
+     State('nodes_input', 'value'),
+     State('net-mode-selector', 'value'),
+     State('net_selector', 'value')]
 )
-
-def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes):
+def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes_mode, global_nodes, net_mode, global_net):
     if n_clicks_selected_timestamp is None:
         n_clicks_selected_timestamp = -1
     if n_clicks_all_timestamp is None:
@@ -193,15 +195,23 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
     tree_data.args = [engine, '--weights=' + net]
 
-    nodes = nodes
     board = game_data.board
     if not is_analyze_selected:
         tree_data.G_list = {}
         tree_data.data = {}
+    else:
+        for position_index in position_indices:
+            tree_data.G_list.pop(position_index, None)  # clear graph data for this position
     for config_i in range(len(marks)):
+        print('mode:', nodes_mode)
+        print('global nodes', global_nodes)
+        nodes = config_data.get_nodes(config_i, nodes_mode, global_nodes)
+        print('nodes', nodes)
         for position_index in position_indices:
             game_data.set_board_position(position_index)
-            configurations = config_data.get_configurations(config_i)
+            if net_mode != 'global':
+                global_net = None
+            configurations = config_data.get_configurations(config_i, global_net)
             tree_data.run_search(position_index, configurations, board, nodes)
 
     for position_index in position_indices:
@@ -217,9 +227,15 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     [Output('graph', 'figure'),
      Output('config_info', 'children')],
     [Input('slider1', 'value'),
-     Input('move-table', 'active_cell')])
-def update_data(selected_value, active_cell):
-    configurations = config_data.get_configurations(selected_value, only_non_default=True)
+     Input('move-table', 'active_cell'),
+     Input('net-mode-selector', 'value'),
+     Input('config-table-dummy-div', 'children')],
+    [State('net_selector', 'value')]
+)
+def update_data(selected_value, active_cell, net_mode, config_hanged, global_net):
+    if net_mode != 'global':
+        global_net = None
+    configurations = config_data.get_configurations(selected_value, global_net, only_non_default=True)
     #print('KONFIGURAATIOT', configurations)
     tooltip = ', '.join([f'{option}={configurations[option]}' for option in configurations])
 

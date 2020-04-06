@@ -104,7 +104,7 @@ def get_score_bar_figure(W, D, B):
     return(fig)
 
 def score_bar():
-    fig = get_score_bar_figure(20, 30, 50)
+    fig = get_score_bar_figure(33, 34, 33)
 
     #the height of the component is set relative to it's width
     #this is achieved by the padding hack from
@@ -439,6 +439,7 @@ def update_score_bar(value, active_cell):
     W = game_data.game_data['W'][row]
     D = game_data.game_data['D'][row]
     B = game_data.game_data['L'][row]
+    print('WDB:', W,D,B)
     fig = get_score_bar_figure(W, D, B)
     return(fig, style)
 

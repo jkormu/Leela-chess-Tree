@@ -25,7 +25,7 @@ overridden_defaults = {
 }
 
 #Options user cannot change, mostly due to not having effect on search
-filter_out_options = ['WeightsFile',
+filter_out_options = [#'WeightsFile',
                       'Backend',
                       'BackendOptions',
                       'NNCacheSize',
@@ -57,6 +57,7 @@ filter_out_options = ['WeightsFile',
 #this this dict also determines order of the groups and parameters (dicts are ordered in python 3.7)
 COLUMNS_PER_GROUP = {
     'Nodes': ['Nodes'],
+    'Net': ['WeightsFile'],
     'Cpuct': ['CPuct',
               'CPuctRootOffset',
               'CPuctBase',
@@ -123,16 +124,22 @@ class ConfigData:
         self.dropdowns = {}
         self.columns = []
         self.lc0 = lc0
-        self.construct_config_data()
-        self.weights = []
+        self.weight_files = []
+        self.weight_paths = []
         self.find_weights()
-        print('WEIGHTS', self.weights)
+        self.construct_config_data()
+        #self.use_global_weight = True
+        #self.global_weight = self.weight_paths[0]
+        #print('WEIGHTS', self.weights)
 
     def find_weights(self):
         root = os.getcwd()
         weights_folder = os.path.join(root, 'weights')
-        weights_files = [join(weights_folder, f) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
-        self.weights = weights_files
+        weight_files = [f.split(".")[0] for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
+        weight_paths = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
+        print('WEIGHT PATHS', weight_paths)
+        self.weight_files = weight_files
+        self.weight_paths = weight_paths
 
     def construct_config_data(self):
         self.df_dict['Nodes'] = 200
@@ -165,14 +172,18 @@ class ConfigData:
             self.df_dict[name] = [default]
         self.df_dict[name + '_default'] = [default]
         col = {'id': name, 'name': [category, name], 'clearable': False}
-        if option_type == 'combo' or option_type == 'check':
+        if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
             col['presentation'] = 'dropdown'
             if option_type == 'combo':
                 var = option.var
             else:
                 var = ('True', 'False')
-            dropdown = {'options': [{'label': val, 'value': val} for val in var],
-                        'clearable': False}
+            if name == 'WeightsFile':
+                dropdown = {'options': [{'label': file, 'value': path} for file, path in zip(self.weight_files, self.weight_paths)],
+                            'clearable': False}
+            else:
+                dropdown = {'options': [{'label': val, 'value': val} for val in var],
+                            'clearable': False}
             self.dropdowns[name] = dropdown
             print('DROPDOWNS', self.dropdowns)
         self.columns.append(col)
@@ -189,25 +200,39 @@ class ConfigData:
         row = self.data.iloc[row_ind]
         return(row)
 
-    def get_configurations(self, row_ind, only_non_default=False):
+    def get_configurations(self, row_ind, global_weight, only_non_default=False):
         row = self.get_row(row_ind)
         config = {}
         for option_name in row.index:
             if option_name.endswith('_default') or option_name == 'Nodes':
                 continue
+            if option_name == 'WeightsFile' and global_weight is not None:
+                config[option_name] = global_weight
+                continue
             option_value = row[option_name]
-            if not only_non_default or option_value != row[option_name + '_default']:
+            if not only_non_default or option_value != row[option_name + '_default'] or option_name == 'WeightsFile':
                 config[option_name] = option_value
         return(config)
+
+    def get_nodes(self, row_ind, nodes_mode, global_nodes):
+        if nodes_mode == 'global':
+            return(global_nodes)
+        row = self.get_row(row_ind)
+        nodes = row['Nodes']
+        return(nodes)
+
 
     def get_data(self, nr_of_rows):
         return(config_data.data[:nr_of_rows])
 
-    def get_columns(self, with_nodes):
+    def get_columns(self, with_nodes, with_nets):
+        columns_to_exclude = []
         if not with_nodes:
-            d = [col for col in self.columns if col['id'] != 'Nodes']
-        else:
-            d = self.columns
+            columns_to_exclude.append('Nodes')
+        if not with_nets:
+            columns_to_exclude.append('WeightsFile')
+
+        d = [col for col in self.columns if col['id'] not in columns_to_exclude]
         return(d)
 
 class TreeData:
