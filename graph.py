@@ -209,7 +209,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
         print('nodes', nodes)
         for position_index in position_indices:
             game_data.set_board_position(position_index)
-            if net_mode != 'global':
+            if net_mode != ['global']:
                 global_net = None
             configurations = config_data.get_configurations(config_i, global_net)
             tree_data.run_search(position_index, configurations, board, nodes)
@@ -233,7 +233,7 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     [State('net_selector', 'value')]
 )
 def update_data(selected_value, active_cell, net_mode, config_hanged, global_net):
-    if net_mode != 'global':
+    if net_mode != ['global']:
         global_net = None
     configurations = config_data.get_configurations(selected_value, global_net, only_non_default=True)
     #print('KONFIGURAATIOT', configurations)

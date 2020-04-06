@@ -16,17 +16,18 @@ EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 
 
 def get_config_table():
-    nodes_input = html.Div(children=[html.Label('Nodes: ', style={'margin-left': '10px'}),
+    nodes_input = html.Div(children=[#html.Label('Nodes: ', style={'margin-left': '10px'}),
                                      dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1,
                                                inputMode='numeric',
-                                               value=200),
+                                               value=200,
+                                               style={'margin-left': '10px'}),
                                      ])
-    nodes_mode_select = html.Div(children=[html.Label('Set nodes: ', style={'margin-left': '10px'}),
-                                 dcc.RadioItems(id='nodes-mode-selector', options=[
-                                     {'label': 'per config', 'value': 'config'},
-                                     {'label': 'globally', 'value': 'global'},
+    nodes_mode_select = html.Div(children=[#html.Label('Set nodes: ', style={'margin-left': '10px'}),
+                                 dcc.Checklist(id='nodes-mode-selector', options=[
+                                     #{'label': 'per config', 'value': 'config'},
+                                     {'label': 'Global nodes', 'value': 'global'},
                                  ],
-                                                value='global'),
+                                                value=['global']),
                                            nodes_input],
                                  style={'display': 'flex'})
     number_of_configs_input = html.Div(children=[html.Label('Configurations: '),
@@ -36,7 +37,7 @@ def get_config_table():
                                                            value=2, debounce=False),
                                                  ])
 
-    net_selector = html.Div(children=[html.Label('Net: ', style={'margin-left': '10px'}),
+    net_selector = html.Div(children=[#html.Label('Net: ', style={'margin-left': '10px'}),
                                       dcc.Dropdown(id='net_selector',
                                                    options=[{'label': weight_file,
                                                              'value': weight_path}
@@ -51,12 +52,12 @@ def get_config_table():
                                       ],
                             #style={'display': 'flex'}
                             )
-    net_mode_select = html.Div(children=[html.Label('Select net: ', style={'margin-left': '10px'}),
-                                         dcc.RadioItems(id='net-mode-selector', options=[
-                                             {'label': 'per config', 'value': 'config'},
-                                             {'label': 'globally', 'value': 'global'},
+    net_mode_select = html.Div(children=[#html.Label('Select net: ', style={'margin-left': '10px'}),
+                                         dcc.Checklist(id='net-mode-selector', options=[
+                                             #{'label': 'per config', 'value': 'config'},
+                                             {'label': 'Global net', 'value': 'global'},
                                          ],
-                                                value='global'),
+                                                value=['global']),
                                          net_selector],
                                #style={'display': 'flex'}
                                )
@@ -157,8 +158,8 @@ def update_rows(nr_of_rows, dd, slider_value):
      Input("net-mode-selector", 'value')],
 )
 def set_nodes_and_net_mode(nodes_mode, net_mode):
-    global_nodes_disabled = True if nodes_mode != 'global' else False
-    global_net_disabled = True if net_mode != 'global' else False
+    global_nodes_disabled = True if nodes_mode != ['global'] else False
+    global_net_disabled = True if net_mode != ['global'] else False
     columns = config_data.get_columns(with_nodes=global_nodes_disabled, with_nets=global_net_disabled)
     return(global_nodes_disabled, global_net_disabled, columns)
 

@@ -215,7 +215,7 @@ class ConfigData:
         return(config)
 
     def get_nodes(self, row_ind, nodes_mode, global_nodes):
-        if nodes_mode == 'global':
+        if nodes_mode == ['global']:
             return(global_nodes)
         row = self.get_row(row_ind)
         nodes = row['Nodes']
