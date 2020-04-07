@@ -138,17 +138,16 @@ def get_graph_component():
                            children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
-                                               style={'height': '95%', 'marginTop': '0'},
+                                               style={'height': '90%', 'marginTop': '0', 'margin-bottom': '25px'},
                                                config={'displayModeBar': False},
                                                ),
-                                     dcc.Slider(id='slider1',
+                                     html.Div(dcc.Slider(id='slider1',
                                                 min=0,
                                                 #max=1,
                                                 value=0,
                                                 #marks={str(i): 'config '+str(i) for i in range(2)},
                                                 step=None,
-
-                                                ),#updatemode='drag'
+                                                ), style={'height': '10%'}),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
                            style={'height': '90%', 'width': '100%', 'float': 'left'}
