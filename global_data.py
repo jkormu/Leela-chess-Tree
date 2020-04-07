@@ -109,6 +109,13 @@ class GameData:
         self.board.set_fen(self.fen)
 
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def try_to_round(value, precision):
     #don't convert boolean values to floats
     if isinstance(value, bool):
@@ -181,6 +188,8 @@ class ConfigData:
 
         self.df_dict[name + '_default'] = [default]
         col = {'id': name, 'name': [category, name], 'clearable': False}
+        if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
+            col['type'] = 'numeric'
         if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
             col['presentation'] = 'dropdown'
             if option_type == 'combo':
