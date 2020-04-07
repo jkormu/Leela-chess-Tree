@@ -16,6 +16,7 @@ body {
   padding: 0;
   font-family: 'BundledDejavuSans';
   font-size: 14px;
+  -moz-user-select: none;
 }
 
 .dash-spinner.dash-default-spinner {
