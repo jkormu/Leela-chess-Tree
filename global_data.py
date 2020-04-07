@@ -197,7 +197,7 @@ class ConfigData:
         if option.max is not None:
             self.df_dict[name + '_max'] = [option.max]
             self.columns_with_max.append(name)
-        col = {'id': name, 'name': [category, name], 'clearable': False}
+        col = {'id': name, 'name': [category, name], 'clearable': False}#, 'validation': {'allow_null': False}, 'on_change': {'action': 'validate'}}
         if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
             col['type'] = 'numeric'
         if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
