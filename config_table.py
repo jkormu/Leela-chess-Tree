@@ -75,6 +75,32 @@ def get_config_table():
                              reset_button_clicked_indicator
                              ]
 
+    style_non_default = [{
+                'if': {
+                    'column_id': col,
+                    'filter_query': '{{{0}}} != {{{0}_default}}'.format(col)
+                },
+                'background_color': EDITED_CELL_COLOR
+            } for col in config_data.data.columns if col != 'Nodes' and col != 'WeightsFile']
+
+    style_below_min = [{
+                'if': {
+                    'column_id': col,
+                    'filter_query': '{{{0}}} < {{{0}_min}}'.format(col)
+                },
+                'background_color': 'red'
+            } for col in config_data.columns_with_min]
+
+    style_above_max = [{
+                'if': {
+                    'column_id': col,
+                    'filter_query': '{{{0}}} > {{{0}_max}}'.format(col)
+                },
+                'background_color': 'red'
+            } for col in config_data.columns_with_max]
+
+    conditional_style = style_non_default + style_below_min + style_above_max
+
     config_table = html.Div([
         #settings_bar,
         #number_of_configs_dropdown,
@@ -84,13 +110,7 @@ def get_config_table():
             columns=config_data.columns,
             editable=True,
             dropdown=config_data.dropdowns,
-            style_data_conditional=[{
-                'if': {
-                    'column_id': col,
-                    'filter_query': '{{{0}}} != {{{0}_default}}'.format(col)
-                },
-                'background_color': EDITED_CELL_COLOR  # or whatever
-            } for col in config_data.data.columns if col != 'Nodes' and col != 'WeightsFile'],
+            style_data_conditional=conditional_style,
             merge_duplicate_headers=True,
             style_cell={'textAlign': 'center'},
             style_table={'overflowX': 'auto', 'padding-bottom': '6em'}
@@ -105,6 +125,7 @@ def get_config_table():
         settings_bar,
         config_table,
         html.Div(id='config-table-dummy-div', style={'display': 'none'}),
+        html.Div(id='data-validity', style={'display': 'none'}),
         #html.Div('Font1 .a.b.c.d.E.F.G', style={'font-family': 'sans-serif'}),
         #html.Div('Font2 .a.b.c.d.E.F.G', style={'font-family': "'BundledMonoSpace'"}),
         #html.Div('Font3 .a.b.c.d.E.F.G'),
@@ -113,6 +134,7 @@ def get_config_table():
         style={'width': '100%', 'display': 'flex', 'flex-direction': 'column'})
 
     return(config_component)
+
 
 @app.callback(
     Output("config-table-dummy-div", "children"),

@@ -134,6 +134,8 @@ class ConfigData:
         self.df_dict = {}
         self.dropdowns = {}
         self.columns = []
+        self.columns_with_min = [] #options with min allowed uci value
+        self.columns_with_max = [] #options with max allowed uci value
         self.lc0 = lc0
         self.weight_files = []
         self.weight_paths = []
@@ -155,6 +157,8 @@ class ConfigData:
     def construct_config_data(self):
         self.df_dict = {}
         self.columns = []
+        self.columns_with_min = []
+        self.columns_with_max = []
         self.df_dict['Nodes'] = 200
         self.df_dict['Nodes_default'] = 200
         node_col = {'id': 'Nodes', 'name': ['', 'Nodes'], 'clearable': False}
@@ -187,6 +191,12 @@ class ConfigData:
             self.df_dict[name] = [default]
 
         self.df_dict[name + '_default'] = [default]
+        if option.min is not None:
+            self.df_dict[name + '_min'] = [option.min]
+            self.columns_with_min.append(name)
+        if option.max is not None:
+            self.df_dict[name + '_max'] = [option.max]
+            self.columns_with_max.append(name)
         col = {'id': name, 'name': [category, name], 'clearable': False}
         if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
             col['type'] = 'numeric'
@@ -223,7 +233,7 @@ class ConfigData:
         row = self.get_row(row_ind)
         config = {}
         for option_name in row.index:
-            if option_name.endswith('_default') or option_name == 'Nodes':
+            if option_name.endswith('_default') or option_name.endswith('_min') or option_name.endswith('_max') or option_name == 'Nodes':
                 continue
             if option_name == 'WeightsFile' and global_weight is not None:
                 config[option_name] = global_weight
