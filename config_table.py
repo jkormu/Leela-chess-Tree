@@ -15,67 +15,78 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 MAX_NUMBER_OF_CONFIGS = 10
 EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
+LINE_COLOR = 'rgb(100, 100, 100)'
+
+def get_settings_bar():
+    settings_bar = html.Div(style={'display': 'flex',
+                                   'justify-content': 'space-between',
+                                   'border-top': f'1px solid {LINE_COLOR}',
+                                   'padding-top': '5px',
+                                   'padding-bottom': '5px'})  # style={'display': 'flex', 'justify-content': 'flex-start'})#'space-between'
 
 
-def get_config_table():
-    nodes_input = html.Div(children=[#html.Label('Nodes: ', style={'margin-left': '10px'}),
-                                     dcc.Input(id='nodes_input', type="number", min=1, max=10000, step=1,
-                                               inputMode='numeric',
-                                               value=200,
-                                               style={'margin-left': '10px'}),
-                                     ])
-    nodes_mode_select = html.Div(children=[#html.Label('Set nodes: ', style={'margin-left': '10px'}),
-                                 dcc.Checklist(id='nodes-mode-selector', options=[
-                                     #{'label': 'per config', 'value': 'config'},
-                                     {'label': 'Global nodes', 'value': 'global'},
-                                 ],
-                                                value=['global']),
-                                           nodes_input],
-                                 style={'display': 'flex'})
-    number_of_configs_input = html.Div(children=[html.Label('Configurations: '),
+    number_of_configs_input = html.Div(children=[html.Div('#Configurations: '),
                                                  dcc.Input(id='number-of-configs-input', type="number", min=1, max=10,
                                                            step=1,
                                                            inputMode='numeric',
                                                            value=2, debounce=False),
-                                                 ])
+                                                 ], style={'flex': 1})
 
-    net_selector = html.Div(children=[#html.Label('Net: ', style={'margin-left': '10px'}),
-                                      dcc.Dropdown(id='net_selector',
-                                                   options=[{'label': weight_file,
-                                                             'value': weight_path}
-                                                            for weight_file, weight_path
-                                                            in zip(config_data.weight_files,
-                                                                   config_data.weight_paths)],
-                                                   #style={'flex': 1},
-                                                   #style={'display': 'inline-block'},
-                                                   value=config_data.weight_paths[0],
-                                                   placeholder='',
-                                                   clearable=False),
-                                      ],
-                            #style={'display': 'flex'}
+    weight_options = [{'label': weight_file, 'value': weight_path} for weight_file, weight_path
+                      in zip(config_data.weight_files, config_data.weight_paths)]
+    net_selector_dropdown = dcc.Dropdown(id='net_selector',
+                                         options=weight_options,
+                                         value=config_data.weight_paths[0],
+                                         placeholder='',
+                                         clearable=False)
+
+    net_mode_select = dcc.Checklist(id='net-mode-selector',
+                                    options=[{'label': 'Global net',
+                                              'value': 'global'}],
+                                    value=['global'])
+
+    net_selector = html.Div(children=[net_mode_select, net_selector_dropdown],
+                            style={'flex': 1})
+
+
+    nodes_input = dcc.Input(id='nodes_input',
+                            type="number",
+                            min=1,
+                            max=10000,
+                            step=1,
+                            inputMode='numeric',
+                            value=200,
                             )
-    net_mode_select = html.Div(children=[#html.Label('Select net: ', style={'margin-left': '10px'}),
-                                         dcc.Checklist(id='net-mode-selector', options=[
-                                             #{'label': 'per config', 'value': 'config'},
-                                             {'label': 'Global net', 'value': 'global'},
-                                         ],
-                                                value=['global']),
-                                         net_selector],
-                               #style={'display': 'flex'}
-                               )
+
+    nodes_mode_select = dcc.Checklist(id='nodes-mode-selector',
+                                      options=[{'label': 'Global nodes',
+                                                'value': 'global'}],
+                                      value=['global'])
+
+    nodes_selector = html.Div(children=[nodes_mode_select, nodes_input],
+                              style={'flex': 1})
+
 
     reset_button = html.Button(id='reset_defaults_button',
-                               children='Reset')
+                               children='Reset',
+                               style={'width': '100%', 'height': '100%'})
 
-    reset_button_clicked_indicator = html.Div(id='reset_button_clicked_indicator', style={'display': 'none'})
+    reset_button_clicked_indicator = html.Div(id='reset_button_clicked_indicator',
+                                              style={'display': 'none'})
 
-    settings_bar = html.Div()#style={'display': 'flex', 'justify-content': 'flex-start'})#'space-between'
-    settings_bar.children = [number_of_configs_input, net_mode_select, nodes_mode_select,
-                             reset_button,
-                             reset_button_clicked_indicator
-                             ]
+    reset_button_container = html.Div(children=[reset_button, reset_button_clicked_indicator],
+                                      style={'flex': 1})
 
-    style_non_default = [{
+    separator_div1 = html.Div(style={'flex': 1})
+
+    settings_bar.children = [number_of_configs_input, nodes_selector, net_selector, separator_div1, reset_button_container]
+
+    return(settings_bar)
+
+def get_config_table():
+    settings_bar = get_settings_bar()
+
+    highlight_non_default = [{
                 'if': {
                     'column_id': col,
                     'filter_query': '{{{0}}} != {{{0}_default}}'.format(col)
@@ -83,7 +94,7 @@ def get_config_table():
                 'background_color': EDITED_CELL_COLOR
             } for col in config_data.data.columns if col != 'Nodes' and col != 'WeightsFile']
 
-    style_below_min = [{
+    highlight_below_min = [{
                 'if': {
                     'column_id': col,
                     'filter_query': '{{{0}}} < {{{0}_min}}'.format(col)
@@ -91,7 +102,7 @@ def get_config_table():
                 'background_color': 'red'
             } for col in config_data.columns_with_min]
 
-    style_above_max = [{
+    highlight_above_max = [{
                 'if': {
                     'column_id': col,
                     'filter_query': '{{{0}}} > {{{0}_max}}'.format(col)
@@ -99,7 +110,7 @@ def get_config_table():
                 'background_color': 'red'
             } for col in config_data.columns_with_max]
 
-    conditional_style = style_non_default + style_below_min + style_above_max
+    conditional_style = highlight_non_default + highlight_below_min + highlight_above_max
 
     config_table = html.Div([
         #settings_bar,
@@ -116,7 +127,6 @@ def get_config_table():
             style_table={'overflowX': 'auto', 'padding-bottom': '6em'}
         ),
         html.Div([html.Br() for _ in range(4)]),
-        #html.Div('Dummy2 to take space')
     ],
         style={'width': '100%', 'height': '100%'})
 
@@ -126,10 +136,6 @@ def get_config_table():
         config_table,
         html.Div(id='config-table-dummy-div', style={'display': 'none'}),
         html.Div(id='data-validity', style={'display': 'none'}),
-        #html.Div('Font1 .a.b.c.d.E.F.G', style={'font-family': 'sans-serif'}),
-        #html.Div('Font2 .a.b.c.d.E.F.G', style={'font-family': "'BundledMonoSpace'"}),
-        #html.Div('Font3 .a.b.c.d.E.F.G'),
-        #html.Div('Font4 .a.b.c.d.E.F.G', style={'font-family': "'BundledFreeMono'"})
         ],
         style={'width': '100%', 'display': 'flex', 'flex-direction': 'column'})
 
@@ -139,12 +145,10 @@ def get_config_table():
 @app.callback(
     Output("config-table-dummy-div", "children"),
     [Input("config-table", "data")],
-#    [State("number-of-configs-input", "value")]
 )
 def copy_table(data):
     data = pd.DataFrame(data)
     has_changed = config_data.update_data(data)
-    #print('data changed')
     return(str(has_changed))
 
 @app.callback(
@@ -173,10 +177,8 @@ def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
     slider_max = nr_of_rows - 1
     slider_style = {}
     if nr_of_rows == 1:
-        slider_style["visibility"] = "hidden" #= {"visibility": "hidden"}
-    data = config_data.get_data(nr_of_rows)#config_data.data[:nr_of_rows]
-    #print(data)
-    #print(data.columns)
+        slider_style["visibility"] = "hidden"
+    data = config_data.get_data(nr_of_rows)
     print(data.shape)
     data = data.to_dict('records')
 
