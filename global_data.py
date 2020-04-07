@@ -12,8 +12,8 @@ from os.path import isfile, join
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MAX_NUMBER_OF_CONFIGS = 10
 
-#deterministic search settings
-overridden_defaults = {
+# deterministic search settings
+deterministic_defaults = {
     'Threads': 1,
     'MinibatchSize': 1,
     'MaxPrefetch': 1,
@@ -21,6 +21,10 @@ overridden_defaults = {
     'MaxCollisionVisits': 1,
     'OutOfOrderEval': 'False',
     'MaxConcurrentSearchers': 1,
+}
+
+# Disable smart pruning
+other_defaults = {
     'SmartPruningFactor': 0
 }
 
@@ -142,6 +146,8 @@ class ConfigData:
         self.weight_paths = weight_paths
 
     def construct_config_data(self):
+        self.df_dict = {}
+        self.columns = []
         self.df_dict['Nodes'] = 200
         self.df_dict['Nodes_default'] = 200
         node_col = {'id': 'Nodes', 'name': ['', 'Nodes'], 'clearable': False}
@@ -166,10 +172,13 @@ class ConfigData:
         elif option_type != "spin":
             default = try_to_round(default, 3)  # TODO: don't round here, rather edit datatable formatting
         name = option.name
-        if name in overridden_defaults:
-            self.df_dict[name] = overridden_defaults[name]
+        if name in deterministic_defaults:
+            self.df_dict[name] = deterministic_defaults[name]
+        elif name in other_defaults:
+            self.df_dict[name] = other_defaults[name]
         else:
             self.df_dict[name] = [default]
+
         self.df_dict[name + '_default'] = [default]
         col = {'id': name, 'name': [category, name], 'clearable': False}
         if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
@@ -187,6 +196,7 @@ class ConfigData:
             self.dropdowns[name] = dropdown
             print('DROPDOWNS', self.dropdowns)
         self.columns.append(col)
+        return(None)
 
     def update_data(self, data):
         nr_of_rows = data.shape[0]

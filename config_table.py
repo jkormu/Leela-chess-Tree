@@ -62,8 +62,16 @@ def get_config_table():
                                #style={'display': 'flex'}
                                )
 
+    reset_button = html.Button(id='reset_defaults_button',
+                               children='Reset')
+
+    reset_button_clicked_indicator = html.Div(id='reset_button_clicked_indicator', style={'display': 'none'})
+
     settings_bar = html.Div()#style={'display': 'flex', 'justify-content': 'flex-start'})#'space-between'
-    settings_bar.children = [number_of_configs_input, net_mode_select, nodes_mode_select]
+    settings_bar.children = [number_of_configs_input, net_mode_select, nodes_mode_select,
+                             reset_button,
+                             reset_button_clicked_indicator
+                             ]
 
     config_table = html.Div([
         #settings_bar,
@@ -94,7 +102,7 @@ def get_config_table():
         #number_of_configs_dropdown,
         settings_bar,
         config_table,
-        html.Div(id='config-table-dummy-div'),
+        html.Div(id='config-table-dummy-div', style={'display': 'none'}),
         #html.Div('Font1 .a.b.c.d.E.F.G', style={'font-family': 'sans-serif'}),
         #html.Div('Font2 .a.b.c.d.E.F.G', style={'font-family': "'BundledMonoSpace'"}),
         #html.Div('Font3 .a.b.c.d.E.F.G'),
@@ -122,12 +130,14 @@ def copy_table(data):
      Output("slider1", "max"),
      Output("slider1", "style"),
      Output("slider1", "value")],
-    [Input("number-of-configs-input", "value")],
+    [Input("number-of-configs-input", "value"),
+     Input("reset_button_clicked_indicator", "children")
+     ],
     [State("config-table", "dropdown"),
      State("slider1", "value")]
 )
-def update_rows(nr_of_rows, dd, slider_value):
-    print('DROPDOWN:')
+def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
+    print('DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:')
     print(dd)
     print(nr_of_rows)
     try:
@@ -142,7 +152,9 @@ def update_rows(nr_of_rows, dd, slider_value):
     if nr_of_rows == 1:
         slider_style = {"visibility": "hidden"}
     data = config_data.get_data(nr_of_rows)#config_data.data[:nr_of_rows]
-    print(data)
+    #print(data)
+    #print(data.columns)
+    print(data.shape)
     data = data.to_dict('records')
 
     new_slider_value = min(slider_value, slider_max)
@@ -164,5 +176,10 @@ def set_nodes_and_net_mode(nodes_mode, net_mode):
     return(global_nodes_disabled, global_net_disabled, columns)
 
 
-#if __name__ == '__main__':
-#    app.run_server(debug=True)
+@app.callback(
+    Output('reset_button_clicked_indicator', 'children'),
+    [Input('reset_defaults_button', 'n_clicks_timestamp')],
+)
+def reset_data(n_clicks_timestamp):
+    config_data.construct_config_data()
+    return(str(n_clicks_timestamp))
