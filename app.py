@@ -53,7 +53,6 @@ config_container = html.Div(
 graph_container.children = [graph_component]
 config_container.children = [config_component]
 
-
 left_container.children = [graph_container, config_container]
 
 right_container = html.Div(

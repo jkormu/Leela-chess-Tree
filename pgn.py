@@ -20,6 +20,8 @@ from dash_table.Format import Format, Symbol, Scheme
 
 from colors import rgb_adjust_saturation
 
+from quit_button import get_quit_button
+
 COMPONENT_WIDTH = '98%'
 WHITE_WIN_COLOR = 'rgb(255, 255, 255)'
 DRAW_COLOR ='rgb(184, 184, 184)'
@@ -126,7 +128,7 @@ def score_bar():
 
 
 def pgn_layout():
-
+    quit_button = get_quit_button()
     upload = dcc.Upload(
             id='upload-pgn',
             children=html.Div([
@@ -241,7 +243,7 @@ def pgn_layout():
     container_table = html.Div(html.Div(children=data_table, style={'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
-    content = [upload, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table]
+    content = [quit_button, upload, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table]
     container.children = content
     return(container)
 

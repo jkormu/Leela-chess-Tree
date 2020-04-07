@@ -69,6 +69,9 @@ class leela_engine:
             print('setting parameters:', self.configuration)
             self.lc0.configure(self.configuration)
 
+    def quit(self):
+        self.lc0.quit()
+
 
     def get_options(self):
         return(self.lc0.options)

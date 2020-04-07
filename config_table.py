@@ -6,7 +6,9 @@ import dash_core_components as dcc
 import pandas as pd
 import dash_table
 from server import app
-from global_data import config_data, lc0
+from global_data import config_data
+from flask import request
+import sys
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -112,7 +114,6 @@ def get_config_table():
 
     return(config_component)
 
-
 @app.callback(
     Output("config-table-dummy-div", "children"),
     [Input("config-table", "data")],
@@ -146,11 +147,11 @@ def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
         nr_of_rows = max(1, nr_of_rows)
     except:
         return(dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update)
-    slider_marks = {str(i): str(i+1) for i in range(nr_of_rows)}
+    slider_marks = {str(i): 'config' + str(i+1) for i in range(nr_of_rows)}
     slider_max = nr_of_rows - 1
     slider_style = {}
     if nr_of_rows == 1:
-        slider_style = {"visibility": "hidden"}
+        slider_style["visibility"] = "hidden" #= {"visibility": "hidden"}
     data = config_data.get_data(nr_of_rows)#config_data.data[:nr_of_rows]
     #print(data)
     #print(data.columns)

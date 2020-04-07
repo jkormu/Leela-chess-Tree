@@ -143,10 +143,11 @@ def get_graph_component():
                                                ),
                                      dcc.Slider(id='slider1',
                                                 min=0,
-                                                max=1,
+                                                #max=1,
                                                 value=0,
-                                                marks={str(i): str(i) for i in range(2)},
+                                                #marks={str(i): 'config '+str(i) for i in range(2)},
                                                 step=None,
+
                                                 ),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
