@@ -47,7 +47,8 @@ graph_container = html.Div(
 )
 
 config_container = html.Div(
-    style={'height': f'{CONFIG_PANE_HEIGHT}%', 'width': '100%', 'background-color': CONFIG_CONTAINER_BG}
+    style={'height': f'{CONFIG_PANE_HEIGHT}%', 'width': '100%', 'background-color': CONFIG_CONTAINER_BG,
+           'display': 'flex', 'flex-direction': 'column'}
 )
 
 graph_container.children = [graph_component]

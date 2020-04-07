@@ -113,8 +113,6 @@ def get_config_table():
     conditional_style = highlight_non_default + highlight_below_min + highlight_above_max
 
     config_table = html.Div([
-        #settings_bar,
-        #number_of_configs_dropdown,
         dash_table.DataTable(
             id='config-table',
             data=config_data.data.to_dict('records'),
@@ -124,11 +122,11 @@ def get_config_table():
             style_data_conditional=conditional_style,
             merge_duplicate_headers=True,
             style_cell={'textAlign': 'center'},
-            style_table={'overflowX': 'auto', 'padding-bottom': '6em'}
+            style_table={'overflowX': 'auto', 'flex': 1},# 'height': '100%'}#, 'padding-bottom': '6em'}
         ),
-        html.Div([html.Br() for _ in range(4)]),
+        #html.Div([html.Br() for _ in range(4)]),
     ],
-        style={'width': '100%', 'height': '100%'})
+        style={'width': '100%', 'height': '100%', 'display': 'flex', 'flex-direction': 'column', 'flex': 1})
 
     config_component = html.Div([
         #number_of_configs_dropdown,
@@ -137,7 +135,7 @@ def get_config_table():
         html.Div(id='config-table-dummy-div', style={'display': 'none'}),
         html.Div(id='data-validity', style={'display': 'none'}),
         ],
-        style={'width': '100%', 'display': 'flex', 'flex-direction': 'column'})
+        style={'width': '100%', 'display': 'flex', 'flex-direction': 'column', 'flex': 1})
 
     return(config_component)
 
