@@ -55,11 +55,25 @@ class leela_engine:
         #change configuration only if new options differ from old
         changed = False
         boolean_conversion = {'False': False, 'True': True}
+        print(options)
         for opt in options:
             # Need to convert boolean strings to booleans
             # since dash datatable works with strings and python chess with booleans
             if options[opt] in ['True', 'False']:
                 options[opt] = boolean_conversion[options[opt]]
+
+            #clip the option value to allowed range
+            min_ = self.options[opt].min
+            max_ = self.options[opt].max
+            #print(opt, min_, max_)
+            if min_ is not None:
+                options[opt] = min(options[opt], max_)
+            if max_ is not None:
+                options[opt] = max(options[opt], min_)
+
+            #round interger options to nearest integer
+            if self.options[opt].type == 'spin':
+                options[opt] = int(round(options[opt]))
 
             if self.configuration[opt] != options[opt]:
                 self.configuration[opt] = options[opt]
