@@ -42,15 +42,8 @@ ARROW_COLORS = {#'p': (23, 178, 207),
                 'q': (255, 0, 0)}
 
 
-di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
-df = pd.DataFrame(di)
-board = chess.Board()
-svg_str = str(svg.board(board, size=400))
-svg_byte = svg_str.encode()
-encoded = base64.b64encode(svg_byte)
-svg_board = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
-
-
+#di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
+#df = pd.DataFrame(di)
 
 
 def get_score_bar_figure(W, D, B):
@@ -62,8 +55,6 @@ def get_score_bar_figure(W, D, B):
                marker=dict(color=WHITE_WIN_COLOR,
                            line=dict(color=WHITE_WIN_BAR_LINE_COLOR,
                                      width=BAR_LINE_WIDTH)))
-               #marker_color=WHITE_WIN_COLOR,)
-               #orientation='h')
     D = go.Bar(name='Draw-%', y=[''], x=[D],
                text=[f'{int(round(D))}%'],
                textposition='auto',
@@ -72,7 +63,6 @@ def get_score_bar_figure(W, D, B):
                marker=dict(color=DRAW_COLOR,
                            line=dict(color=DRAW_BAR_LINE_COLOR,
                                      width=BAR_LINE_WIDTH)))
-              # orientation='h')
     B = go.Bar(name='Black win-%', y=[''], x=[B],
                text=[f'{int(round(B))}%'],
                textposition='auto',
@@ -81,11 +71,9 @@ def get_score_bar_figure(W, D, B):
                marker=dict(color=BLACK_WIN_COLOR,
                            line=dict(color=BLACK_WIN_BAR_LINE_COLOR,
                                      width=BAR_LINE_WIDTH)))
-              # orientation='h')
     fig = go.Figure(data=[W, D, B])
-    #Change the bar mode
+
     xaxis = {'range': [0,100],
-             #'zeroline': False,
              'showgrid': False,
              #'ticks': 'outside',
              'showticklabels': False,
@@ -96,7 +84,6 @@ def get_score_bar_figure(W, D, B):
                       margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
                       xaxis=xaxis,
                       yaxis=yaxis,
-                      #height=50,
                       plot_bgcolor='rgb(255, 255, 255)',
                       transition={
                           'duration': 500,
@@ -113,8 +100,8 @@ def score_bar():
     #https://stackoverflow.com/questions/8894506/can-i-scale-a-divs-height-proportionally-to-its-width-using-css
     component = dcc.Graph(id='score-bar',
                           figure=fig,
-                          style={'width': '100%','height': '100%',
-                                 'position': 'absolute', 'left': 0},#{'height': '50px'},#, 'marginTop': '0'},
+                          style={'width': '100%', 'height': '100%',
+                                 'position': 'absolute', 'left': 0},
                           config={'displayModeBar': False}
                           )
     container = html.Div(style={
@@ -132,18 +119,16 @@ def pgn_layout():
     upload = dcc.Upload(
             id='upload-pgn',
             children=html.Div([
-                'Drag and Drop pgn file or ',
+                'Drag and Drop a pgn file or ',
                 html.A('Select File')
             ]),
             style={
-                # 'width': '80%',
                 'height': '60px',
                 'lineHeight': '60px',
                 'borderWidth': '1px',
                 'borderStyle': 'dashed',
                 'borderRadius': '5px',
                 'textAlign': 'center',
-                # 'margin': '10px'
             },
             # Only one pgn allowed
             multiple=False
@@ -173,7 +158,7 @@ def pgn_layout():
 
     arrow_settings.children = [arrow_options, arrows_input]
 
-    img = html.Img(id='board', src=svg_board)
+    img = html.Img(id='board')
     upload_output = html.Div(id='pgn-data-upload')
 
     buttons = html.Div(children=[
@@ -199,7 +184,7 @@ def pgn_layout():
                      {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": '', "id": 'dummy_right'}],
-            data=df.to_dict('records'),
+            #data=df.to_dict('records'),
             fixed_rows={'headers': True, 'data': 0},
             style_cell={'textAlign': 'left', 'minWidth': '5px', 'width': '20px', 'maxWidth': '20px',
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
