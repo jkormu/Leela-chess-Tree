@@ -203,11 +203,12 @@ def reset_data(n_clicks_timestamp):
     config_data.construct_config_data()
     return(str(n_clicks_timestamp))
 
-@app.callback(
-     Output('reset_button_clicked_indicator', "style"),
-    [Input("config-table", "data")],
-)
-def set_nodes_and_net_mode(data):
-    print('DATAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
-    print(data)
-    return(dash.no_update)
+#for debugging datatable data
+#@app.callback(
+#     Output('reset_button_clicked_indicator', "style"),
+#    [Input("config-table", "data")],
+#)
+#def set_nodes_and_net_mode(data):
+#    print('Data:')
+#    print(data)
+#    return(dash.no_update)
