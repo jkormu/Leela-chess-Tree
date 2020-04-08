@@ -351,7 +351,7 @@ class TreeData:
                 G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
             else:
                 G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
-        pos = pt.get_pos(G_merged)
+        pos = pt.get_tree_layout(G_merged)
         pos = pt.adjust_y(pos)
         data = {}
         node_counts = []
@@ -397,7 +397,7 @@ class TreeData:
             #########################
 
             G_pos = pt.get_own_pos(G, pos)
-            pos_list = pt.pos_separation(G, G_pos)
+            pos_list = pt.branch_separation(G, G_pos)
             node_counts.append(gt.get_nodes_in_depth(G))
 
             pv_nodes = pt.get_pv_nodes(G)

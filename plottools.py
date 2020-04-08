@@ -6,18 +6,20 @@ MOVED_PIECE_COLOR = 'rgb(210,105,30)'
 COLOR_START = '<a href="" style="color: ' + MOVED_PIECE_COLOR + '">'
 COLOR_END = '</a>'
 
-def extract_pos(tree, pos):
+
+def extract_coordinates(tree, pos):
     pos[tree.node][0] = tree.x
     pos[tree.node][1] = -tree.y
     for child in tree.children:
-        extract_pos(child, pos)
+        extract_coordinates(child, pos)
 
-def get_pos(G):
+#calculates node positions in canvas
+def get_tree_layout(G):
     node = get_root(G)
     pos = {n:[None, None] for n in G.nodes}
     start = time.time()
     tree = buchheim(G, node)
-    extract_pos(tree, pos)
+    extract_coordinates(tree, pos)
     #normalize x,y coords to interval [0,1]
     x_list,y_list = list(zip(*list(pos.values())))
     max_x, max_y = max(x_list), max(y_list)
@@ -38,10 +40,10 @@ def adjust_y(pos):
     return(pos)
 
 
-def pos_separation(G, pos):
+def branch_separation(G, pos):
     #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
     
-    #finds the ancestor node on depth 1, i.e. the root node of this branch
+    #finds the ancestor node on depth 1, i.e. the first node of this branch
     #if node is root, then root is returned
     def get_branch(node):
         if is_root(G, node):

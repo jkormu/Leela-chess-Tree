@@ -161,25 +161,3 @@ def second_walk(v, m=0, depth=0, min=None):
         min = second_walk(w, m + v.mod, depth+1, min)
     #pos[v.node][0] = v.x
     return min
-
-
-def extract_pos(tree, pos):
-    pos[tree.node][0] = tree.x
-    pos[tree.node][1] = -tree.y
-    for child in tree.children:
-        extract_pos(child, pos)
-
-def get_layout(G):
-    node = get_root(G)
-    pos = {n:[None, None] for n in G.nodes}
-    start = time.time()
-    tree = buchheim(G, node)
-    extract_pos(tree, pos)
-    x_list,y_list = list(zip(*list(pos.values())))
-    max_x, max_y = max(x_list), max(y_list)
-    min_x, min_y = min(x_list), min(y_list)
-    for n in pos:
-        x,y = pos[n]
-        pos[n] = ((x-min_x)/(max_x-min_x), (y-min_y)/(max_y-min_y))
-    print('Layout algorithm executed in:', time.time() - start, 's')
-    return(pos)
