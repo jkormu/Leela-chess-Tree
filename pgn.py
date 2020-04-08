@@ -21,6 +21,7 @@ from dash_table.Format import Format, Symbol, Scheme
 from colors import rgb_adjust_saturation
 
 from quit_button import get_quit_button
+import copy
 
 COMPONENT_WIDTH = '98%'
 WHITE_WIN_COLOR = 'rgb(255, 255, 255)'
@@ -34,6 +35,31 @@ BLACK_WIN_BAR_LINE_COLOR = BAR_LINE_COLOR#'rgb(255, 255, 255)'
 BAR_LINE_WIDTH = 1
 RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
 SHOW_BOARD_COORDINATES = False
+
+FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "10%"
+
+#PGN_COMPONENT_STYLE = {
+#                'height': '60px',
+#                'lineHeight': '60px',
+#                'borderWidth': '1px',
+#                'borderStyle': 'dashed',
+#                'borderRadius': '5px',
+#                'textAlign': 'center',
+#            }
+
+PGN_COMPONENT_STYLE = {
+                'height': '100%',
+                'width': '100%',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'position': 'absolute',
+                'left': 0,
+                'display': 'flex',
+                'flex-direction': 'column',
+            }
+FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%'}#'display': 'flex',
 
 ARROW_COLORS = {#'p': (23, 178, 207),
                 #'p': (0, 255, 255), #teal
@@ -110,12 +136,55 @@ def score_bar():
         'padding-bottom': RELATIVE_HEIGHT_OF_SCORE_BAR,
         'float': 'left',
         'height': 0})
+
     container.children = component
     return(container)
 
+def fen_component():
+    fen_pgn_container = html.Div(style={
+        'position': 'relative',
+        'width': '100%',
+        'padding-bottom': FEN_PGN_COMPONENT_RELATIVE_HEIGHT,
+        'float': 'left',
+        'height': 0})
+
+    fen_component = html.Div(id='fen-component', style=FEN_COMPONENT_STYLE)
+    add_button = html.Button(id='add-fen',
+                             children=['Add fen'],
+                             style={'margin-right': '5px'})
+    fen_input = dcc.Input(id='fen-input',
+                          type='text',
+                          #style={'flex': 1},
+                          )
+
+    upload = dcc.Upload(
+            id='upload-pgn',
+            children=[html.Div(style={'flex':1}),
+                      html.Div([
+                          'Drag and Drop a pgn file or ',
+                          html.A('Select File')
+                      ],
+                          style={'flex': 1}),
+                      html.Div(style={'flex': 1})],
+            style=PGN_COMPONENT_STYLE,
+            # Only one pgn allowed
+            multiple=False
+        )
+
+    fen_component.children = [add_button, fen_input]
+    fen_pgn_container.children = [fen_component, upload]
+    return(fen_pgn_container)
 
 def pgn_layout():
     quit_button = get_quit_button()
+
+    mode_selector = html.Div(children=[dcc.RadioItems(id='position-mode-selector',
+                                                      options=[{'label': 'pgn', 'value': 'pgn'},
+                                                               {'label': 'fen', 'value': 'fen'},
+                                                               ],
+                                                      value='pgn')])
+
+    a = """
     upload = dcc.Upload(
             id='upload-pgn',
             children=html.Div([
@@ -133,6 +202,8 @@ def pgn_layout():
             # Only one pgn allowed
             multiple=False
         )
+    """
+    fen_input = fen_component()
 
     arrow_settings = html.Div(style={'display': 'flex',
                                      'flex-direction': 'row',
@@ -228,7 +299,7 @@ def pgn_layout():
     container_table = html.Div(html.Div(children=data_table, style={'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
-    content = [quit_button, upload, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table]
+    content = [quit_button, mode_selector, fen_input, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table] upload,
     container.children = content
     return(container)
 
@@ -429,6 +500,22 @@ def update_score_bar(value, active_cell):
     print('WDB:', W,D,B)
     fig = get_score_bar_figure(W, D, B)
     return(fig, style)
+
+@app.callback([
+     Output('fen-component', 'style'),
+     Output('upload-pgn', 'style')],
+    [Input('position-mode-selector', 'value')])
+def set_position_upload_mode(mode):
+    fen_style = copy.copy(FEN_COMPONENT_STYLE)
+    pgn_style = copy.copy(PGN_COMPONENT_STYLE)
+    if mode == 'fen':
+        pgn_style['display'] = 'none'
+    elif mode =='pgn':
+        fen_style['display'] = 'none'
+    else:
+        fen_style = dash.no_update
+        pgn_style = dash.no_update
+    return(fen_style, pgn_style)
 
 #if __name__ == '__main__':
 #    app.run_server(debug=True)
