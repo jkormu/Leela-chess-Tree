@@ -31,6 +31,7 @@ def get_tree_layout(G):
     print('Layout algorithm excecuted in:', time.time() - start, 's')
     return(pos)
 
+#set y-coordinates to integers
 def adjust_y(pos):
     y = [pos[k][1] for k in pos.keys()]
     set_y = list(set(y))
@@ -44,7 +45,6 @@ def branch_separation(G, pos):
     #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
     
     #finds the ancestor node on depth 1, i.e. the first node of this branch
-    #if node is root, then root is returned
     def get_branch(node):
         if is_root(G, node):
             return(node)
@@ -56,7 +56,7 @@ def branch_separation(G, pos):
     root = get_root(G)
     root_children = get_children(G, root)
 
-    branches = {child:{} for child in root_children}
+    branches = {child: {} for child in root_children}
     branches[root] = {}
     
     #divide pos into branches

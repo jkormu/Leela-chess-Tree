@@ -17,7 +17,7 @@ def get_children(G, n):
 def get_parent(G, n):
     if is_root(G, n):
         return(None)
-    #Only one predecessor we are dealing with trees
+    #Only one predecessor as we are dealing with trees
     return(list(G.predecessors(n))[0])
 
 def get_subtree_node_count(G, n):
@@ -40,6 +40,7 @@ def get_nodes_in_depth(G):
     counts = [str(distances.count(x)) for x in l][::-1]
     return(counts)
 
+#maybe useful someday
 def number_of_shared_nodes(G1,G2):
     G = nx.intersection(G1, G2)
     return(G.number_of_nodes())
@@ -58,18 +59,16 @@ def get_moves(G, n):
         move = G.nodes[n]['move']
     return(moves[::-1])
 
-
 def relabel(G):
     def mapping(n):
         label = "".join(get_moves(G,n))
         if label == "":
             label = "root"
-        #label = G.nodes[n]['N'] + label
-            
         return(label)
 
     return(nx.relabel_nodes(G, mapping, copy=True))
 
+#maybe useful someday
 def calc_shared_nodes(G1, G2):
     G1 = relabel(G1)
     G2 = relabel(G2)
@@ -78,9 +77,9 @@ def calc_shared_nodes(G1, G2):
         count += n in G2
     return(count)
 
-
 def merge_graphs(G_list):
     #takes list of DiGraphs and calculates union of the graphs
+    #also unifies the node ids of each graph so that nodes obtained from same move sequence have same id
     G_merged = nx.DiGraph()
     G_list = [relabel(G) for G in G_list]
     G_merged.add_node(get_root(G_list[0]))  # add root node to handle case of no edges
