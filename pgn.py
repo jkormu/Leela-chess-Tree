@@ -154,6 +154,9 @@ def fen_component():
                              style={'margin-right': '5px'})
     fen_input = dcc.Input(id='fen-input',
                           type='text',
+                          size="70",#"92",
+                          autoComplete="off",
+                          style={'font-size': '12px'}
                           #style={'flex': 1},
                           )
 
@@ -182,7 +185,8 @@ def pgn_layout():
                                                       options=[{'label': 'pgn', 'value': 'pgn'},
                                                                {'label': 'fen', 'value': 'fen'},
                                                                ],
-                                                      value='pgn')])
+                                                      value='pgn')],
+                             style={'margin-bottom': '3px'})
 
     a = """
     upload = dcc.Upload(
@@ -516,6 +520,19 @@ def set_position_upload_mode(mode):
         fen_style = dash.no_update
         pgn_style = dash.no_update
     return(fen_style, pgn_style)
+
+@app.callback([Output('fen-input', "value"),
+     Output('fen-input', 'placeholder')],
+    [Input('add-fen', 'n_clicks')],
+    [State('fen-input', 'value')])
+def add_fen(n_clicks, fen):
+    if fen is None or n_clicks is None:
+        return (dash.no_update, dash.no_update)
+    try:
+        game_data.board.set_fen(fen)
+        return(dash.no_update, '')
+    except ValueError:
+        return('', 'not a valid fen')
 
 #if __name__ == '__main__':
 #    app.run_server(debug=True)
