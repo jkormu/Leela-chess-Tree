@@ -162,9 +162,6 @@ def copy_table(data):
      State("slider1", "value")]
 )
 def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
-    print('DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:')
-    print(dd)
-    print(nr_of_rows)
     try:
         nr_of_rows = int(nr_of_rows)
         nr_of_rows = min(MAX_NUMBER_OF_CONFIGS, nr_of_rows)
@@ -177,7 +174,6 @@ def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
     if nr_of_rows == 1:
         slider_style["visibility"] = "hidden"
     data = config_data.get_data(nr_of_rows)
-    print(data.shape)
     data = data.to_dict('records')
 
     new_slider_value = min(slider_value, slider_max)
@@ -206,3 +202,12 @@ def set_nodes_and_net_mode(nodes_mode, net_mode):
 def reset_data(n_clicks_timestamp):
     config_data.construct_config_data()
     return(str(n_clicks_timestamp))
+
+@app.callback(
+     Output('reset_button_clicked_indicator', "style"),
+    [Input("config-table", "data")],
+)
+def set_nodes_and_net_mode(data):
+    print('DATAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+    print(data)
+    return(dash.no_update)

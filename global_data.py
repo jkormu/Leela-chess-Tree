@@ -9,6 +9,8 @@ from leela import leela_engine
 import os
 from os.path import isfile, join
 
+from dash_table.Format import Format, Symbol, Scheme
+
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MAX_NUMBER_OF_CONFIGS = 10
 
@@ -121,7 +123,8 @@ def try_to_round(value, precision):
     if isinstance(value, bool):
         return value
     try:
-        out = str(round(float(value), precision))
+        #out = str(round(float(value), precision))
+        out = round(float(value), precision)
         #print(value, out, type(value))
     except ValueError:
         out = value
@@ -176,6 +179,7 @@ class ConfigData:
         self.data = df
 
     def add_column(self, option, category):
+        #'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)
         option_type = option.type
         default = option.default
         if option_type == 'check':
@@ -200,6 +204,10 @@ class ConfigData:
         col = {'id': name, 'name': [category, name], 'clearable': False}#, 'validation': {'allow_null': False}, 'on_change': {'action': 'validate'}}
         if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
             col['type'] = 'numeric'
+            if option_type == 'spin':
+                col['format'] = Format(precision=0, scheme=Scheme.fixed) #symbol=Symbol.yes, symbol_suffix='%'
+            else:
+                col['format'] = Format(precision=2, scheme=Scheme.fixed)  # symbol=Symbol.yes, symbol_suffix='%'
         if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
             col['presentation'] = 'dropdown'
             if option_type == 'combo':
@@ -271,7 +279,6 @@ class TreeData:
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
-        #self.parameters = None
 
         self.x_range = {}
         self.y_range = {}
@@ -286,7 +293,6 @@ class TreeData:
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
-        #self.parameters = None
         self.x_range = {}
         self.y_range = {}
         self.y_tick_labels = {}
