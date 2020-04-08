@@ -133,7 +133,7 @@ def get_graph_component():
     graph_component = html.Div(style={'height': '100%', 'width': '100%'})
     loading_component = html.Div(dcc.Loading(children=[html.Div(id='loading_trigger', style={'display': 'none'})], style={'flex': 1}),
                                  style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flex-direction': 'column'})
-    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '5%'})
+    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '5%', 'overflow-y': 'auto'})
     graph_container = html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
