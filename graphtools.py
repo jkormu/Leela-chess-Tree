@@ -99,7 +99,8 @@ def merge_graphs(G_list):
         nodes.append(n)
     visits, nodes = zip(*sorted(zip(visits, nodes), reverse=True))
 
-    #reconstruct by adding nodes ordered by visit counts for prettier layout -> node heavy branches are aligned left
+    #reconstruct by adding nodes in order of visit counts for prettier layout result from buchheim algorithm
+    # -> node heavy branches will be aligned left
     G_merged_ordered = nx.DiGraph()
     for n in nodes:
         G_merged_ordered.add_node(n)
