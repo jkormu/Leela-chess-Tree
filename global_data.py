@@ -9,7 +9,7 @@ from leela import leela_engine
 import os
 from os.path import isfile, join
 
-from dash_table.Format import Format, Symbol, Scheme
+from dash_table.Format import Format, Scheme
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MAX_NUMBER_OF_CONFIGS = 10
@@ -179,7 +179,6 @@ class ConfigData:
         self.data = df
 
     def add_column(self, option, category):
-        #'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)
         option_type = option.type
         default = option.default
         if option_type == 'check':
@@ -205,9 +204,9 @@ class ConfigData:
         if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
             col['type'] = 'numeric'
             if option_type == 'spin':
-                col['format'] = Format(precision=0, scheme=Scheme.fixed) #symbol=Symbol.yes, symbol_suffix='%'
+                col['format'] = Format(precision=0, scheme=Scheme.fixed)
             else:
-                col['format'] = Format(precision=2, scheme=Scheme.fixed)  # symbol=Symbol.yes, symbol_suffix='%'
+                col['format'] = Format(precision=2, scheme=Scheme.fixed)
         if option_type == 'combo' or option_type == 'check' or name == 'WeightsFile':
             col['presentation'] = 'dropdown'
             if option_type == 'combo':
