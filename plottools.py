@@ -89,7 +89,6 @@ def get_moves(G, n):
 
 def set_board(moves, board, init_moves):
     board.reset()
-    #print('fen', init_moves)
     if type(init_moves)==str:
         board.set_fen(init_moves)
     else:

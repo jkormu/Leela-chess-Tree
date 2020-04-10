@@ -84,8 +84,6 @@ def merge_graphs(G_list):
     G_list = [relabel(G) for G in G_list]
     G_merged.add_node(get_root(G_list[0]))  # add root node to handle case of no edges
 
-    print('Number of nodes:', [len([n for n in g]) for g in G_list])
-
     for G in G_list:
         for edge in G.edges():
             if edge not in G_merged.edges():

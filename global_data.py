@@ -98,17 +98,46 @@ GROUP_PER_COLUMN = {column: group for group in COLUMNS_PER_GROUP for column in C
     #                    group for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]}
 
 class GameData:
-    def __init__(self):
+    def __init__(self, mode):
         self.board = chess.Board()
-        self.game_data = None
-        self.fen = self.board.fen()
+        self.pgn_start_fen = self.board.fen()
+        self.data = None #Pandas DataFrame
+        self.data_previous_raw = None #raw dict from dash datatable 'data' property
+        self.mode = mode #either "pgn" or "fen"
+        self.running_fen_id = 0
+
+    def get_value_by_position_id(self, column_name, position_id):
+        value = self.data.loc[self.data['ply'] == position_id, column_name].iloc[0]
+        return(value)
+
+    def get_position_id(self, row):
+        try:
+            return(self.data['ply'][row])
+        except (KeyError, TypeError) as e:
+            return(None)
 
     def set_board_position(self, position_index):
-        self.reset_board()
-        for move in self.game_data['move'][1:position_index + 1]:
-            self.board.push_san(move)
+        if self.mode == 'fen':
+            if self.data is None or position_index is None:
+                self.board.reset_board()
+            else:
+                print('position_index in set board', position_index)
+                print(self.data['ply'])
+                fen = self.get_value_by_position_id('fen', position_index)#self.data.loc[self.data['ply'] == position_index, 'fen'].iloc[0]
+                #fen = self.data['fen'][position_index]
+                self.board.set_fen(fen)
+        else:
+            self.reset_board()
+            for move in self.data['move'][1:position_index + 1]:
+                self.board.push_san(move)
+
     def reset_board(self):
-        self.board.set_fen(self.fen)
+        self.board.set_fen(self.pgn_start_fen)
+
+    def get_running_fen_id(self):
+        fen_id = self.running_fen_id
+        self.running_fen_id += 1
+        return(fen_id)
 
 
 def is_number(s):
@@ -123,9 +152,7 @@ def try_to_round(value, precision):
     if isinstance(value, bool):
         return value
     try:
-        #out = str(round(float(value), precision))
         out = round(float(value), precision)
-        #print(value, out, type(value))
     except ValueError:
         out = value
     return out
@@ -144,16 +171,13 @@ class ConfigData:
         self.weight_paths = []
         self.find_weights()
         self.construct_config_data()
-        #self.use_global_weight = True
-        #self.global_weight = self.weight_paths[0]
-        #print('WEIGHTS', self.weights)
 
     def find_weights(self):
         root = os.getcwd()
         weights_folder = os.path.join(root, 'weights')
         weight_files = [f.split(".")[0] for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         weight_paths = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
-        print('WEIGHT PATHS', weight_paths)
+        #print('WEIGHT PATHS', weight_paths)
         self.weight_files = weight_files
         self.weight_paths = weight_paths
 
@@ -220,7 +244,6 @@ class ConfigData:
                 dropdown = {'options': [{'label': val, 'value': val} for val in var],
                             'clearable': False}
             self.dropdowns[name] = dropdown
-            print('DROPDOWNS', self.dropdowns)
         self.columns.append(col)
         return(None)
 
@@ -274,7 +297,7 @@ class ConfigData:
 class TreeData:
     def __init__(self, lc0):
         self.lc0 = lc0
-        self.G_list = {} #{position_index1: [], position_index2: []....}
+        self.G_dict = {} #{position_index1: [], position_index2: []....}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -288,7 +311,7 @@ class TreeData:
         self.x_tick_values = {}
 
     def reset_data(self):
-        self.G_list = {}
+        self.G_dict = {}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -300,10 +323,9 @@ class TreeData:
         self.x_tick_labels = {}
         self.x_tick_values = {}
 
-
     def get_best_moves(self, position_index, slider_value, type, max_moves):
         try:
-            tree = self.G_list[position_index][slider_value]
+                tree = self.G_dict[position_index][slider_value]
         except (KeyError, IndexError) as e:
             #position not yet analyzed or slider value set to config not yet analyzed
             return ([], [])
@@ -339,13 +361,13 @@ class TreeData:
     def run_search(self, position_index, parameters, board, nodes):
         self.lc0.configure(parameters)
         g = self.lc0.play(board, nodes)
-        if position_index in self.G_list:
-            self.G_list[position_index].append(g)
+        if position_index in self.G_dict:
+            self.G_dict[position_index].append(g)
         else:
-            self.G_list[position_index] = [g]
+            self.G_dict[position_index] = [g]
 
     def create_data(self, position_index, moves):
-        G_merged, G_list = gt.merge_graphs(self.G_list[position_index])
+        G_merged, G_list = gt.merge_graphs(self.G_dict[position_index])
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
             if parent is None:
@@ -452,30 +474,6 @@ class TreeData:
         self.x_tick_labels[position_index] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_index] = x_label_vals
 
-    def create_demo_data(self):
-        net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
-        engine = '/home/jusufe/lc0_test4/build/release/lc0'
-        self.args = [engine, '--weights=' + net]
-
-        #param1 = ['--cpuct=2.147', '--minibatch-size=1', '--threads=1',
-                  #'--max-collision-events=1', '--max-collision-visits=1']
-        #param2 = ['--cpuct=4.147', '--minibatch-size=1', '--threads=1',
-                  #'--max-collision-events=1', '--max-collision-visits=1']
-
-        param1 = {'CPuct': '2.147', 'MinibatchSize': '1', 'Threads': '1',
-                          'MaxCollisionEvents': '1', 'MaxCollisionVisits': '1', }
-        param2 = {'CPuct': '4.147', 'MinibatchSize': '1', 'Threads': '1',
-                          'MaxCollisionEvents': '1', 'MaxCollisionVisits': '1', }
-
-        nodes = 20
-
-        position_index = 0
-        moves = []
-        board = chess.Board()
-        self.run_search(position_index, param1, board, nodes)
-        self.run_search(position_index, param2, board, nodes)
-        self.create_data(position_index, moves)
-
 net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
 engine = '/home/jusufe/lc0_test4/build/release/lc0'
 engine = '/home/jusufe/PycharmProjects/leela-tree-dash/lc0_tree'
@@ -483,8 +481,13 @@ args = [engine, '--weights=' + net]
 #lc0 = leela_engine(args)
 lc0 = leela_engine(None)#leela(args)
 
-tree_data = TreeData(lc0)
+tree_data_pgn = TreeData(lc0)
+tree_data_fen = TreeData(lc0)
+
+game_data_pgn = GameData('pgn')
+game_data_fen = GameData('fen')
+
 #tree_data.create_demo_data()
-game_data = GameData()
+#game_data = GameData()
 config_data = ConfigData(lc0)
 

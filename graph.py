@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly import subplots
-from global_data import tree_data, game_data, config_data
+from global_data import tree_data_pgn, tree_data_fen, game_data_pgn, game_data_fen, config_data
 
 from server import app
 
@@ -168,9 +168,10 @@ def get_graph_component():
      State('nodes-mode-selector', 'value'),
      State('nodes_input', 'value'),
      State('net-mode-selector', 'value'),
-     State('net_selector', 'value')]
+     State('net_selector', 'value'),
+     State('position-mode-selector', 'value')]
 )
-def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes_mode, global_nodes, net_mode, global_net):
+def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, active_cell, nodes_mode, global_nodes, net_mode, global_net, position_mode):
     if n_clicks_selected_timestamp is None:
         n_clicks_selected_timestamp = -1
     if n_clicks_all_timestamp is None:
@@ -178,35 +179,39 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     if n_clicks_all_timestamp == -1 and n_clicks_selected_timestamp == -1:
         return(dash.no_update, dash.no_update)
 
-    data = game_data.game_data
+    if position_mode == 'pgn':
+        tree_data = tree_data_pgn
+        game_data = game_data_pgn
+    else:
+        tree_data = tree_data_fen
+        game_data = game_data_fen
+
+    data = game_data.data
     if data is None:
-        #print('Game data:', data)
-        return ("Generate data (pgn not yet loaded)", dash.no_update)
+        return ("No positions to analyze", dash.no_update)
 
     is_analyze_selected = False
     if n_clicks_selected_timestamp > n_clicks_all_timestamp:
         is_analyze_selected = True
-        position_indices = [active_cell['row']]
+        row_index = active_cell['row']
+        position_indices = [data['ply'][row_index]]
     else:
         position_indices = data['ply']
-    nr_of_plies = len(position_indices)
+    nr_of_positions = len(position_indices)
 
-    net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
-    engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
-    tree_data.args = [engine, '--weights=' + net]
+    #net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
+    #engine = '/home/jusufe/lc0_farmers/build/release/lc0'# '/home/jusufe/lc0_test4/build/release/lc0'
+    #tree_data.args = [engine, '--weights=' + net]
 
     board = game_data.board
     if not is_analyze_selected:
-        tree_data.G_list = {}
+        tree_data.G_dict = {}
         tree_data.data = {}
     else:
         for position_index in position_indices:
-            tree_data.G_list.pop(position_index, None)  # clear graph data for this position
+            tree_data.G_dict.pop(position_index, None)  # clear graph data for this position
     for config_i in range(len(marks)):
-        print('mode:', nodes_mode)
-        print('global nodes', global_nodes)
         nodes = config_data.get_nodes(config_i, nodes_mode, global_nodes)
-        print('nodes', nodes)
         for position_index in position_indices:
             game_data.set_board_position(position_index)
             if net_mode != ['global']:
@@ -217,11 +222,10 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     for position_index in position_indices:
         game_data.set_board_position(position_index)
         fen = board.fen()
-        print('CREATING GRAPH FOR', position_index)
         tree_data.create_data(position_index, fen)
     if is_analyze_selected:
-        return('', str(nr_of_plies))
-    return(f'All {str(nr_of_plies)} positions analyzed', str(nr_of_plies))
+        return('', str(nr_of_positions))
+    return(f'All {str(nr_of_positions)} positions analyzed', str(nr_of_positions))
 
 @app.callback(
     [Output('graph', 'figure'),
@@ -230,19 +234,29 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
      Input('move-table', 'active_cell'),
      Input('net-mode-selector', 'value'),
      Input('config-table-dummy-div', 'children')],
-    [State('net_selector', 'value')]
+    [State('net_selector', 'value'),
+     State('position-mode-selector', 'value')]
 )
-def update_data(selected_value, active_cell, net_mode, config_hanged, global_net):
+def update_data(selected_value, active_cell, net_mode, config_changed, global_net, position_mode):
+    if position_mode == 'pgn':
+        tree_data = tree_data_pgn
+        game_data = game_data_pgn
+    else:
+        tree_data = tree_data_fen
+        game_data = game_data_fen
+
     if net_mode != ['global']:
         global_net = None
     configurations = config_data.get_configurations(selected_value, global_net, only_non_default=True)
-    #print('KONFIGURAATIOT', configurations)
     tooltip = ', '.join([f'{option}={configurations[option]}' for option in configurations])
 
-    if active_cell is None:
-        position_index = 0
+    if active_cell is None or game_data.data is None:
+        return (empty_figure(), tooltip)
     else:
         position_index = active_cell['row']
+        print('ACTIVE CELL', position_index)
+        position_index = game_data.data['ply'][position_index]
+        print('FEN ID', position_index)
 
     #Show empty graph if position is not yet analyzed
     if position_index not in tree_data.data:
@@ -303,8 +317,6 @@ def update_data(selected_value, active_cell, net_mode, config_hanged, global_net
               trace_node_root]
 
     x_hist, y_hist = tree_data.data_depth[position_index][selected_value]
-
-    #print(x_hist, y_hist)
 
     trace_depth_histogram = go.Bar(x=y_hist, y=x_hist, orientation='h',
                                    showlegend=False, hoverinfo='none',
@@ -384,15 +396,22 @@ def update_data(selected_value, active_cell, net_mode, config_hanged, global_net
 @app.callback(
     Output('hidden-div-slider-state', 'children'),
     [Input('slider1', 'value'),
-     Input('generate-data-button', 'title')])
-def update_game_evals(visible, *args):
+     Input('generate-data-button', 'title')],
+    [State('position-mode-selector', 'value')])
+def update_game_evals(visible, title, position_mode):
+    if position_mode == 'pgn':
+        tree_data = tree_data_pgn
+        game_data = game_data_pgn
+    else:
+        tree_data = tree_data_fen
+        game_data = game_data_fen
     Q_values = []
     W_values = []
     D_values = []
     L_values = []
-    if game_data.game_data is None:
+    if game_data.data is None:
         return(dash.no_update)
-    for position_index in game_data.game_data['ply']:
+    for position_index in game_data.data['ply']:
         if position_index not in tree_data.data: #position not yet evaluated
             Q, W, D, L = None, None, None, None
         elif visible not in tree_data.data[position_index]['root']['visible']: #engine config set not yet evaluated
@@ -406,15 +425,17 @@ def update_game_evals(visible, *args):
             L = evaluation['L']
 
             #invert W and L for black
-            if not game_data.game_data['turn'][position_index]:
+            turn = game_data.get_value_by_position_id('turn', position_index)
+            if not turn:
                 W = 100 - W - D
                 L = 100 - L - D
         Q_values.append(Q)
         W_values.append(W)
         D_values.append(D)
         L_values.append(L)
-    game_data.game_data['Q'] = Q_values
-    game_data.game_data['W'] = W_values
-    game_data.game_data['D'] = D_values
-    game_data.game_data['L'] = L_values
+    game_data.data['Q'] = Q_values
+    game_data.data['W'] = W_values
+    game_data.data['D'] = D_values
+    game_data.data['L'] = L_values
+    game_data.data_previous_raw = game_data.data.to_dict('records')
     return(str(visible))
