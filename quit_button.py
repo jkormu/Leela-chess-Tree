@@ -8,11 +8,11 @@ import dash
 
 def get_quit_button():
     quit_button = html.Button(id='quit',
-                          children='Quit', style={'border-color': 'red',
+                          children='Quit', style={'borderColor': 'red',
                                                   'padding': '3px',
-                                                  'padding-left': '10px',
-                                                  'padding-right': '10px',
-                                                  'margin-bottom': '5px',
+                                                  'paddingLeft': '10px',
+                                                  'paddingRight': '10px',
+                                                  'marginBottom': '5px',
                                                   'fontWeight': 'bold',
                                                   'float': 'right'})
     shutdown_signal = html.Div(id="shutdown-signal", style={"display": "none"})
@@ -40,8 +40,8 @@ def quit_signal(n_clicks):
     if n_clicks is not None and n_clicks >= 1:
         print("setting shutdown signal")
         return("shutdown complete, you may close the browser tab now",
-               {'width': '100%', 'border-color': 'green', 'padding': '3px',
-                'margin-bottom': '5px', 'fontWeight': 'bold'})
+               {'width': '100%', 'borderColor': 'green', 'padding': '3px',
+                'marginBottom': '5px', 'fontWeight': 'bold'})
     return(dash.no_update, dash.no_update)
 
 @app.callback(

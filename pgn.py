@@ -36,25 +36,27 @@ BAR_LINE_WIDTH = 1
 RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
 SHOW_BOARD_COORDINATES = False
 
-FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "10%"
+FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "13.5%"
 
-PGN_MODE_COLUMNS = [{"name": '', "id": 'dummy_left'},
+PGN_MODE_COLUMNS = [#{"name": '', "id": 'dummy_left'},
                      {"name": 'plyId', "id": 'ply'},
                      {"name": 'move', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
                      {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": '', "id": 'dummy_right'}]
+                     {"name": '', "id": 'dummy_right'},
+]
 
 FEN_MODE_COLUMNS = [
-                     {"name": 'fenId', "id": 'ply'},
+                     {"name": 'Id', "id": 'ply'},
                      {"name": 'turn', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
                      {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": '', "id": 'dummy_right'}]
+                     {"name": '', "id": 'dummy_right'}
+]
 
 PGN_COMPONENT_STYLE = {
                 'height': '100%',
@@ -66,7 +68,7 @@ PGN_COMPONENT_STYLE = {
                 'position': 'absolute',
                 'left': 0,
                 'display': 'flex',
-                'flex-direction': 'column',
+                'flexDirection': 'column',
             }
 FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%'}#'display': 'flex',
 
@@ -142,7 +144,7 @@ def score_bar():
     container = html.Div(style={
         'position': 'relative',
         'width': '100%',
-        'padding-bottom': RELATIVE_HEIGHT_OF_SCORE_BAR,
+        'paddingBottom': RELATIVE_HEIGHT_OF_SCORE_BAR,
         'float': 'left',
         'height': 0})
 
@@ -153,14 +155,14 @@ def fen_component():
     fen_pgn_container = html.Div(style={
         'position': 'relative',
         'width': '100%',
-        'padding-bottom': FEN_PGN_COMPONENT_RELATIVE_HEIGHT,
+        'paddingBottom': FEN_PGN_COMPONENT_RELATIVE_HEIGHT,
         'float': 'left',
         'height': 0})
 
     fen_component = html.Div(id='fen-component', style=FEN_COMPONENT_STYLE)
     add_button = html.Button(id='add-fen',
                              children=['Add fen'],
-                             style={'margin-right': '5px'})
+                             style={'marginRight': '5px'})
     fen_input = dcc.Input(id='fen-input',
                           type='text',
                           size="70",#"92",
@@ -197,46 +199,27 @@ def pgn_layout():
                                                                {'label': 'fen', 'value': 'fen'},
                                                                ],
                                                       value='pgn')],
-                             style={'margin-bottom': '3px'})
+                             style={'marginBottom': '3px'})
 
-    a = """
-    upload = dcc.Upload(
-            id='upload-pgn',
-            children=html.Div([
-                'Drag and Drop a pgn file or ',
-                html.A('Select File')
-            ]),
-            style={
-                'height': '60px',
-                'lineHeight': '60px',
-                'borderWidth': '1px',
-                'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-            },
-            # Only one pgn allowed
-            multiple=False
-        )
-    """
     fen_input = fen_component()
 
     arrow_settings = html.Div(style={'display': 'flex',
-                                     'flex-direction': 'row',
-                                     'padding': '3px', 'padding-top': '5px'})
-    arrow_options = html.Div(children=[html.Label('Arrow type: '),
+                                     'flexDirection': 'row',
+                                     'padding': '3px', 'paddingTop': '5px'})
+    arrow_options = html.Div(children=[html.Label('Arrows: '),
         dcc.RadioItems(
             id='arrow-type-selector',
             options=[
-                {'label': 'Policy-%', 'value': 'p'},
-                {'label': 'Visits-%', 'value': 'n'},
+                {'label': 'P-%', 'value': 'p'},
+                {'label': 'Visit-%', 'value': 'n'},
                 {'label': 'Q-%', 'value': 'q'},
             ],
             value='n',
-            labelStyle={'padding-left': '3px'},
+            labelStyle={'paddingLeft': '3px'},
             style={'flex': 1}
     )],
-                             style={'flex': 1, 'display': 'flex', 'flex-direction': 'row'})
-    arrows_input = html.Div(children=[html.Label('#Arrows: '),
+                             style={'flex': 1, 'display': 'flex', 'flexDirection': 'row'})
+    arrows_input = html.Div(children=[html.Label('#: '),
                                       dcc.Input(id='nr_of_arrows_input', type="number",
                                                 min=0, max=100, step=1,
                                                 size='3', #size has effect in firefox
@@ -255,14 +238,14 @@ def pgn_layout():
         html.Button('Analyze all',
                     id='generate-data-button',
                     title='Load pgn to analyze',
-                    style={'flex': '1', 'padding': '5px', 'margin-right': '5px',
-                           'margin-top': '8px', 'margin-bottom': '5px'}),
+                    style={'flex': '1', 'padding': '5px', 'marginRight': '5px',
+                           'marginTop': '8px', 'marginBottom': '5px'}),
         html.Button('Analyze selected',
                     id='generate-data-selected-button',
                     title='',
-                    style={'flex': '1', 'padding': '5px', 'margin-left': '5px',
-                           'margin-top': '8px', 'margin-bottom': '5px'})],
-    style={'display': 'flex', 'flex-direction': 'row'})
+                    style={'flex': '1', 'padding': '5px', 'marginLeft': '5px',
+                           'marginTop': '8px', 'marginBottom': '5px'})],
+    style={'display': 'flex', 'flexDirection': 'row'})
 
     data_table = dash_table.DataTable(
             id='move-table',
@@ -273,9 +256,9 @@ def pgn_layout():
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
             # row_selectable='single',
             style_as_list_view=True,
-            style_table={'width': '100%', 'margin-left': '0px', 'overflowY': 'auto',
-                         #'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}',
-                         #'box-sizing': 'border-box', 'display:': 'inline-block'
+            style_table={'width': '100%', 'marginLeft': '0px', 'overflowY': 'auto',
+                         #'borderLeft': f'1px solid {BAR_LINE_COLOR}', 'borderTop': f'1px solid {BAR_LINE_COLOR}',
+                         #'boxSizing': 'border-box', 'display:': 'inline-block'
                          },  # , 'maxHeight': '300px', 'overflowY': 'scroll'},#'height': '750px'
             style_data_conditional=[
                 {
@@ -308,9 +291,9 @@ def pgn_layout():
             css=[{"selector": "table", "rule": "width: 100%;"},{"selector": ".dash-spreadsheet.dash-freeze-top, .dash-spreadsheet .dash-virtualized", "rule": "max-height: none;"}],
 
         )
-    container_table = html.Div(html.Div(children=data_table, style={'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'}),
+    container_table = html.Div(html.Div(children=data_table, style={'borderLeft': f'1px solid {BAR_LINE_COLOR}', 'borderTop': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
-    container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
+    container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flexDirection': 'column'})
     content = [quit_button, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]#container_table] upload,
     container.children = content
     return(container)
@@ -355,7 +338,7 @@ def parse_pgn(contents, filename, is_new_pgn):
     game_info = f'**File**: {filename}\n'
     game_info += f'**White**: {first_game.headers.get("White", "?")}\n'
     game_info += f'**Black**: {first_game.headers.get("Black", "?")}'
-    game_info = dcc.Markdown(game_info, style={"white-space": "pre"})
+    game_info = dcc.Markdown(game_info, style={"whiteSpace": "pre"})
     return(game_info)
 
 
@@ -603,7 +586,7 @@ def update_score_bar(value, active_cell, position_mode):
     else:
         tree_data = tree_data_fen
         game_data = game_data_fen
-    style = {'width': '100%','height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
+    style = {'width': '100%', 'height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
 
     print('Active cell', active_cell['row'] if active_cell is not None else active_cell)
     print('Corresponding position id', game_data.get_position_id(active_cell['row']) if active_cell is not None else active_cell)
@@ -664,7 +647,7 @@ def add_fen(n_clicks, fen):
         data = pd.DataFrame(columns=columns)
 
     row = {}
-    side_to_move = {1: 'white', 0: 'black'}
+    side_to_move = {1: 'W', 0: 'B'}
     fen_id = game_data_fen.get_running_fen_id()
     row['ply'] = fen_id
     row['fen'] = fen

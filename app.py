@@ -43,16 +43,16 @@ graph_component = get_graph_component()
 # engine conf|list |
 #------------|-----|
 left_container = html.Div(
-    style={'height': '100%', 'width': f'{LEFT_PANE_WIDTH}%', 'background-color': LEFT_CONTAINER_BG}
+    style={'height': '100%', 'width': f'{LEFT_PANE_WIDTH}%', 'backgroundColor': LEFT_CONTAINER_BG}
 )
 
 graph_container = html.Div(
-    style={'height': f'{GRAPH_PANE_HEIGHT}%', 'width': '100%', 'background-color': GRAPH_CONTAINER_BG}
+    style={'height': f'{GRAPH_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': GRAPH_CONTAINER_BG}
 )
 
 config_container = html.Div(
-    style={'height': f'{CONFIG_PANE_HEIGHT}%', 'width': '100%', 'background-color': CONFIG_CONTAINER_BG,
-           'display': 'flex', 'flex-direction': 'column'}
+    style={'height': f'{CONFIG_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': CONFIG_CONTAINER_BG,
+           'display': 'flex', 'flexDirection': 'column'}
 )
 
 graph_container.children = [graph_component]
@@ -61,8 +61,8 @@ config_container.children = [config_component]
 left_container.children = [graph_container, config_container]
 
 right_container = html.Div(
-    style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'background-color': RIGHT_CONTAINER_BG,
-           'padding-left': 5, 'box-sizing': 'border-box'
+    style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'backgroundColor': RIGHT_CONTAINER_BG,
+           'paddingLeft': 5, 'boxSizing': 'border-box'
            }
 )
 
@@ -73,8 +73,8 @@ layout = html.Div(children=[
     left_container,
     right_container,
 ],
-    style={'height': '100vh', 'width': '100vw', 'background-color': APP_CONTAINER_BG,
-           'display': 'flex', 'flex-direction': 'row', 'align-items:': 'flex-end', 'overflow': 'auto'})
+    style={'height': '100vh', 'width': '100vw', 'backgroundColor': APP_CONTAINER_BG,
+           'display': 'flex', 'flexDirection': 'row', 'alignItems:': 'flex-end', 'overflow': 'auto'})
 
 
 app.layout = layout

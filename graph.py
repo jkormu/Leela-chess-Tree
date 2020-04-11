@@ -131,13 +131,13 @@ def get_data(data, visible):
 def get_graph_component():
     graph_component = html.Div(style={'height': '100%', 'width': '100%'})
     loading_component = html.Div(dcc.Loading(children=[html.Div(id='loading_trigger', style={'display': 'none'})], style={'flex': 1}),
-                                 style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flex-direction': 'column'})
-    config_info = html.Div(id='config_info', style={'text-align': 'center', 'height': '5%', 'overflow-y': 'auto'})
+                                 style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flexDirection': 'column'})
+    config_info = html.Div(id='config_info', style={'textAlign': 'center', 'height': '5%', 'overflowY': 'auto'})
     graph_container = html.Div(id='graph-container',
                            children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
-                                               style={'height': '90%', 'marginTop': '0', 'margin-bottom': '25px'},
+                                               style={'height': '90%', 'marginTop': '0', 'marginBottom': '25px'},
                                                config={'displayModeBar': False},
                                                ),
                                      html.Div(dcc.Slider(id='slider1',
