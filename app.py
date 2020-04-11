@@ -5,6 +5,10 @@ from pgn import pgn_layout
 from server import app
 import dash_html_components as html
 from graph import get_graph_component
+#from dash.dependencies import Input, Output
+#import dash
+
+from global_data import lc0
 
 DEBUG = False
 
@@ -64,6 +68,7 @@ right_container = html.Div(
 
 right_container.children = [pgn_component]
 
+
 layout = html.Div(children=[
     left_container,
     right_container,
@@ -72,10 +77,5 @@ layout = html.Div(children=[
            'display': 'flex', 'flex-direction': 'row', 'align-items:': 'flex-end', 'overflow': 'auto'})
 
 
-
 app.layout = layout
 
-
-
-#if __name__ == '__main__':
-#    app.run_server(debug=True)

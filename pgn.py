@@ -39,7 +39,7 @@ SHOW_BOARD_COORDINATES = False
 FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "10%"
 
 PGN_MODE_COLUMNS = [{"name": '', "id": 'dummy_left'},
-                     {"name": 'ply id', "id": 'ply'},
+                     {"name": 'plyId', "id": 'ply'},
                      {"name": 'move', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
                      {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
@@ -48,23 +48,13 @@ PGN_MODE_COLUMNS = [{"name": '', "id": 'dummy_left'},
                      {"name": '', "id": 'dummy_right'}]
 
 FEN_MODE_COLUMNS = [
-                     {"name": 'fen id', "id": 'ply'},
+                     {"name": 'fenId', "id": 'ply'},
                      {"name": 'turn', "id": 'move'},
                      {"name": 'Q', "id": 'Q'},
                      {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
                      {"name": '', "id": 'dummy_right'}]
-
-
-#PGN_COMPONENT_STYLE = {
-#                'height': '60px',
-#                'lineHeight': '60px',
-#                'borderWidth': '1px',
-#                'borderStyle': 'dashed',
-#                'borderRadius': '5px',
-#                'textAlign': 'center',
-#            }
 
 PGN_COMPONENT_STYLE = {
                 'height': '100%',
@@ -255,7 +245,11 @@ def pgn_layout():
     arrow_settings.children = [arrow_options, arrows_input]
 
     img = html.Img(id='board')
-    upload_output = html.Div(id='pgn-data-upload')
+    pgn_info = html.Div(id='pgn-info',
+                         style={'height': '5em'})
+    fen_text = html.Div(id='fen-text',
+                         style={'height': '1.5em',
+                                'font-size': '12px'})
 
     buttons = html.Div(children=[
         html.Button('Analyze all',
@@ -317,11 +311,11 @@ def pgn_layout():
     container_table = html.Div(html.Div(children=data_table, style={'border-left': f'1px solid {BAR_LINE_COLOR}', 'border-top': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flex-direction': 'column'})
-    content = [quit_button, mode_selector, fen_input, arrow_settings, img, score_bar(), upload_output, buttons, container_table]#container_table] upload,
+    content = [quit_button, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]#container_table] upload,
     container.children = content
     return(container)
 
-def parse_pgn(contents, filename):
+def parse_pgn(contents, filename, is_new_pgn):
     if contents is None:
         return(dash.no_update)
     content_type, content_string = contents.split(',')
@@ -335,29 +329,33 @@ def parse_pgn(contents, filename):
     except Exception as e:
         return('Upload failed')
 
-    board = first_game.board()
-    fen = board.fen()
-    game_data_pgn.board = board
-    data = {'dummy_left': '', 'ply': [0], 'move': ['-'], 'turn': [board.turn], 'fen': None, 'dummy_right': ''}
-    for ply, move in enumerate(first_game.mainline_moves()):
-        san = board.san(move)
-        uci = board.uci(move).lower()
-        data['move'].append(san)
-        data['ply'].append(ply + 1)
-        data['turn'].append(not board.turn)
-        board.push(move)
+    if is_new_pgn:
+        board = first_game.board()
+        fen = board.fen()
+        game_data_pgn.board = board
+        data = {'dummy_left': '', 'ply': [0], 'move': ['-'], 'turn': [board.turn], 'fen': [fen], 'dummy_right': ''}
+        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+        #data = pd.DataFrame(columns=columns)
+        #data = data.to_dict()
 
-    data = pd.DataFrame(data)
-    game_data_pgn.data = data
-    game_data_pgn.fen = fen
+        for ply, move in enumerate(first_game.mainline_moves()):
+            san = board.san(move)
+            data['move'].append(san)
+            data['ply'].append(ply + 1)
+            data['turn'].append(not board.turn)
+            board.push(move)
+            data['fen'].append(board.fen())
+
+        data = pd.DataFrame(data)
+        game_data_pgn.data = data
+        game_data_pgn.fen = fen
+        # reset analysis of previous pgn
+        tree_data_pgn.reset_data()
 
     game_info = f'**File**: {filename}\n'
     game_info += f'**White**: {first_game.headers.get("White", "?")}\n'
     game_info += f'**Black**: {first_game.headers.get("Black", "?")}'
     game_info = dcc.Markdown(game_info, style={"white-space": "pre"})
-
-    #reset analysis of previous pgn
-    tree_data_pgn.reset_data()
     return(game_info)
 
 
@@ -484,17 +482,45 @@ def update_board_image(active_cell, slider_value, arrow_type, nr_of_arrows, posi
     return(svg_board)
 
 @app.callback(
-    #Output('move-table', 'data'),
-     Output('pgn-data-upload', 'children'),
-    [Input('upload-pgn', 'contents')],
+     Output('pgn-info', 'children'),
+    [Input('upload-pgn', 'contents'),
+     Input('position-mode-selector', 'value')],
     [State('upload-pgn', 'filename')]
 )
-def update_pgn(content, filename):
-    return(parse_pgn(content, filename))
+def update_pgn(content, position_mode, filename):
+    triggerers = dash.callback_context.triggered
+    is_new_pgn = True
+    for triggerer in triggerers:
+        if triggerer['prop_id'] == 'position-mode-selector.value':
+            is_new_pgn = False
+            break
+    if position_mode == 'fen':
+        return('')
+    return(parse_pgn(content, filename, is_new_pgn))
+
+@app.callback(
+     Output('fen-text', 'children'),
+    [Input('move-table', 'active_cell')],
+    [State('position-mode-selector', 'value')]
+)
+def update_fen_text(active_cell, position_mode):
+    if active_cell is None:
+        return('')
+    if position_mode == 'fen':
+        game_data = game_data_fen
+    else:
+        game_data = game_data_pgn
+    if game_data.data is not None:
+        row = active_cell['row']
+        fen = game_data.get_value_by_row_id('fen', row)
+        print(game_data.data['fen'])
+        return(fen)
+    return('')
+
 
 @app.callback(
     Output('move-table', 'data'),
-    [Input('pgn-data-upload', 'children'),
+    [Input('pgn-info', 'children'),
      Input('hidden-div-slider-state', 'children'),
      Input('position-mode-selector', 'value'),
      Input('fen-added', 'children')],
@@ -506,8 +532,10 @@ def update_datatable(text, slider_state, position_mode, fen_added):
         game_data = game_data_fen
     data = game_data.data
     if (text is None and fen_added is None) or data is None:
-        dummy = {'ply': [0], 'move': ['-']}
-        return(pd.DataFrame(dummy).to_dict('records'))
+        columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+        data = pd.DataFrame(columns=columns)
+        #dummy = {'ply': [0], 'move': ['-']}
+        return(pd.DataFrame(data).to_dict('records'))
     print('UPDATING MOVE-DATA TO')
     print(data)
     return(data.to_dict('records'))
@@ -567,9 +595,8 @@ def set_state_of_analyze_selected_button(active_cell):
     [Input('hidden-div-slider-state', 'children'),
      Input('move-table', 'active_cell')],
     [State('position-mode-selector', 'value'),
-     State('fen-added', 'children')])
-def update_score_bar(value, active_cell, position_mode, fen_added):
-    print('FEN ADDED STATE', fen_added)
+     ])
+def update_score_bar(value, active_cell, position_mode):
     if position_mode == 'pgn':
         tree_data = tree_data_pgn
         game_data = game_data_pgn
@@ -637,7 +664,7 @@ def add_fen(n_clicks, fen):
         data = pd.DataFrame(columns=columns)
 
     row = {}
-    side_to_move = {0: 'white', 1: 'black'}
+    side_to_move = {1: 'white', 0: 'black'}
     fen_id = game_data_fen.get_running_fen_id()
     row['ply'] = fen_id
     row['fen'] = fen
@@ -687,7 +714,7 @@ def data_row_delete(data, position_mode):
 
     if deleted_row is None:
         return (dash.no_update)
-    tree_data_fen.data.pop(deleted_position_index)
+    tree_data_fen.data.pop(deleted_position_index, None) #try to delete corresponding tree data
     print('Delete triggered for row_id:', deleted_row)
     print('before deleting:')
     print(game_data_fen.data)

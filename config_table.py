@@ -10,10 +10,10 @@ from global_data import config_data
 from flask import request
 import sys
 
+from constants import MAX_NODES, MAX_NUMBER_OF_CONFIGS, DEFAULT_NUMBER_OF_CONFIGS, DEFAULT_NODES
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-
-MAX_NUMBER_OF_CONFIGS = 10
 EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 LINE_COLOR = 'rgb(100, 100, 100)'
 
@@ -26,10 +26,10 @@ def get_settings_bar():
 
 
     number_of_configs_input = html.Div(children=[html.Div('#Configurations: '),
-                                                 dcc.Input(id='number-of-configs-input', type="number", min=1, max=10,
+                                                 dcc.Input(id='number-of-configs-input', type="number", min=1, max=MAX_NUMBER_OF_CONFIGS,
                                                            step=1,
                                                            inputMode='numeric',
-                                                           value=2, debounce=False),
+                                                           value=DEFAULT_NUMBER_OF_CONFIGS, debounce=False),
                                                  ], style={'flex': 1})
 
     weight_options = [{'label': weight_file, 'value': weight_path} for weight_file, weight_path
@@ -52,10 +52,10 @@ def get_settings_bar():
     nodes_input = dcc.Input(id='nodes_input',
                             type="number",
                             min=1,
-                            max=10000,
+                            max=MAX_NODES,
                             step=1,
                             inputMode='numeric',
-                            value=200,
+                            value=DEFAULT_NODES,
                             )
 
     nodes_mode_select = dcc.Checklist(id='nodes-mode-selector',

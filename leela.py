@@ -3,14 +3,30 @@ import time
 import networkx as nx
 import os
 from os.path import isfile, join
+from datetime import datetime
 
 class leela_engine:
-    def __init__(self, engine_path = None):
+    def __init__(self, engine_path=None):
+        self.error = None
         if engine_path is None:
             engine_path = self.find_engine()
             net = self.find_net()#'/home/jusufe/tmp/weights_run2_591226.pb.gz'
-            engine_path = [engine_path, '--weights=' + net]#, '--logfile=lc0_log.txt']
-        self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
+        if net is not None and engine_path is not None:
+            engine_path = [engine_path, '--weights=' + net]  # '--logfile=lc0_log.txt']
+            try:
+                self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
+            except:
+                self.error = f'{datetime.now()}: Could not launch lc0_tree engine with command "{"".join(engine_path)}"'
+        else:
+            self.lc0 = None
+            self.error = ''
+            if net is None:
+                self.error += f'{datetime.now()}: Could not find any weight files in "weights"-folder. Add at least one weight file. \n'
+            if engine_path is None:
+                self.error += f'{datetime.now()}: Coult not find lc0_tree engine. Please refer to the installation guide in "https://github.com/jkormu/leela-tree-dash" \n'
+        if self.error is not None:
+            with open('LcT_log.txt', "w") as log:
+                log.write(self.error)
         self.analyzed_count = 0 #used as unique id of position for SimpleEngine.play(), forces ucinewgame
         self.configuration = {}
         self.options = self.get_options()
@@ -33,7 +49,11 @@ class leela_engine:
     def find_net(self):
         root = os.getcwd()
         weights_folder = os.path.join(root, 'weights')
-        net_path = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))][0]
+        net_path = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
+        try:
+            net_path = net_path[0]
+        except IndexError:
+            net_path = None
         return(net_path)
 
     def play(self, board, nodes):

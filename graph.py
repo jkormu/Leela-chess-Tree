@@ -22,7 +22,6 @@ HOVER_LABEL_COLOR = 'white'
 ROOT_NODE_COLOR = 'red'
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 MOVED_PIECE_COLOR = 'rgb(210,105,30)'
-MAX_ALLOWED_NODES = 200000
 MARKER_SIZE = 5.0
 FONT_FAMILY = 'monospace'
 GRAPH_WIDTH = 84
@@ -143,9 +142,7 @@ def get_graph_component():
                                                ),
                                      html.Div(dcc.Slider(id='slider1',
                                                 min=0,
-                                                #max=1,
                                                 value=0,
-                                                #marks={str(i): 'config '+str(i) for i in range(2)},
                                                 step=None,
                                                 ), style={'height': '10%'}),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
@@ -405,6 +402,9 @@ def update_game_evals(visible, title, position_mode):
     else:
         tree_data = tree_data_fen
         game_data = game_data_fen
+    #print('GAME-DATA:')
+    #if game_data.data is not None:
+    #    print(game_data.data['Q'])
     Q_values = []
     W_values = []
     D_values = []

@@ -11,8 +11,9 @@ from os.path import isfile, join
 
 from dash_table.Format import Format, Scheme
 
+from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES
+
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
-MAX_NUMBER_OF_CONFIGS = 10
 
 # deterministic search settings
 deterministic_defaults = {
@@ -110,6 +111,10 @@ class GameData:
         value = self.data.loc[self.data['ply'] == position_id, column_name].iloc[0]
         return(value)
 
+    def get_value_by_row_id(self, column_name, row):
+        value = self.data[column_name][row]
+        return(value)
+
     def get_position_id(self, row):
         try:
             return(self.data['ply'][row])
@@ -186,8 +191,8 @@ class ConfigData:
         self.columns = []
         self.columns_with_min = []
         self.columns_with_max = []
-        self.df_dict['Nodes'] = 200
-        self.df_dict['Nodes_default'] = 200
+        self.df_dict['Nodes'] = DEFAULT_NODES
+        self.df_dict['Nodes_default'] = DEFAULT_NODES
         node_col = {'id': 'Nodes', 'name': ['', 'Nodes'], 'clearable': False}
         self.columns.append(node_col)
         for opt in self.lc0.options:
@@ -474,10 +479,10 @@ class TreeData:
         self.x_tick_labels[position_index] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_index] = x_label_vals
 
-net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
-engine = '/home/jusufe/lc0_test4/build/release/lc0'
-engine = '/home/jusufe/PycharmProjects/leela-tree-dash/lc0_tree'
-args = [engine, '--weights=' + net]
+#net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
+#engine = '/home/jusufe/lc0_test4/build/release/lc0'
+#engine = '/home/jusufe/PycharmProjects/leela-tree-dash/lc0_tree'
+#args = [engine, '--weights=' + net]
 #lc0 = leela_engine(args)
 lc0 = leela_engine(None)#leela(args)
 

@@ -1,3 +1,7 @@
+.dash-delete-cell {
+    --accent: #e30b0b !important;
+}
+
 .dash-spreadsheet-container table {
     --accent: #e1e1e1 !important;
     --selected-background: rgba(23, 179, 207, 0.5) !important;
