@@ -58,7 +58,8 @@ filter_out_options = [#'WeightsFile',
                       'MoveOverheadMs',
                       'Slowmover',
                       'ImmediateTimeUse',
-                      'LogFile']
+                      'LogFile',
+                      'SmartPruningMinimumBatches']
 
 #dictionary of option categorys and option names user can edit
 #this this dict also determines order of the groups and parameters (dicts are ordered in python 3.7)
@@ -66,9 +67,11 @@ COLUMNS_PER_GROUP = {
     'Nodes': ['Nodes'],
     'Net': ['WeightsFile'],
     'Cpuct': ['CPuct',
-              'CPuctRootOffset',
+              'CPuctFactor',
               'CPuctBase',
-              'CPuctFactor'],
+              'CPuctAtRoot',
+              'CPuctFactorAtRoot',
+              'CPuctBaseAtRoot'],
     'Fpu': ['FpuStrategy',
             'FpuValue',
             'FpuStrategyAtRoot',
@@ -91,6 +94,7 @@ COLUMNS_PER_GROUP = {
                                'MaxCollisionEvents',
                                'MaxCollisionVisits',
                                'OutOfOrderEval',
+                               'MaxOutOfOrderEvalsFactor',
                                'MaxConcurrentSearchers']
 }
 COLUMN_ORDER = [column for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]]
@@ -121,19 +125,19 @@ class GameData:
         except (KeyError, TypeError) as e:
             return(None)
 
-    def set_board_position(self, position_index):
+    def set_board_position(self, position_id):
         if self.mode == 'fen':
-            if self.data is None or position_index is None:
+            if self.data is None or position_id is None:
                 self.board.reset_board()
             else:
-                print('position_index in set board', position_index)
+                print('position_id in set board', position_id)
                 print(self.data['ply'])
-                fen = self.get_value_by_position_id('fen', position_index)#self.data.loc[self.data['ply'] == position_index, 'fen'].iloc[0]
-                #fen = self.data['fen'][position_index]
+                fen = self.get_value_by_position_id('fen', position_id)#self.data.loc[self.data['ply'] == position_id, 'fen'].iloc[0]
+                #fen = self.data['fen'][position_id]
                 self.board.set_fen(fen)
         else:
             self.reset_board()
-            for move in self.data['move'][1:position_index + 1]:
+            for move in self.data['move'][1:position_id + 1]:
                 self.board.push_san(move)
 
     def reset_board(self):
@@ -302,7 +306,7 @@ class ConfigData:
 class TreeData:
     def __init__(self, lc0):
         self.lc0 = lc0
-        self.G_dict = {} #{position_index1: [], position_index2: []....}
+        self.G_dict = {} #{position_id1: [], position_id2: []....}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -328,9 +332,9 @@ class TreeData:
         self.x_tick_labels = {}
         self.x_tick_values = {}
 
-    def get_best_moves(self, position_index, slider_value, type, max_moves):
+    def get_best_moves(self, position_id, slider_value, type, max_moves):
         try:
-                tree = self.G_dict[position_index][slider_value]
+                tree = self.G_dict[position_id][slider_value]
         except (KeyError, IndexError) as e:
             #position not yet analyzed or slider value set to config not yet analyzed
             return ([], [])
@@ -363,16 +367,16 @@ class TreeData:
         moves = moves[: min(max_moves, nr_of_children)]
         return(moves, metrics)
 
-    def run_search(self, position_index, parameters, board, nodes):
+    def run_search(self, position_id, parameters, board, nodes):
         self.lc0.configure(parameters)
         g = self.lc0.play(board, nodes)
-        if position_index in self.G_dict:
-            self.G_dict[position_index].append(g)
+        if position_id in self.G_dict:
+            self.G_dict[position_id].append(g)
         else:
-            self.G_dict[position_index] = [g]
+            self.G_dict[position_id] = [g]
 
-    def create_data(self, position_index, moves):
-        G_merged, G_list = gt.merge_graphs(self.G_dict[position_index])
+    def create_data(self, position_id, moves):
+        G_merged, G_list = gt.merge_graphs(self.G_dict[position_id])
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
             if parent is None:
@@ -461,23 +465,23 @@ class TreeData:
                         eval = pt.get_node_eval(G, node)
                         data[node]['visible'][owner]['eval'] = eval
 
-        self.data[position_index] = data
+        self.data[position_id] = data
         y_tick_labels, y_tick_values = pt.get_y_ticks(pos)
         y_range = [-1, len(y_tick_values)]
         x_range = pt.get_x_range(pos)
-        self.x_range[position_index] = x_range
-        self.y_range[position_index] = y_range
-        self.y_tick_labels[position_index] = y_tick_labels
-        self.y_tick_values[position_index] = y_tick_values
+        self.x_range[position_id] = x_range
+        self.y_range[position_id] = y_range
+        self.y_tick_labels[position_id] = y_tick_labels
+        self.y_tick_values[position_id] = y_tick_values
 
 
         max_len = max([len(nc) for nc in node_counts])
         node_counts = [['0'] * (max_len - len(nc)) + nc for nc in node_counts]
         y2_max = max(max([int(x) for x in nc]) for nc in node_counts)
-        self.y2_range[position_index] = [0, y2_max]
-        self.data_depth[position_index] = {i: (list(range(len(node_count))), list(map(int, node_count))) for i, node_count in enumerate(node_counts)}
-        self.x_tick_labels[position_index] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
-        self.x_tick_values[position_index] = x_label_vals
+        self.y2_range[position_id] = [0, y2_max]
+        self.data_depth[position_id] = {i: (list(range(len(node_count))), list(map(int, node_count))) for i, node_count in enumerate(node_counts)}
+        self.x_tick_labels[position_id] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
+        self.x_tick_values[position_id] = x_label_vals
 
 #net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
 #engine = '/home/jusufe/lc0_test4/build/release/lc0'

@@ -386,7 +386,7 @@ X = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 Y = ['1', '2', '3', '4', '5', '6', '7', '8']
 move_table = {x+y: 8*Y.index(y)+X.index(x) for y in Y for x in X}
 
-def get_arrows(position_index, slider_value, type, nr_of_arrows, position_mode):
+def get_arrows(position_id, slider_value, type, nr_of_arrows, position_mode):
     if position_mode == 'pgn':
         tree_data = tree_data_pgn
     else:
@@ -394,7 +394,7 @@ def get_arrows(position_index, slider_value, type, nr_of_arrows, position_mode):
 
     if nr_of_arrows == 0 or nr_of_arrows is None:
         return([])
-    moves, metrics = tree_data.get_best_moves(position_index=position_index,
+    moves, metrics = tree_data.get_best_moves(position_id=position_id,
                                               slider_value=slider_value,
                                               type=type,
                                               max_moves=nr_of_arrows)
@@ -461,15 +461,15 @@ def update_board_image(active_cell, slider_value, arrow_type, nr_of_arrows, posi
         selected_row_id = active_cell['row']
 
     last_move = None
-    position_index = game_data.get_position_id(selected_row_id)
+    position_id = game_data.get_position_id(selected_row_id)
     if position_mode == 'pgn':
         for i in range(1, selected_row_id + 1):
             move = game_data.data['move'][i]
             last_move = board.push_san(move)
     else:
-        game_data.set_board_position(position_index)
+        game_data.set_board_position(position_id)
         board = game_data.board #probably not needed to set again
-    arrows = get_arrows(position_index, slider_value, arrow_type, nr_of_arrows, position_mode)
+    arrows = get_arrows(position_id, slider_value, arrow_type, nr_of_arrows, position_mode)
     #reverse the order so that better moves are drawn above worse moves
     arrows = arrows[::-1]
     svg_board = svg_board_image(board, arrows, last_move)
@@ -699,11 +699,11 @@ def data_row_delete(data, position_mode):
 
     position_ids_in_table = [d['ply'] for d in data]
     position_ids_in_previous_table = [d['ply'] for d in previous_data]
-    for row_index, position_index in enumerate(position_ids_in_previous_table):
-        print(row_index, position_index)
-        if position_index not in position_ids_in_table:
+    for row_index, position_id in enumerate(position_ids_in_previous_table):
+        print(row_index, position_id)
+        if position_id not in position_ids_in_table:
             deleted_row = row_index
-            deleted_position_index = position_index
+            deleted_position_id = position_id
             break
 
     if data == []:
@@ -714,7 +714,7 @@ def data_row_delete(data, position_mode):
 
     if deleted_row is None:
         return (dash.no_update)
-    tree_data_fen.data.pop(deleted_position_index, None) #try to delete corresponding tree data
+    tree_data_fen.data.pop(deleted_position_id, None) #try to delete corresponding tree data
     print('Delete triggered for row_id:', deleted_row)
     print('before deleting:')
     print(game_data_fen.data)

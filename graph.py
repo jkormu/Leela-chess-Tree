@@ -205,21 +205,21 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
         tree_data.G_dict = {}
         tree_data.data = {}
     else:
-        for position_index in position_indices:
-            tree_data.G_dict.pop(position_index, None)  # clear graph data for this position
+        for position_id in position_indices:
+            tree_data.G_dict.pop(position_id, None)  # clear graph data for this position
     for config_i in range(len(marks)):
         nodes = config_data.get_nodes(config_i, nodes_mode, global_nodes)
-        for position_index in position_indices:
-            game_data.set_board_position(position_index)
+        for position_id in position_indices:
+            game_data.set_board_position(position_id)
             if net_mode != ['global']:
                 global_net = None
             configurations = config_data.get_configurations(config_i, global_net)
-            tree_data.run_search(position_index, configurations, board, nodes)
+            tree_data.run_search(position_id, configurations, board, nodes)
 
-    for position_index in position_indices:
-        game_data.set_board_position(position_index)
+    for position_id in position_indices:
+        game_data.set_board_position(position_id)
         fen = board.fen()
-        tree_data.create_data(position_index, fen)
+        tree_data.create_data(position_id, fen)
     if is_analyze_selected:
         return('', str(nr_of_positions))
     return(f'All {str(nr_of_positions)} positions analyzed', str(nr_of_positions))
@@ -250,15 +250,15 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     if active_cell is None or game_data.data is None:
         return (empty_figure(), tooltip)
     else:
-        position_index = active_cell['row']
-        print('ACTIVE CELL', position_index)
-        position_index = game_data.data['ply'][position_index]
-        print('FEN ID', position_index)
+        position_id = active_cell['row']
+        print('ACTIVE CELL', position_id)
+        position_id = game_data.data['ply'][position_id]
+        print('FEN ID', position_id)
 
     #Show empty graph if position is not yet analyzed
-    if position_index not in tree_data.data:
+    if position_id not in tree_data.data:
         return(empty_figure(), tooltip)
-    data = tree_data.data[position_index]
+    data = tree_data.data[position_id]
     x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
     #if there is no root node, then slider is set to value that has not been analyzed yet
@@ -313,25 +313,25 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
               trace_node_even,
               trace_node_root]
 
-    x_hist, y_hist = tree_data.data_depth[position_index][selected_value]
+    x_hist, y_hist = tree_data.data_depth[position_id][selected_value]
 
     trace_depth_histogram = go.Bar(x=y_hist, y=x_hist, orientation='h',
                                    showlegend=False, hoverinfo='none',
                                    marker=dict(color=BAR_COLOR))
 
-    x_range = tree_data.x_range[position_index]
-    y_range = tree_data.y_range[position_index]
-    y_tick_values = tree_data.y_tick_values[position_index]
-    y_tick_labels = tree_data.y_tick_labels[position_index]
+    x_range = tree_data.x_range[position_id]
+    y_range = tree_data.y_range[position_id]
+    y_tick_values = tree_data.y_tick_values[position_id]
+    y_tick_labels = tree_data.y_tick_labels[position_id]
 
     #pad labels for nice alignment
     y_hist_labels = ['0' for _ in range(len(y_tick_labels) - len(y_hist))] + list(map(str, y_hist))
     max_y2_label_len = max(map(len, y_hist_labels))
     y2_tick_labels = [label.rjust(max_y2_label_len, ' ') for label in y_hist_labels]
 
-    y2_range = tree_data.y2_range[position_index]
-    x_tick_labels = tree_data.x_tick_labels[position_index][selected_value]
-    x_tick_values = tree_data.x_tick_values[position_index]
+    y2_range = tree_data.y2_range[position_id]
+    x_tick_labels = tree_data.x_tick_labels[position_id][selected_value]
+    x_tick_values = tree_data.x_tick_values[position_id]
 
 
     layout = go.Layout(#title=dict(text='Leela tree Visualization', x=0.5, xanchor="center"),
@@ -411,13 +411,13 @@ def update_game_evals(visible, title, position_mode):
     L_values = []
     if game_data.data is None:
         return(dash.no_update)
-    for position_index in game_data.data['ply']:
-        if position_index not in tree_data.data: #position not yet evaluated
+    for position_id in game_data.data['ply']:
+        if position_id not in tree_data.data: #position not yet evaluated
             Q, W, D, L = None, None, None, None
-        elif visible not in tree_data.data[position_index]['root']['visible']: #engine config set not yet evaluated
+        elif visible not in tree_data.data[position_id]['root']['visible']: #engine config set not yet evaluated
             Q, W, D, L = None, None, None, None
         else:
-            root = tree_data.data[position_index]['root']
+            root = tree_data.data[position_id]['root']
             evaluation = root['visible'][visible]['eval']
             Q = evaluation['Q']
             W = evaluation['W']
@@ -425,7 +425,7 @@ def update_game_evals(visible, title, position_mode):
             L = evaluation['L']
 
             #invert W and L for black
-            turn = game_data.get_value_by_position_id('turn', position_index)
+            turn = game_data.get_value_by_position_id('turn', position_id)
             if not turn:
                 W = 100 - W - D
                 L = 100 - L - D
