@@ -213,8 +213,6 @@ class ConfigData:
         #df = pd.DataFrame(self.df_dict)
         #df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
         self.data = [self.data_row for _ in range(MAX_NUMBER_OF_CONFIGS)]
-        print('CPuct:',self.data[0]['CPuct'])
-        print('CPuct_default:', self.data[0]['CPuct_default'])
 
     def add_column(self, option, category):
         option_type = option.type

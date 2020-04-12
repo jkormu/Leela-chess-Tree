@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/leela-tree-dash.iml" filepath="$PROJECT_DIR$/.idea/leela-tree-dash.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/LcT.iml" filepath="$PROJECT_DIR$/.idea/LcT.iml" />
     </modules>
   </component>
 </project>

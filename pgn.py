@@ -456,8 +456,8 @@ def update_board_image(active_cell, slider_value, arrow_type, nr_of_arrows, posi
     if position_mode == 'pgn':
         for i in range(1, selected_row_id + 1):
             move = game_data.get_value_by_row_id('move', i) #game_data.data['move'][i]
-            print('SAN MOVE:', move)
-            print(board.fen())
+            #print('SAN MOVE:', move)
+            #print(board.fen())
             last_move = board.push_san(move)
     else:
         game_data.set_board_position(position_id)
@@ -529,8 +529,8 @@ def update_datatable(text, slider_state, position_mode, fen_added):
         #dummy = {'ply': [0], 'move': ['-']}
         #return(pd.DataFrame(data).to_dict('records'))
         return([])
-    print('UPDATING MOVE-DATA TO')
-    print(data)
+    #print('UPDATING MOVE-DATA TO')
+    #print(data)
     return(data)
 
 @app.callback([
@@ -544,7 +544,7 @@ def update_datatable(text, slider_state, position_mode, fen_added):
      ],
     [State('move-table', 'active_cell')])
 def reset_selected_cells(arg1, arg2, fen_added, position_mode, active_cell): # data_deleted
-    print('RSET SELECTED CELLS TRIGGERED...................................')
+    #print('RSET SELECTED CELLS TRIGGERED...................................')
     triggerers = dash.callback_context.triggered
     triggered_by_fen = False
     triggered_by_position_mode = False
@@ -558,9 +558,9 @@ def reset_selected_cells(arg1, arg2, fen_added, position_mode, active_cell): # d
             break
         elif triggerer['prop_id'] == 'data-deleted-indicator.children':
             triggered_by_delete = True
-    print('TRIGGERES',triggerers)
+    #print('TRIGGERES',triggerers)
     if triggered_by_fen:
-        print('ADDED FEN AND SETTING FOCUS:')
+        #print('ADDED FEN AND SETTING FOCUS:')
         row_of_new_fen = len(game_data_fen.data) - 1
         active_cell = {'row': row_of_new_fen, 'column': 0}
     elif active_cell is None or triggered_by_position_mode or triggered_by_delete:
@@ -597,9 +597,9 @@ def update_score_bar(value, active_cell, position_mode):
         game_data = game_data_fen
     style = {'width': '100%', 'height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
 
-    print('Active cell', active_cell['row'] if active_cell is not None else active_cell)
-    print('Corresponding position id', game_data.get_position_id(active_cell['row']) if active_cell is not None else active_cell)
-    print('tree data keys', tree_data.data.keys())
+    #print('Active cell', active_cell['row'] if active_cell is not None else active_cell)
+    #print('Corresponding position id', game_data.get_position_id(active_cell['row']) if active_cell is not None else active_cell)
+    #print('tree data keys', tree_data.data.keys())
     if active_cell is None or game_data.data is None or game_data.get_position_id(active_cell['row']) not in tree_data.data:
         style['visibility'] = 'hidden'
         return(dash.no_update, style)
@@ -625,12 +625,12 @@ def set_position_upload_mode(mode):
     fen_style = copy.copy(FEN_COMPONENT_STYLE)
     pgn_style = copy.copy(PGN_COMPONENT_STYLE)
     if mode == 'fen':
-        print('position mode set to: FEN')
+        #print('position mode set to: FEN')
         columns = FEN_MODE_COLUMNS
         pgn_style['display'] = 'none'
         row_deletable = True
     elif mode =='pgn':
-        print('position mode set to: PGN')
+        #print('position mode set to: PGN')
         columns = PGN_MODE_COLUMNS
         fen_style['display'] = 'none'
         row_deletable = False
@@ -693,7 +693,7 @@ def data_row_delete(data, position_mode):
     position_ids_in_table = [d['ply'] for d in data]
     position_ids_in_previous_table = [d['ply'] for d in previous_data]
     for row_index, position_id in enumerate(position_ids_in_previous_table):
-        print(row_index, position_id)
+        #print(row_index, position_id)
         if position_id not in position_ids_in_table:
             deleted_row = row_index
             deleted_position_id = position_id

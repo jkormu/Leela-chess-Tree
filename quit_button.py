@@ -36,9 +36,9 @@ def shutdown():
     [Input("quit", "n_clicks")],
 )
 def quit_signal(n_clicks):
-    print('N_CLICKS', n_clicks)
+    #print('N_CLICKS', n_clicks)
     if n_clicks is not None and n_clicks >= 1:
-        print("setting shutdown signal")
+        #print("setting shutdown signal")
         return("shutdown complete, you may close the browser tab now",
                {'width': '100%', 'borderColor': 'green', 'padding': '3px',
                 'marginBottom': '5px', 'fontWeight': 'bold'})

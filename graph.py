@@ -251,9 +251,9 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
         return (empty_figure(), tooltip)
     else:
         position_id = active_cell['row']
-        print('ACTIVE CELL', position_id)
+        #print('ACTIVE CELL', position_id)
         position_id = game_data.data[position_id]['ply']
-        print('FEN ID', position_id)
+        #print('FEN ID', position_id)
 
     #Show empty graph if position is not yet analyzed
     if position_id not in tree_data.data:
