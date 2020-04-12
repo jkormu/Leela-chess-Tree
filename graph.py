@@ -191,9 +191,9 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     if n_clicks_selected_timestamp > n_clicks_all_timestamp:
         is_analyze_selected = True
         row_index = active_cell['row']
-        position_indices = [data['ply'][row_index]]
+        position_indices = [data[row_index]['ply']]
     else:
-        position_indices = data['ply']
+        position_indices = [row['ply'] for row in data]
     nr_of_positions = len(position_indices)
 
     #net = '/home/jusufe/leelas/graph_analysis3/nets60T/weights_run1_62100.pb.gz'
@@ -252,7 +252,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     else:
         position_id = active_cell['row']
         print('ACTIVE CELL', position_id)
-        position_id = game_data.data['ply'][position_id]
+        position_id = game_data.data[position_id]['ply']
         print('FEN ID', position_id)
 
     #Show empty graph if position is not yet analyzed
@@ -411,7 +411,9 @@ def update_game_evals(visible, title, position_mode):
     L_values = []
     if game_data.data is None:
         return(dash.no_update)
-    for position_id in game_data.data['ply']:
+
+    for row in game_data.data:
+        position_id = row['ply']
         if position_id not in tree_data.data: #position not yet evaluated
             Q, W, D, L = None, None, None, None
         elif visible not in tree_data.data[position_id]['root']['visible']: #engine config set not yet evaluated
@@ -433,9 +435,9 @@ def update_game_evals(visible, title, position_mode):
         W_values.append(W)
         D_values.append(D)
         L_values.append(L)
-    game_data.data['Q'] = Q_values
-    game_data.data['W'] = W_values
-    game_data.data['D'] = D_values
-    game_data.data['L'] = L_values
-    game_data.data_previous_raw = game_data.data.to_dict('records')
+    game_data.set_column('Q', Q_values)
+    game_data.set_column('W', W_values)
+    game_data.set_column('D', D_values)
+    game_data.set_column('L', L_values)
+    game_data.data_previous = game_data.data
     return(str(visible))

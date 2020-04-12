@@ -3,15 +3,13 @@ import graphtools as gt
 import plottools as pt
 import chess
 import chess.engine
-import numpy as np
-import pandas as pd
 from leela import leela_engine
 import os
 from os.path import isfile, join
 
 from dash_table.Format import Format, Scheme
 
-from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES
+from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES, ROOT_DIR
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 
@@ -106,22 +104,24 @@ class GameData:
     def __init__(self, mode):
         self.board = chess.Board()
         self.pgn_start_fen = self.board.fen()
-        self.data = None #Pandas DataFrame
-        self.data_previous_raw = None #raw dict from dash datatable 'data' property
+        self.data = None #[row1, row2, ...] where row1 = {'column_name1': value1, 'column_name2': value2, ...}
+        self.data_previous = None # ToDo: this is no longer needed as we don't use pandas anymore. fen delete callback should use GameData.data directly
         self.mode = mode #either "pgn" or "fen"
         self.running_fen_id = 0
 
     def get_value_by_position_id(self, column_name, position_id):
-        value = self.data.loc[self.data['ply'] == position_id, column_name].iloc[0]
-        return(value)
+        for row in self.data:
+            if row['ply'] == position_id:
+                return(row[column_name])
+        return(None)
 
     def get_value_by_row_id(self, column_name, row):
-        value = self.data[column_name][row]
+        value = self.data[row][column_name]
         return(value)
 
     def get_position_id(self, row):
         try:
-            return(self.data['ply'][row])
+            return(self.data[row]['ply'])
         except (KeyError, TypeError) as e:
             return(None)
 
@@ -130,14 +130,12 @@ class GameData:
             if self.data is None or position_id is None:
                 self.board.reset_board()
             else:
-                print('position_id in set board', position_id)
-                print(self.data['ply'])
-                fen = self.get_value_by_position_id('fen', position_id)#self.data.loc[self.data['ply'] == position_id, 'fen'].iloc[0]
-                #fen = self.data['fen'][position_id]
+                fen = self.get_value_by_position_id('fen', position_id)
                 self.board.set_fen(fen)
         else:
             self.reset_board()
-            for move in self.data['move'][1:position_id + 1]:
+            for row in self.data[1:position_id + 1]:#move in [self.data[row]['move'] for row in self.data[1:position_id + 1]]:
+                move = row['move']
                 self.board.push_san(move)
 
     def reset_board(self):
@@ -147,6 +145,11 @@ class GameData:
         fen_id = self.running_fen_id
         self.running_fen_id += 1
         return(fen_id)
+
+    def set_column(self, column_name, values):
+        for i, value in enumerate(values):
+            self.data[i][column_name] = value
+
 
 
 def is_number(s):
@@ -168,9 +171,9 @@ def try_to_round(value, precision):
 
 class ConfigData:
     def __init__(self, lc0):
-        self.data = pd.DataFrame()
-        self.data_analyzed = pd.DataFrame()
-        self.df_dict = {}
+        self.data = []#pd.DataFrame()
+        self.data_analyzed = []#pd.DataFrame()
+        self.data_row = {}
         self.dropdowns = {}
         self.columns = []
         self.columns_with_min = [] #options with min allowed uci value
@@ -182,7 +185,7 @@ class ConfigData:
         self.construct_config_data()
 
     def find_weights(self):
-        root = os.getcwd()
+        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
         weights_folder = os.path.join(root, 'weights')
         weight_files = [f.split(".")[0] for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         weight_paths = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
@@ -191,12 +194,12 @@ class ConfigData:
         self.weight_paths = weight_paths
 
     def construct_config_data(self):
-        self.df_dict = {}
+        self.data_row = {}
         self.columns = []
         self.columns_with_min = []
         self.columns_with_max = []
-        self.df_dict['Nodes'] = DEFAULT_NODES
-        self.df_dict['Nodes_default'] = DEFAULT_NODES
+        self.data_row['Nodes'] = DEFAULT_NODES
+        self.data_row['Nodes_default'] = DEFAULT_NODES
         node_col = {'id': 'Nodes', 'name': ['', 'Nodes'], 'clearable': False}
         self.columns.append(node_col)
         for opt in self.lc0.options:
@@ -207,9 +210,11 @@ class ConfigData:
 
         self.columns.sort(key=lambda x: COLUMN_ORDER.index(x['name'][1]) if x['name'][1] in COLUMN_ORDER else 999999)
 
-        df = pd.DataFrame(self.df_dict)
-        df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
-        self.data = df
+        #df = pd.DataFrame(self.df_dict)
+        #df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
+        self.data = [self.data_row for _ in range(MAX_NUMBER_OF_CONFIGS)]
+        print('CPuct:',self.data[0]['CPuct'])
+        print('CPuct_default:', self.data[0]['CPuct_default'])
 
     def add_column(self, option, category):
         option_type = option.type
@@ -220,18 +225,18 @@ class ConfigData:
             default = try_to_round(default, 3)  # TODO: don't round here, rather edit datatable formatting
         name = option.name
         if name in deterministic_defaults:
-            self.df_dict[name] = deterministic_defaults[name]
+            self.data_row[name] = deterministic_defaults[name]
         elif name in other_defaults:
-            self.df_dict[name] = other_defaults[name]
+            self.data_row[name] = other_defaults[name]
         else:
-            self.df_dict[name] = [default]
+            self.data_row[name] = default
 
-        self.df_dict[name + '_default'] = [default]
+        self.data_row[name + '_default'] = default
         if option.min is not None:
-            self.df_dict[name + '_min'] = [option.min]
+            self.data_row[name + '_min'] = option.min
             self.columns_with_min.append(name)
         if option.max is not None:
-            self.df_dict[name + '_max'] = [option.max]
+            self.data_row[name + '_max'] = option.max
             self.columns_with_max.append(name)
         col = {'id': name, 'name': [category, name], 'clearable': False}#, 'validation': {'allow_null': False}, 'on_change': {'action': 'validate'}}
         if option_type == 'spin' or is_number(default) or option.min is not None or option.max is not None:
@@ -257,21 +262,21 @@ class ConfigData:
         return(None)
 
     def update_data(self, data):
-        nr_of_rows = data.shape[0]
+        nr_of_rows = len(data)
         self.data[:nr_of_rows] = data
         return(self.is_data_equal_to_analyzed())
 
     def is_data_equal_to_analyzed(self):
-        return(self.data.equals(self.data_analyzed))
+        return(self.data == self.data_analyzed)
 
     def get_row(self, row_ind):
-        row = self.data.iloc[row_ind]
+        row = self.data[row_ind]
         return(row)
 
     def get_configurations(self, row_ind, global_weight, only_non_default=False):
         row = self.get_row(row_ind)
         config = {}
-        for option_name in row.index:
+        for option_name in row:
             if option_name.endswith('_default') or option_name.endswith('_min') or option_name.endswith('_max') or option_name == 'Nodes':
                 continue
             if option_name == 'WeightsFile' and global_weight is not None:
@@ -291,7 +296,7 @@ class ConfigData:
 
 
     def get_data(self, nr_of_rows):
-        return(config_data.data[:nr_of_rows])
+        return(self.data[:nr_of_rows])
 
     def get_columns(self, with_nodes, with_nets):
         columns_to_exclude = []
@@ -302,6 +307,15 @@ class ConfigData:
 
         d = [col for col in self.columns if col['id'] not in columns_to_exclude]
         return(d)
+
+#replicate behaviour of numpy's linspace
+def linspace(a, b, n):
+    if n == 0:
+        return([])
+    elif n < 2:
+        return [a]
+    diff = (b - a)/(n - 1)
+    return([diff * i + a  for i in range(n)])
 
 class TreeData:
     def __init__(self, lc0):
@@ -396,7 +410,7 @@ class TreeData:
         root_children = list(gt.get_children(G_merged, root))  # X-label
         root_children.sort(key=lambda n: pos[n][0])  # X-label
         x_labels = []  # X-label
-        x_label_vals = list(np.linspace(0, 1, len(root_children)))
+        x_label_vals = linspace(0, 1, len(root_children))
         move_names = []
         for child in root_children:
             for G in G_list:
@@ -483,12 +497,7 @@ class TreeData:
         self.x_tick_labels[position_id] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_id] = x_label_vals
 
-#net = '/home/jusufe/tmp/weights_run2_591226.pb.gz'
-#engine = '/home/jusufe/lc0_test4/build/release/lc0'
-#engine = '/home/jusufe/PycharmProjects/leela-tree-dash/lc0_tree'
-#args = [engine, '--weights=' + net]
-#lc0 = leela_engine(args)
-lc0 = leela_engine(None)#leela(args)
+lc0 = leela_engine(None)
 
 tree_data_pgn = TreeData(lc0)
 tree_data_fen = TreeData(lc0)
@@ -496,7 +505,5 @@ tree_data_fen = TreeData(lc0)
 game_data_pgn = GameData('pgn')
 game_data_fen = GameData('fen')
 
-#tree_data.create_demo_data()
-#game_data = GameData()
 config_data = ConfigData(lc0)
 

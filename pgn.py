@@ -4,7 +4,6 @@ import dash_core_components as dcc
 import dash_table
 import dash_html_components as html
 import io
-import pandas as pd
 import chess
 import chess.svg
 import python_chess_customized_svg as svg
@@ -77,10 +76,6 @@ ARROW_COLORS = {#'p': (23, 178, 207),
                 'p': (183, 0, 255), #purple
                 'n': (0, 166, 255),#(0, 255, 0),
                 'q': (255, 0, 0)}
-
-
-#di = {'ply': [0], 'move': ['-'], 'Q': [0.0], 'W': [0.0], 'D': [0.0], 'L': [0.0]}
-#df = pd.DataFrame(di)
 
 
 def get_score_bar_figure(W, D, B):
@@ -250,7 +245,6 @@ def pgn_layout():
     data_table = dash_table.DataTable(
             id='move-table',
             columns=PGN_MODE_COLUMNS,
-            #data=df.to_dict('records'),
             fixed_rows={'headers': True, 'data': 0},
             style_cell={'textAlign': 'left', 'minWidth': '5px', 'width': '20px', 'maxWidth': '20px',
                         'whiteSpace': 'normal', 'height': 'auto', 'overflow': 'hidden'},
@@ -316,20 +310,34 @@ def parse_pgn(contents, filename, is_new_pgn):
         board = first_game.board()
         fen = board.fen()
         game_data_pgn.board = board
-        data = {'dummy_left': '', 'ply': [0], 'move': ['-'], 'turn': [board.turn], 'fen': [fen], 'dummy_right': ''}
+        data = [{'dummy_left': '', 'ply': 0, 'move': '-', 'turn': board.turn, 'fen': fen, 'dummy_right': ''}]
+
         #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
         #data = pd.DataFrame(columns=columns)
         #data = data.to_dict()
 
         for ply, move in enumerate(first_game.mainline_moves()):
+            row = {}
             san = board.san(move)
-            data['move'].append(san)
-            data['ply'].append(ply + 1)
-            data['turn'].append(not board.turn)
-            board.push(move)
-            data['fen'].append(board.fen())
 
-        data = pd.DataFrame(data)
+            row['move'] = san
+            row['ply'] = ply + 1
+            row['turn'] = not board.turn
+            board.push(move)
+            row['fen'] = board.fen()
+            row['dummy_left'] = ''
+            row['dummy_right'] = ''
+
+            data.append(row)
+            #data['move'].append(san)
+            #data['ply'].append(ply + 1)
+            #data['turn'].append(not board.turn)
+            #board.push(move)
+            #data['fen'].append(board.fen())
+            #data['dummy_left'].append('')
+            #data['dummy_right'].append('')
+
+        #data = pd.DataFrame(data)
         game_data_pgn.data = data
         game_data_pgn.fen = fen
         # reset analysis of previous pgn
@@ -447,7 +455,9 @@ def update_board_image(active_cell, slider_value, arrow_type, nr_of_arrows, posi
     position_id = game_data.get_position_id(selected_row_id)
     if position_mode == 'pgn':
         for i in range(1, selected_row_id + 1):
-            move = game_data.data['move'][i]
+            move = game_data.get_value_by_row_id('move', i) #game_data.data['move'][i]
+            print('SAN MOVE:', move)
+            print(board.fen())
             last_move = board.push_san(move)
     else:
         game_data.set_board_position(position_id)
@@ -496,7 +506,6 @@ def update_fen_text(active_cell, position_mode):
     if game_data.data is not None:
         row = active_cell['row']
         fen = game_data.get_value_by_row_id('fen', row)
-        print(game_data.data['fen'])
         return(fen)
     return('')
 
@@ -515,13 +524,14 @@ def update_datatable(text, slider_state, position_mode, fen_added):
         game_data = game_data_fen
     data = game_data.data
     if (text is None and fen_added is None) or data is None:
-        columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-        data = pd.DataFrame(columns=columns)
+        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+        #data = pd.DataFrame(columns=columns)
         #dummy = {'ply': [0], 'move': ['-']}
-        return(pd.DataFrame(data).to_dict('records'))
+        #return(pd.DataFrame(data).to_dict('records'))
+        return([])
     print('UPDATING MOVE-DATA TO')
     print(data)
-    return(data.to_dict('records'))
+    return(data)
 
 @app.callback([
      Output('move-table', 'active_cell'),
@@ -551,9 +561,8 @@ def reset_selected_cells(arg1, arg2, fen_added, position_mode, active_cell): # d
     print('TRIGGERES',triggerers)
     if triggered_by_fen:
         print('ADDED FEN AND SETTING FOCUS:')
-        id_of_new_fen = game_data_fen.data.shape[0] - 1
-        print(id_of_new_fen)
-        active_cell = {'row': id_of_new_fen, 'column': 0}
+        row_of_new_fen = len(game_data_fen.data) - 1
+        active_cell = {'row': row_of_new_fen, 'column': 0}
     elif active_cell is None or triggered_by_position_mode or triggered_by_delete:
         active_cell = {'row': 0, 'column': 0}
     selected_cells = [active_cell]
@@ -591,14 +600,18 @@ def update_score_bar(value, active_cell, position_mode):
     print('Active cell', active_cell['row'] if active_cell is not None else active_cell)
     print('Corresponding position id', game_data.get_position_id(active_cell['row']) if active_cell is not None else active_cell)
     print('tree data keys', tree_data.data.keys())
-    if active_cell is None or game_data.data is None or game_data.get_position_id(active_cell['row']) not in tree_data.data:#game_data.game_data['ply']:
+    if active_cell is None or game_data.data is None or game_data.get_position_id(active_cell['row']) not in tree_data.data:
         style['visibility'] = 'hidden'
         return(dash.no_update, style)
 
     row = active_cell['row']
-    W = game_data.data['W'][row]
-    D = game_data.data['D'][row]
-    B = game_data.data['L'][row]
+    W = game_data.data[row]['W']
+    D = game_data.data[row]['D']
+    B = game_data.data[row]['L']
+    if W is None:
+        style['visibility'] = 'hidden'
+        return(dash.no_update, style)
+
     fig = get_score_bar_figure(W, D, B)
     return(fig, style)
 
@@ -643,8 +656,8 @@ def add_fen(n_clicks, fen):
 
     data = game_data_fen.data
     if data is None:
-        columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-        data = pd.DataFrame(columns=columns)
+        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+        data = []#pd.DataFrame(columns=columns)
 
     row = {}
     side_to_move = {1: 'W', 0: 'B'}
@@ -655,12 +668,9 @@ def add_fen(n_clicks, fen):
     row['move'] = side_to_move[game_data_fen.board.turn]
     row['dummy_left'] = ''
     row['dummy_right'] = ''
-    data = data.append(row, ignore_index=True)
+    data.append(row)
     game_data_fen.data = data
-    print('SETTING PREVIOUS DATA IN ADD', data.to_dict('records'))
-    game_data_fen.data_previous_raw = data.to_dict('records')
-    print('GAME DATA AFTER FEN ADDED')
-    print(game_data_fen.data)
+    game_data_fen.data_previous = data
     return (dash.no_update, '', fen_id)
 
 
@@ -671,7 +681,7 @@ def data_row_delete(data, position_mode):
     if position_mode != 'fen':
         return(dash.no_update)
     #print('ACTIVE CELL IN DELETE', print(active))
-    previous_data = game_data_fen.data_previous_raw
+    previous_data = game_data_fen.data_previous
     if data is None or previous_data is None:
         return(dash.no_update)
     deleted_row = None
@@ -691,22 +701,21 @@ def data_row_delete(data, position_mode):
 
     if data == []:
         game_data_fen.data = None
-        game_data_fen.data_previous_raw = None
+        game_data_fen.data_previous = None
         tree_data_fen.data = {}
         return(deleted_row)
 
     if deleted_row is None:
         return (dash.no_update)
     tree_data_fen.data.pop(deleted_position_id, None) #try to delete corresponding tree data
-    print('Delete triggered for row_id:', deleted_row)
-    print('before deleting:')
-    print(game_data_fen.data)
-    game_data_fen.data = game_data_fen.data.drop(deleted_row)
-    print('after deleting')
-    game_data_fen.data = game_data_fen.data.reset_index(drop=True)
-    print(game_data_fen.data)
-    print('SETTING PREVIOUS DATA IN DELETE', game_data_fen.data.to_dict('records'))
-    game_data_fen.data_previous_raw = game_data_fen.data.to_dict('records')
+    #print('Delete triggered for row_id:', deleted_row)
+    #print('before deleting:')
+    #print(game_data_fen.data)
+    #game_data_fen.data = game_data_fen.data.drop(deleted_row)
+    game_data_fen.data.pop(deleted_row)
+    #print('after deleting')
+    #print(game_data_fen.data)
+    game_data_fen.data_previous = game_data_fen.data
     return(deleted_row)
 
 

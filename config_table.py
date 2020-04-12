@@ -3,12 +3,9 @@ import dash
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
-import pandas as pd
 import dash_table
 from server import app
 from global_data import config_data
-#from flask import request
-#import sys
 
 from constants import MAX_NODES, MAX_NUMBER_OF_CONFIGS, DEFAULT_NUMBER_OF_CONFIGS, DEFAULT_NODES
 
@@ -92,7 +89,7 @@ def get_config_table():
                     'filter_query': '{{{0}}} != {{{0}_default}}'.format(col)
                 },
                 'background_color': EDITED_CELL_COLOR
-            } for col in config_data.data.columns if col != 'Nodes' and col != 'WeightsFile']
+            } for col in config_data.data[0] if col != 'Nodes' and col != 'WeightsFile']
 
     highlight_below_min = [{
                 'if': {
@@ -111,11 +108,11 @@ def get_config_table():
             } for col in config_data.columns_with_max]
 
     conditional_style = highlight_non_default + highlight_below_min + highlight_above_max
-
+    print(config_data.data)
     config_table = html.Div([
         dash_table.DataTable(
             id='config-table',
-            data=config_data.data.to_dict('records'),
+            data=config_data.data,
             columns=config_data.columns,
             editable=True,
             dropdown=config_data.dropdowns,
@@ -145,7 +142,6 @@ def get_config_table():
     [Input("config-table", "data")],
 )
 def copy_table(data):
-    data = pd.DataFrame(data)
     has_changed = config_data.update_data(data)
     return(str(has_changed))
 
@@ -174,7 +170,6 @@ def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
     if nr_of_rows == 1:
         slider_style["visibility"] = "hidden"
     data = config_data.get_data(nr_of_rows)
-    data = data.to_dict('records')
 
     new_slider_value = min(slider_value, slider_max)
 

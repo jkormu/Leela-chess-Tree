@@ -4,6 +4,7 @@ import networkx as nx
 import os
 from os.path import isfile, join
 from datetime import datetime
+from constants import ROOT_DIR
 
 class leela_engine:
     def __init__(self, engine_path=None):
@@ -37,7 +38,7 @@ class leela_engine:
             self.configuration[opt] = value
 
     def find_engine(self):
-        root = os.getcwd()
+        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
         for r, d, files in os.walk(root):
             for f in files:
                 if f.startswith('lc0_tree') and isfile(join(r, f)):
@@ -47,7 +48,7 @@ class leela_engine:
         return(None)
 
     def find_net(self):
-        root = os.getcwd()
+        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
         weights_folder = os.path.join(root, 'weights')
         net_path = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         try:
@@ -75,8 +76,8 @@ class leela_engine:
         changed = False
         boolean_conversion = {'False': False, 'True': True}
         for opt in options:
-            # Need to convert boolean strings to booleans
-            # since dash datatable works with strings and python chess with booleans
+            # Need to convert boolean strings to booleans since
+            # dash datatable works with strings and python chess with booleans
             if options[opt] in ['True', 'False']:
                 options[opt] = boolean_conversion[options[opt]]
 
