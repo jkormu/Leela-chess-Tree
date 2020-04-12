@@ -7,8 +7,8 @@ import pandas as pd
 import dash_table
 from server import app
 from global_data import config_data
-from flask import request
-import sys
+#from flask import request
+#import sys
 
 from constants import MAX_NODES, MAX_NUMBER_OF_CONFIGS, DEFAULT_NUMBER_OF_CONFIGS, DEFAULT_NODES
 
