@@ -11,7 +11,7 @@ class leela_engine:
         self.error = None
         if engine_path is None:
             engine_path = self.find_engine()
-            net = self.find_net()#'/home/jusufe/tmp/weights_run2_591226.pb.gz'
+            net = self.find_net()
         if net is not None and engine_path is not None:
             engine_path = [engine_path, '--weights=' + net]  # '--logfile=lc0_log.txt']
             try:
@@ -25,8 +25,12 @@ class leela_engine:
                 self.error += f'{datetime.now()}: Could not find any weight files in "weights"-folder. Add at least one weight file. \n'
             if engine_path is None:
                 self.error += f'{datetime.now()}: Coult not find lc0_tree engine. Please refer to the installation guide in "https://github.com/jkormu/leela-tree-dash" \n'
+        log_file = join(ROOT_DIR, 'LcT_log.txt')
+        print(log_file)
         if self.error is not None:
-            with open('LcT_log.txt', "w") as log:
+            log_file = join(ROOT_DIR, 'LcT_log.txt')
+            print(log_file)
+            with open(log_file, "w") as log:
                 log.write(self.error)
         self.analyzed_count = 0 #used as unique id of position for SimpleEngine.play(), forces ucinewgame
         self.configuration = {}
@@ -38,17 +42,15 @@ class leela_engine:
             self.configuration[opt] = value
 
     def find_engine(self):
-        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
+        root = ROOT_DIR
         for r, d, files in os.walk(root):
             for f in files:
                 if f.startswith('lc0_tree') and isfile(join(r, f)):
                     return(join(r, f))
-        #path = os.getcwd()
-        #engine_path = [join(path, f) for f in os.listdir(path) if isfile(join(path, f)) and f.startswith('lc0_tree')][0]
         return(None)
 
     def find_net(self):
-        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
+        root = ROOT_DIR
         weights_folder = os.path.join(root, 'weights')
         net_path = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         try:
