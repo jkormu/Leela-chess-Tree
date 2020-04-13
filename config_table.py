@@ -108,7 +108,7 @@ def get_config_table():
             } for col in config_data.columns_with_max]
 
     conditional_style = highlight_non_default + highlight_below_min + highlight_above_max
-    print(config_data.data)
+    #print(config_data.data)
     config_table = html.Div([
         dash_table.DataTable(
             id='config-table',
