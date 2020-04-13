@@ -13,7 +13,7 @@ GUI running on web browser for investigating Lc0 search trees
 ## Installation
 In order to run LcT you will need:
 * LcT executable
-* Special build of Lc0 engine capable of writing search tree to disk
+* Special build of Lc0 engine capable of writing search trees to disk
 * dll files required to run lc0 engine redistributed by lc0-project
 * At least one lc0 weight file
 
