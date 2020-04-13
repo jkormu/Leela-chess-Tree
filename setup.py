@@ -29,5 +29,5 @@ setup(name="LcT",
         packages=find_packages(),
         description="Leela chess Tree",
         options={"build_exe": build_exe_options},
-        executables=[Executable("run.py", base=base, icon=icon)]
+        executables=[Executable("LcT.py", base=base, icon=icon)]
         )
