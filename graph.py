@@ -144,7 +144,7 @@ def get_graph_component():
                                                 min=0,
                                                 value=0,
                                                 step=None,
-                                                ), style={'height': '10%'}),#updatemode='drag'
+                                                ), style={'height': '10%', 'width': '95%', 'margin': 'auto'}),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
                            style={'height': '90%', 'width': '100%', 'float': 'left'}
