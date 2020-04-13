@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 import PIL
-Z = 640
+Z = 1280#640
 
 def circle(img, x,y,r, color):
     x = int(round(Z*x))
@@ -82,7 +82,7 @@ img = circle(img, X0, Y1, R, EVEN_C)
 img = circle(img, X1, Y1, R, ODD_C)
 img = circle(img, X2, Y1, R, EVEN_C)
 resample = PIL.Image.LANCZOS
-favicon_sizes = [16, 32, 128]
+favicon_sizes = [16, 32, 128, 640]
 
 for size in favicon_sizes:
     img_resized = newimg.resize((size, size), resample=resample)
