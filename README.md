@@ -18,12 +18,12 @@ In order to run LcT you will need:
 * At least one lc0 weight file
 
 ### Windows
-1. Load and extract LcT-windows zip from
+1. Load and extract LcT Windows zip from [LcT's release page](https://github.com/jkormu/Leela-chess-Tree/releases/tag/v0.24.1-beta)
 2. Load Lc0 0.24.1 engine from official lc0 [releases page](https://github.com/LeelaChessZero/lc0/releases) and place the engine folder inside the extracted LcT folder.
 3. Load special version of lc0 engine 0.24.1 from [fork's release page](https://github.com/jkormu/lc0/releases/tag/v0.24.1_gml) that is capable of writing search trees to disk. 
 4. Place at least one lc0 weight file inside folder "weights" found inside the extracted LcT folder
 
-LcT can now be launched via LcT.exe which will open LcT in your default browser.
+LcT can now be launched via LcT.exe which will open LcT in to your default browser.
 
 Notes:
 * Step 2. is required for getting the needed dll-files for running the engine as these files are not redistributed along with the lc0_tree engine.
