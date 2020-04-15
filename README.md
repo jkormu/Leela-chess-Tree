@@ -52,6 +52,7 @@ LcT can now be launched via LcT executable which will open LcT in to your defaul
 - dash                      1.4.1
 - networkx                  2.4
 - python-chess              0.30.1
+
 it is recommended to setup virtual environment, e.g. with conda envs:
  ```
 conda create -n my_LcT_env python=3.6
