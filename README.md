@@ -18,7 +18,7 @@ In order to run LcT you will need:
 * At least one lc0 weight file
 
 ### Windows
-1. Load and extract LcT Windows zip from [LcT's release page](https://github.com/jkormu/Leela-chess-Tree/releases/tag/v0.24.1)
+1. Load and extract LcT Windows zip from [LcT's release page](https://github.com/jkormu/Leela-chess-Tree/releases/tag/v0.1)
 2. Load Lc0 0.24.1 engine from official lc0 [releases page](https://github.com/LeelaChessZero/lc0/releases) and place the engine folder inside the extracted LcT folder (i.e. inside the folder that holds LcT.exe).
 3. Load special version of lc0 engine 0.24.1 from [fork's release page](https://github.com/jkormu/lc0/releases/tag/v0.24.1_gml) that is capable of writing search trees to disk. Replace vanilla lc0.exe with lc0_tree.exe in the engine folder loaded in step 2.
 4. Place at least one lc0 weight file inside folder "weights" found inside the extracted LcT folder
@@ -33,7 +33,7 @@ Notes:
 This is because the engine will write search tree after each search which is relatively slow process resulting in slow contribution rate and time losses in match games.
 
 ### Linux (easy way)
-1. Load and extract LcT Windows zip from 
+1. Load and extract LcT for linux from[LcT's release page](https://github.com/jkormu/Leela-chess-Tree/releases/tag/v0.1) 
 2. Clone and build special version of lc0 engine 0.24.1 capable of writing search trees to disk:
  ```
 git clone -b 0.24_gml --recurse-submodules https://github.com/jkormu/lc0.git lc0_for_lct
@@ -45,7 +45,7 @@ Place the build folder within LcT folder extracted in step 1. (at the same level
 LcT can now be launched via LcT executable which will open LcT in to your default browser.
 
 ### Linux (by installing dependencies)
-1. Clone this repo or download source files from release page
+1. Download source files from [release page](https://github.com/jkormu/Leela-chess-Tree/releases/tag/v0.1) 
 2. Same as step 2. above
 3. Install dependencies:
 - python                    3.6.10
