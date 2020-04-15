@@ -14,7 +14,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 LINE_COLOR = 'rgb(100, 100, 100)'
 
-def get_settings_bar():
+def settings_bar():
     settings_bar = html.Div(style={'display': 'flex',
                                    'justifyContent': 'space-between',
                                    'borderTop': f'1px solid {LINE_COLOR}',
@@ -80,9 +80,7 @@ def get_settings_bar():
 
     return(settings_bar)
 
-def get_config_table():
-    settings_bar = get_settings_bar()
-
+def config_table():
     highlight_non_default = [{
                 'if': {
                     'column_id': col,
@@ -127,7 +125,7 @@ def get_config_table():
 
     config_component = html.Div([
         #number_of_configs_dropdown,
-        settings_bar,
+        settings_bar(),
         config_table,
         html.Div(id='config-table-dummy-div', style={'display': 'none'}),
         html.Div(id='data-validity', style={'display': 'none'}),

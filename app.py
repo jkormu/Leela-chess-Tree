@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from config_table import get_config_table
-from pgn import pgn_layout
+from config_table import config_table
+from position_pane import position_pane
 from server import app
 import dash_html_components as html
-from graph import get_graph_component
-#from dash.dependencies import Input, Output
-#import dash
-
-from global_data import lc0
+from graph import tree_graph
 
 DEBUG = False
 
@@ -31,9 +27,9 @@ GRAPH_PANE_HEIGHT = 60
 CONFIG_PANE_HEIGHT = 100 - GRAPH_PANE_HEIGHT
 
 
-pgn_component = pgn_layout()
-config_component = get_config_table()
-graph_component = get_graph_component()
+position_component = position_pane()
+config_component = config_table()
+graph_component = tree_graph()
 
 #    layout
 #------------|-----|
@@ -66,7 +62,7 @@ right_container = html.Div(
            }
 )
 
-right_container.children = [pgn_component]
+right_container.children = [position_component]
 
 
 layout = html.Div(children=[

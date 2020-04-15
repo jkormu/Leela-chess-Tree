@@ -6,7 +6,7 @@ import dash_html_components as html
 from server import app
 import dash
 
-def get_quit_button():
+def quit_button():
     quit_button = html.Button(id='quit',
                           children='Quit', style={'borderColor': 'red',
                                                   'padding': '3px',

@@ -19,7 +19,7 @@ from dash_table.Format import Format, Symbol, Scheme
 
 from colors import rgb_adjust_saturation
 
-from quit_button import get_quit_button
+from quit import quit_button
 import copy
 
 COMPONENT_WIDTH = '98%'
@@ -186,8 +186,8 @@ def fen_component():
     fen_pgn_container.children = [fen_component, upload]
     return(fen_pgn_container)
 
-def pgn_layout():
-    quit_button = get_quit_button()
+def position_pane():
+    quit_btn = quit_button()
 
     mode_selector = html.Div(children=[dcc.RadioItems(id='position-mode-selector',
                                                       options=[{'label': 'pgn', 'value': 'pgn'},
@@ -288,7 +288,7 @@ def pgn_layout():
     container_table = html.Div(html.Div(children=data_table, style={'borderLeft': f'1px solid {BAR_LINE_COLOR}', 'borderTop': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flexDirection': 'column'})
-    content = [quit_button, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]#container_table] upload,
+    content = [quit_btn, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]#container_table] upload,
     container.children = content
     return(container)
 

@@ -128,7 +128,7 @@ def get_data(data, visible):
             x_edges, y_edges,
             x_edges_pv, y_edges_pv)
 
-def get_graph_component():
+def tree_graph():
     graph_component = html.Div(style={'height': '100%', 'width': '100%'})
     loading_component = html.Div(dcc.Loading(children=[html.Div(id='loading_trigger', style={'display': 'none'})], style={'flex': 1}),
                                  style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flexDirection': 'column'})
@@ -141,10 +141,11 @@ def get_graph_component():
                                                config={'displayModeBar': False},
                                                ),
                                      html.Div(dcc.Slider(id='slider1',
-                                                min=0,
-                                                value=0,
-                                                step=None,
-                                                ), style={'height': '12.5%', 'width': '95%', 'margin': 'auto'}),#updatemode='drag'
+                                                         min=0,
+                                                         value=0,
+                                                         step=None,
+                                                         ),
+                                              style={'height': '12.5%', 'width': '95%', 'margin': 'auto'}),#updatemode='drag'
                                      html.Div(id='hidden-div-slider-state', style={'display': 'none'}, children='test')
                                      ],
                            style={'height': '90%', 'width': '100%', 'float': 'left'}
