@@ -65,3 +65,24 @@ pip install python-chess==0.30.1
  ```
 python LcT.py
  ```
+
+## Usage
+1. Load position or positions to analyze using one of below methods
+    * Upload a pgn-file via drag&drop. This will load the positions of the first game in the file into position table below the board
+    * Upload a position from fen. Paste fen into fen field and click "Add fen"-button. This will add the position to position table. 
+    You can add multiple fens and also delete fen positions via position table's leftmost column.
+2. Set lc0-engine configurations you want to use to analyze the positions/positions (this is optional as default setttings are us)
+    * If you wish to compare more than one set of engine settings increase the number of configuration sets from "#Configurations"-field
+    * You can set nodes or network per configuration set by disabling "global nodes" and/or "global net". This will add nodes/network columns into the configuration table.
+    * UCI options can be edited through the configuration table.
+    * UCI settings can be reseted via "Reset"-button 
+    * Notes: Configuration table will do basic validation for the settings:
+        * settings out of allowed range are highlighted with red color and before sending to engine the value is clipped back to allowed range
+        * LcT does not prevent you from inserting decimal numbers for integer type settings but these are rounded to nearest integer before sending to engine
+        * Lc0 may have some special validity requirements for certain parameters that cannot be communicated to LcT via UCI protocol. If you happen to hit such 
+        settings, then LcT will unfortunately hang when position is analyzed with invalid settings. Please refer to Lc0 documentation to understand valid settings in such cases.
+        * LcT, by default, diables smart pruning and sets threading and batching settings that guarantee deterministic search results, 
+        i.e. same configurations will always provide exactly same result.
+3. Analyze positions either one by one or all at once through the analysis buttons above position table.
+4. Once positions are analyzed you can navigate between positions by selecting positions in position table. Configuration sets can be compared through slider below the graph component.
+    
