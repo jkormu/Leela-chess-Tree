@@ -1,5 +1,5 @@
 # Leela-chess-Tree
-GUI tool for investigating Lc0 search trees.
+GUI tool for investigating Lc0 search trees for low nodes.
 
 ## Demo
 ![](images/LcT_demo.gif)
@@ -68,6 +68,8 @@ python LcT.py
  ```
 
 ## Usage
+Currently it is advisable to keep the nodes low. Anything above 10k nodes is probably unusable.
+
 1. Load position or positions to analyze using one of below methods
     * Upload a pgn-file via drag&drop. This will load positions to the position table from the first game in the pgn file.
     * Upload a position from a fen. Paste fen into fen field and click "Add fen"-button. This will add the position to position table. 
