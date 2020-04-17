@@ -45,7 +45,7 @@ class leela_engine:
         root = ROOT_DIR
         for r, d, files in os.walk(root):
             for f in files:
-                if f.startswith('lc0_tree') and isfile(join(r, f)):
+                if f.startswith('lc0') and isfile(join(r, f)):
                     return(join(r, f))
         return(None)
 
