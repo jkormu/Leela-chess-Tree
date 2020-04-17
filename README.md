@@ -41,6 +41,7 @@ cd lc0_for_lct
 sh build.sh
 ```
 Place the build folder within LcT folder extracted in step 1. (at the same level with 'LcT' file)
+
 3. Place at least one lc0 weight file inside folder "weights" found inside the extracted LcT folder
 LcT can now be launched via LcT executable which will open LcT in to your default browser.
 
