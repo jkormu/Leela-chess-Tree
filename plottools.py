@@ -139,16 +139,15 @@ def get_WDL(q,d, precision = 5):
 
 #for Dash implementation
 def get_node_eval(G, node):
-    Q = G.nodes[node]['Q']
+    Q = float(G.nodes[node]['Q'])
     D = G.nodes[node]['D'] if 'D' in G.nodes[node] else None
     M = float(G.nodes[node]['M']) if 'M' in G.nodes[node] else None
 
     #filp root Q
-    Q = -float(Q)
+    Q = -Q
     W, D, L = get_WDL(Q, float(D))
 
-    #if node == 'root':
-    Q = str(round(Q, 3))
+    #Q = str(round(Q, 3))
     return({'Q': Q, 'W': W, 'D': D, 'L': L, 'M': M})
 
 #for Dash implementation
