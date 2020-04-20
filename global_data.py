@@ -10,6 +10,7 @@ from os.path import isfile, join
 from dash_table.Format import Format, Scheme
 
 from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES, ROOT_DIR
+import json
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
 
@@ -30,34 +31,35 @@ other_defaults = {
 }
 
 #Options user cannot change, mostly due to not having effect on search
-filter_out_options = [#'WeightsFile',
-                      'Backend',
-                      'BackendOptions',
-                      'NNCacheSize',
-                      'Temperature',
-                      'TempDecayMoves',
-                      'TempCutoffMove',
-                      'TempEndgame',
-                      'TempValueCutoff',
-                      'TempVisitOffset',
-                      'DirichletNoise',
-                      'VerboseMoveStats',
-                      'SyzygyFastPlay',
-                      'MultiPV',
-                      'PerPVCounters',
-                      'ScoreType',
-                      'HistoryFill',
-                      'SyzygyPath',
-                      'Ponder',
-                      'UCI_Chess960',
-                      'UCI_ShowWDL',
-                      'ConfigFile',
-                      'RamLimitMb',
-                      'MoveOverheadMs',
-                      'Slowmover',
-                      'ImmediateTimeUse',
-                      'LogFile',
-                      'SmartPruningMinimumBatches']
+filter_out_options = [
+    'Backend',
+    'BackendOptions',
+    'NNCacheSize',
+    'Temperature',
+    'TempDecayMoves',
+    'TempCutoffMove',
+    'TempEndgame',
+    'TempValueCutoff',
+    'TempVisitOffset',
+    'DirichletNoise',
+    'VerboseMoveStats',
+    'SyzygyFastPlay',
+    'MultiPV',
+    'PerPVCounters',
+    'ScoreType',
+    'HistoryFill',
+    'SyzygyPath',
+    'Ponder',
+    'UCI_Chess960',
+    'UCI_ShowWDL',
+    'ConfigFile',
+    'RamLimitMb',
+    'MoveOverheadMs',
+    'Slowmover',
+    'ImmediateTimeUse',
+    'LogFile',
+    'SmartPruningMinimumBatches',
+    'TimeManager']
 
 #dictionary of option categorys and option names user can edit
 #this this dict also determines order of the groups and parameters (dicts are ordered in python 3.7)
@@ -75,6 +77,9 @@ COLUMNS_PER_GROUP = {
             'FpuStrategyAtRoot',
             'FpuValueAtRoot'],
     'Policy temp': ['PolicyTemperature'],
+    'Moves left': ['MovesLeftThreshold',
+                   'MovesLeftMaxEffect',
+                   'MovesLeftSlope'],
     'Search enhancements': ['LogitQ',
                             'ShortSightedness'],
     'Draw score': ['DrawScoreSideToMove',
@@ -97,8 +102,14 @@ COLUMNS_PER_GROUP = {
 }
 COLUMN_ORDER = [column for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]]
 GROUP_PER_COLUMN = {column: group for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]}
-    #{COLUMNS_PER_GROUP[group][column]:
-    #                    group for group in COLUMNS_PER_GROUP for column in COLUMNS_PER_GROUP[group]}
+
+class GlobalParameters:
+    def __init__(self):
+        self.draw_miniboard = True
+        self.default_nodes = 200
+        self.max_nodes = 200000
+        self.max_configs = 10
+        self.position_pane_relative_width = 20 #portion of the total screen width in percentages
 
 class GameData:
     def __init__(self, mode):
