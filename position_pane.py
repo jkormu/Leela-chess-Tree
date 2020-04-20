@@ -38,23 +38,25 @@ SHOW_BOARD_COORDINATES = False
 FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "13.5%"
 
 PGN_MODE_COLUMNS = [#{"name": '', "id": 'dummy_left'},
-                     {"name": 'plyId', "id": 'ply'},
-                     {"name": 'move', "id": 'move'},
-                     {"name": 'Q', "id": 'Q'},
-                     {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": '', "id": 'dummy_right'},
+    {"name": 'ply', "id": 'ply'},
+    {"name": 'move', "id": 'move'},
+    {"name": 'Q', "id": 'Q'},
+    {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'ML', "id": 'M', 'type': 'numeric', 'format': Format(precision=1, scheme=Scheme.fixed)},
+    {"name": '', "id": 'dummy_right'},
 ]
 
 FEN_MODE_COLUMNS = [
-                     {"name": 'Id', "id": 'ply'},
-                     {"name": 'turn', "id": 'move'},
-                     {"name": 'Q', "id": 'Q'},
-                     {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
-                     {"name": '', "id": 'dummy_right'}
+    {"name": 'Id', "id": 'ply'},
+    {"name": 'turn', "id": 'move'},
+    {"name": 'Q', "id": 'Q'},
+    {"name": 'W-%', "id": 'W', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'D-%', "id": 'D', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'B-%', "id": 'L', 'type': 'numeric', 'format': Format(precision=0, symbol=Symbol.yes, symbol_suffix='%', scheme=Scheme.fixed)},
+    {"name": 'ML', "id": 'M', 'type': 'numeric', 'format': Format(precision=1, scheme=Scheme.fixed)},
+    {"name": '', "id": 'dummy_right'}
 ]
 
 PGN_COMPONENT_STYLE = {
@@ -274,6 +276,10 @@ def position_pane():
                 },
                 {
                     'if': {'column_id': 'L'},
+                    'textAlign': 'right'
+                },
+                {
+                    'if': {'column_id': 'M'},
                     'textAlign': 'right'
                 }
             ],

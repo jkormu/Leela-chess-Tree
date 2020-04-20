@@ -410,15 +410,16 @@ def update_game_evals(visible, title, position_mode):
     W_values = []
     D_values = []
     L_values = []
+    M_values = []
     if game_data.data is None:
         return(dash.no_update)
 
     for row in game_data.data:
         position_id = row['ply']
         if position_id not in tree_data.data: #position not yet evaluated
-            Q, W, D, L = None, None, None, None
+            Q, W, D, L, M = None, None, None, None, None
         elif visible not in tree_data.data[position_id]['root']['visible']: #engine config set not yet evaluated
-            Q, W, D, L = None, None, None, None
+            Q, W, D, L, M = None, None, None, None, None
         else:
             root = tree_data.data[position_id]['root']
             evaluation = root['visible'][visible]['eval']
@@ -426,6 +427,7 @@ def update_game_evals(visible, title, position_mode):
             W = evaluation['W']
             D = evaluation['D']
             L = evaluation['L']
+            M = evaluation['M']
 
             #invert W and L for black
             turn = game_data.get_value_by_position_id('turn', position_id)
@@ -436,9 +438,11 @@ def update_game_evals(visible, title, position_mode):
         W_values.append(W)
         D_values.append(D)
         L_values.append(L)
+        M_values.append(M)
     game_data.set_column('Q', Q_values)
     game_data.set_column('W', W_values)
     game_data.set_column('D', D_values)
     game_data.set_column('L', L_values)
+    game_data.set_column('M', M_values)
     game_data.data_previous = game_data.data
     return(str(visible))

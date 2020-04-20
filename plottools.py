@@ -141,7 +141,7 @@ def get_WDL(q,d, precision = 5):
 def get_node_eval(G, node):
     Q = G.nodes[node]['Q']
     D = G.nodes[node]['D'] if 'D' in G.nodes[node] else None
-    M = G.nodes[node]['M'] if 'M' in G.nodes[node] else None
+    M = float(G.nodes[node]['M']) if 'M' in G.nodes[node] else None
 
     #filp root Q
     Q = -float(Q)
