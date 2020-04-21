@@ -5,6 +5,8 @@ from position_pane import position_pane
 from server import app
 import dash_html_components as html
 from graph import tree_graph
+import dash_core_components as dcc
+from pgn_graphs import pgn_graph_component
 
 DEBUG = False
 
@@ -46,15 +48,29 @@ graph_container = html.Div(
     style={'height': f'{GRAPH_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': GRAPH_CONTAINER_BG}
 )
 
+
+
 config_container = html.Div(
-    style={'height': f'{CONFIG_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': CONFIG_CONTAINER_BG,
-           'display': 'flex', 'flexDirection': 'column'}
+    style={'height': '100%', 'width': '100%', 'backgroundColor': CONFIG_CONTAINER_BG,
+           'display': 'flex', 'flexDirection': 'column', 'flex': 1}
+
 )
 
 graph_container.children = [graph_component]
 config_container.children = [config_component]
 
-left_container.children = [graph_container, config_container]
+bottom_tabs = dcc.Tabs(children=[
+    dcc.Tab(label='Lc0 settings',
+            children=[config_container],
+            ),
+    dcc.Tab(label='pgn graphs',
+            children=[pgn_graph_component(),
+                      ],)
+],
+content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
+parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'})
+
+left_container.children = [graph_container, bottom_tabs]#config_container]
 
 right_container = html.Div(
     style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'backgroundColor': RIGHT_CONTAINER_BG,
