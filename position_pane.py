@@ -433,6 +433,7 @@ def svg_board_image(board, arrows, last_move):
     encoded = base64.b64encode(svg_byte)
     svg_board = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
     return(svg_board)
+
 @app.callback(
     Output('board', 'src'),
     [Input('move-table', 'active_cell'),

@@ -84,17 +84,16 @@ def empty_figure():
 
 
 def get_data(data, visible):
-    points_odd, node_text_odd = [], []
-    points_even, node_text_even = [], []
-    points_root, node_text_root = [], []
+    points_odd, node_text_odd, node_ids_odd = [], [], []
+    points_even, node_text_even, node_ids_even = [], [], []
+    points_root, node_text_root, node_ids_root = [], [], []
     x_edges, y_edges = [], []
     x_edges_pv, y_edges_pv = [], []
-    for node in data:
-        node = data[node]
+    for node_id in data:
+        node = data[node_id]
         node_state_info = node['visible'].get(visible)
         if node_state_info is None: # node is not visible for this state
             continue
-
         type, edge_type = node_state_info['type']
         node_metrics = node_state_info['metric']
 
@@ -105,12 +104,15 @@ def get_data(data, visible):
         if type == 'odd':
             points_odd.append(point)
             node_text_odd.append(node_text)
+            node_ids_odd.append(node_id)
         elif type == 'even':
             points_even.append(point)
             node_text_even.append(node_text)
+            node_ids_even.append(node_id)
         elif type == 'root':
             points_root.append(point)
             node_text_root.append(node_text)
+            node_ids_root.append(node_id)
         if edge_type == 'pv':
             x_edges_pv += [point[0], x_parent, None]
             y_edges_pv += [point[1], y_parent, None]
@@ -122,11 +124,11 @@ def get_data(data, visible):
     x_even, y_even = zip(*points_even) if points_even != [] else ([], [])
     x_root, y_root = zip(*points_root) if points_root != [] else ([], [])
 
-    return (x_odd, y_odd, node_text_odd,
-            x_even, y_even, node_text_even,
-            x_root, y_root, node_text_root,
+    return (x_odd, y_odd, node_text_odd, node_ids_odd,
+            x_even, y_even, node_text_even, node_ids_even,
+            x_root, y_root, node_text_root, node_ids_root,
             x_edges, y_edges,
-            x_edges_pv, y_edges_pv)
+            x_edges_pv, y_edges_pv,)
 
 def tree_graph():
     graph_component = html.Div(style={'height': '100%', 'width': '100%'})
@@ -139,6 +141,7 @@ def tree_graph():
                                                figure={'layout': {'title': ''}},
                                                style={'height': '87.5%', 'marginTop': '0', 'marginBottom': '25px'},
                                                config={'displayModeBar': False},
+                                               clear_on_unhover=True,
                                                ),
                                      html.Div(dcc.Slider(id='slider1',
                                                          min=0,
@@ -260,7 +263,10 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     if position_id not in tree_data.data:
         return(empty_figure(), tooltip)
     data = tree_data.data[position_id]
-    x_odd, y_odd, node_text_odd, x_even, y_even, node_text_even, x_root, y_root, node_text_root, x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
+    x_odd, y_odd, node_text_odd, node_ids_odd,\
+    x_even, y_even, node_text_even, node_ids_even,\
+    x_root, y_root, node_text_root, node_ids_root,\
+    x_edges, y_edges, x_edges_pv, y_edges_pv = get_data(data, selected_value)
 
     #if there is no root node, then slider is set to value that has not been analyzed yet
     if x_root == []:
@@ -271,6 +277,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     trace_node_odd = go.Scatter(dict(x=x_odd, y=y_odd),
                                 mode='markers',
                                 marker={'color': BRANCH_COLORS[1], 'symbol': "circle", 'size': MARKER_SIZE},
+                                customdata=node_ids_odd,
                                 text=node_text_odd,
                                 hoverinfo='text',
                                 textfont={"family": FONT_FAMILY},
@@ -280,6 +287,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     trace_node_even = go.Scatter(dict(x=x_even, y=y_even),
                                  mode='markers',
                                  marker={'color': BRANCH_COLORS[0], 'symbol': "circle", 'size': MARKER_SIZE},
+                                 customdata=node_ids_even,
                                  text=node_text_even,
                                  hoverinfo='text',
                                  textfont={"family": FONT_FAMILY},
@@ -290,6 +298,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     trace_node_root = go.Scatter(dict(x=x_root, y=y_root),
                                  mode='markers',
                                  marker={'color': ROOT_NODE_COLOR, 'symbol': "circle", 'size': MARKER_SIZE},
+                                 customdata=node_ids_root,
                                  text=node_text_root,
                                  hoverinfo='text',
                                  textfont={"family": FONT_FAMILY},

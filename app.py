@@ -7,6 +7,7 @@ import dash_html_components as html
 from graph import tree_graph
 import dash_core_components as dcc
 from pgn_graphs import pgn_graph_component
+from node_info import node_info
 
 DEBUG = False
 
@@ -95,7 +96,7 @@ bottom_tabs = dcc.Tabs(id='bottom-tabs',
     value='configurations')
 
 
-left_container.children = [graph_container, bottom_tabs]#config_container]
+left_container.children = [node_info('150px', '150px'), graph_container, bottom_tabs]
 
 right_container = html.Div(
     style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'backgroundColor': RIGHT_CONTAINER_BG,

@@ -102,9 +102,10 @@ def get_miniboard_unicode(G, node, board, init_moves):
     moves = get_moves(G,node)
     board = set_board(moves, board, init_moves)
     board_uni = board.unicode()
+    fen = board.fen()
     if not moves:
         to_move = (['Black to move', 'White to move'][board.turn])
-        return board_uni + '\n' + to_move
+        return(board_uni + '\n' + to_move, fen)
     board.pop()
     board_parent_uni = board.unicode()
     new_board = ''
@@ -115,7 +116,7 @@ def get_miniboard_unicode(G, node, board, init_moves):
             p0 = COLOR_START + p0 + COLOR_END
         new_board += p0
     #new_board = new_board.replace('.', 'O')
-    return(new_board)
+    return(new_board, fen)
 
 def get_best_edge(G, edges):
         node_counts = [int(G.nodes[e[1]]['N']) for e in edges]

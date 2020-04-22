@@ -479,10 +479,12 @@ class TreeData:
                     if node not in data:
                         parent = gt.get_parent(G, node)
                         parent_point = [None, None] if parent is None else pos[parent]
-                        miniboard = pt.get_miniboard_unicode(G, node, self.board, moves).replace('\n', '<br>')
+                        miniboard, fen = pt.get_miniboard_unicode(G, node, self.board, moves)
+                        miniboard = miniboard.replace('\n', '<br>')
                         data[node] = {'point': branch[node],
                                       'parent': parent_point,
                                       'miniboard':  miniboard,
+                                      'fen': fen,
                                       'visible': {}
                                       }
                     node_metrics = pt.get_node_metric_text(G, node)
