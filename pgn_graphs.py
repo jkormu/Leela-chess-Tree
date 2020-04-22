@@ -8,6 +8,7 @@ import plotly.graph_objs as go
 from server import app
 
 GRID_COLOR = 'rgba(127,127,127, 0.25)'
+PLOT_BACKGROUND_COLOR = 'rgb(255,255,255)'
 
 W_WIN_COLOR = 'rgba(31,119,180, 0.5)'
 DRAW_COLOR = 'rgba(255,127,14, 0.5)'
@@ -22,11 +23,14 @@ def empty_figure():
         xaxis={'title': '',
                'zeroline': False,
                'showgrid': False,
+               'showticklabels': False,
                },
         yaxis={'title': '',
                'zeroline': False,
                'showgrid': False,
+               'showticklabels': False,
                },
+        plot_bgcolor=PLOT_BACKGROUND_COLOR,
         margin={'t': 0, 'b': 0, 'l': 0, 'r': 0}
     )
     fig['layout'].update(layout)
