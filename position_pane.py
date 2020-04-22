@@ -73,11 +73,12 @@ PGN_COMPONENT_STYLE = {
             }
 FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%'}#'display': 'flex',
 
-ARROW_COLORS = {#'p': (23, 178, 207),
-                #'p': (0, 255, 255), #teal
-                'p': (183, 0, 255), #purple
-                'n': (0, 166, 255),#(0, 255, 0),
-                'q': (255, 0, 0)}
+ARROW_COLORS = {
+    'p': (183, 0, 255), #purple
+    'n': (0, 166, 255),
+    'q': (255, 0, 0),
+    'ml_low': (0, 255, 255),
+    'ml_high': (0, 255, 255)}
 
 
 def get_score_bar_figure(W, D, B):
@@ -202,25 +203,37 @@ def position_pane():
 
     arrow_settings = html.Div(style={'display': 'flex',
                                      'flexDirection': 'row',
+                                     'alignItems': 'center',
                                      'padding': '3px', 'paddingTop': '5px'})
     arrow_options = html.Div(children=[html.Label('Arrows: '),
-        dcc.RadioItems(
+        dcc.Dropdown(#RadioItems(
             id='arrow-type-selector',
             options=[
-                {'label': 'P-%', 'value': 'p'},
+                {'label': 'Policy-%', 'value': 'p'},
                 {'label': 'Visit-%', 'value': 'n'},
                 {'label': 'Q-%', 'value': 'q'},
+                {'label': 'Moves left (low)', 'value': 'ml_low'},
+                {'label': 'Moves left (high)', 'value': 'ml_high'},
+
             ],
+            #optionHeight=12,
             value='n',
-            labelStyle={'paddingLeft': '3px'},
-            style={'flex': 1}
+            clearable=False,
+            #labelStyle={'paddingLeft': '3px'},
+            style={'flex': 1,
+                   #'height': '2em',
+                   #'display': 'inline-block',
+                   'marginLeft': '3px',
+                   }
     )],
-                             style={'flex': 1, 'display': 'flex', 'flexDirection': 'row'})
+                             style={'flex': 1, 'display': 'flex', 'flexDirection': 'row',
+                                    'alignItems': 'center', 'marginRight': '6px'})
     arrows_input = html.Div(children=[html.Label('#: '),
                                       dcc.Input(id='nr_of_arrows_input', type="number",
                                                 min=0, max=100, step=1,
                                                 size='3', #size has effect in firefox
-                                                inputMode='numeric', value=3)])
+                                                inputMode='numeric', value=3)],
+                            )
 
     arrow_settings.children = [arrow_options, arrows_input]
 
@@ -287,14 +300,13 @@ def position_pane():
                 'backgroundColor': 'rgb(230, 230, 230)',
                 'fontWeight': 'bold'
             },
-            #css=[{"selector": ".dash-spreadsheet-container", "rule": "accent: #e1e1e1 !important;"}],
             css=[{"selector": "table", "rule": "width: 100%;"},{"selector": ".dash-spreadsheet.dash-freeze-top, .dash-spreadsheet .dash-virtualized", "rule": "max-height: none;"}],
 
         )
     container_table = html.Div(html.Div(children=data_table, style={'borderLeft': f'1px solid {BAR_LINE_COLOR}', 'borderTop': f'1px solid {BAR_LINE_COLOR}'}),
     style={'flex': '1', 'overflow': 'auto', })
     container = html.Div(style={'height': '100%', 'width': COMPONENT_WIDTH, 'display': 'flex', 'flexDirection': 'column'})
-    content = [quit_btn, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]#container_table] upload,
+    content = [quit_btn, mode_selector, fen_input, arrow_settings, img, score_bar(), fen_text, pgn_info, buttons, container_table]
     container.children = content
     return(container)
 
@@ -318,10 +330,6 @@ def parse_pgn(contents, filename, is_new_pgn):
         game_data_pgn.board = board
         data = [{'dummy_left': '', 'ply': 0, 'move': '-', 'turn': board.turn, 'fen': fen, 'dummy_right': ''}]
 
-        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-        #data = pd.DataFrame(columns=columns)
-        #data = data.to_dict()
-
         for ply, move in enumerate(first_game.mainline_moves()):
             row = {}
             san = board.san(move)
@@ -335,15 +343,7 @@ def parse_pgn(contents, filename, is_new_pgn):
             row['dummy_right'] = ''
 
             data.append(row)
-            #data['move'].append(san)
-            #data['ply'].append(ply + 1)
-            #data['turn'].append(not board.turn)
-            #board.push(move)
-            #data['fen'].append(board.fen())
-            #data['dummy_left'].append('')
-            #data['dummy_right'].append('')
 
-        #data = pd.DataFrame(data)
         game_data_pgn.data = data
         game_data_pgn.fen = fen
         # reset analysis of previous pgn
@@ -407,13 +407,19 @@ def get_arrows(position_id, slider_value, type, nr_of_arrows, position_mode):
         tail = move_table[from_square]
         head = move_table[to_square]
         #the worse the move is, the more desaturated the arrow color shall be
-        if type != 'q':
-            saturation_factor = (metric/best_metric)**0.618
-        else:
+
+        if type == 'q':
             saturation_factor = ((1+metric)/(1+best_metric))**1.618
+        elif type == 'ml_low':
+            saturation_factor = ((1+best_metric)/(1+metric))**1.618
+        else:
+            saturation_factor = (metric / best_metric) ** 0.618
         r,g,b = rgb_adjust_saturation(saturation_factor, r, g, b)
         color = f"rgb({r}, {g}, {b})"#"rgb(0, 255, 0)"#"#FF0000"
-        annotation = f'{round(100*metric)}'
+        if type not in ('ml_low, ml_high'):
+            annotation = f'{round(100*metric)}'
+        else:
+            annotation = f'{round(metric)}'
         arrow = svg.Arrow(tail, head, color=color, annotation=annotation)
         arrows.append(arrow)
     return(arrows)

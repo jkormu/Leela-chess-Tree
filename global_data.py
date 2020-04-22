@@ -371,13 +371,19 @@ class TreeData:
                 metric = int(tree.nodes[node]['N'])
             elif type == 'q':
                 metric = float(tree.nodes[node]['Q'])
+            elif type in ('ml_low', 'ml_high'):
+                metric = float(tree.nodes[node]['M'])
             metrics.append(metric)
             moves.append(tree.nodes[node]['move'])
 
         if moves == []:
             return([], [])
 
-        metrics, moves = zip(*sorted(zip(metrics, moves), reverse=True))
+        higher_is_better = True
+        if type == 'ml_low':
+            higher_is_better = False
+
+        metrics, moves = zip(*sorted(zip(metrics, moves), reverse=higher_is_better))
 
         #convert absolute number of visits to ratios
         if type == 'n':
