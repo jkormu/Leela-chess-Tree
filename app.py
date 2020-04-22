@@ -59,16 +59,37 @@ config_container = html.Div(
 graph_container.children = [graph_component]
 config_container.children = [config_component]
 
+tab_style = {
+    #'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
+
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#119DFF',
+    'color': 'white',
+    'padding': '6px'
+}
+
 bottom_tabs = dcc.Tabs(children=[
     dcc.Tab(label='Lc0 settings',
             children=[config_container],
+            style=tab_style,
+            selected_style=tab_selected_style,
             ),
     dcc.Tab(label='pgn graphs',
             children=[pgn_graph_component(),
-                      ],)
+                      ],
+            style=tab_style,
+            selected_style=tab_selected_style,
+            )
 ],
 content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
-parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'})
+parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'},
+style={'height': '30px'})
+
 
 left_container.children = [graph_container, bottom_tabs]#config_container]
 
