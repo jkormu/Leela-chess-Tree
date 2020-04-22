@@ -38,13 +38,14 @@ def empty_figure():
     return(fig)
 
 def pgn_graph_component():
-    container = html.Div(style={'flex': 1, 'display': 'flex', 'flexDirection': 'column'})
+    container = html.Div(style={'flex': 1, 'display': 'flex', 'flexDirection': 'column', 'marginTop': '3px'})
     type_selector = dcc.Dropdown(id='pgn-graph-selector',
                                  options=[
                                      {'label': 'WDL', 'value': 'WDL'},
                                      {'label': 'ML', 'value': 'ML'},
                                      ],
                                  value='WDL',
+                                 clearable=False,
                                  #style={'height': '10%'}
                                  )
     graph = dcc.Graph(id='pgn-graph',
@@ -65,7 +66,7 @@ def add_ply_line(fig, y_min, y_max, ply):
     #adds vertical line that shows current ply
     fig.add_trace(go.Scatter(x=[ply, ply], y=[y_min, y_max], mode='lines',
                              showlegend=False,
-                             line={'width': 1.75, 'color': W_WIN_COLOR, 'dash': 'dash'},
+                             line={'width': 1.75, 'color': W_WIN_COLOR, 'dash': 'dot'},
                              hoverinfo="skip",
                              ))
     return(fig)
@@ -163,7 +164,7 @@ def ML_graph(data, selected_row):
                   )
 
     ply = data[selected_row]['ply']
-    fig = add_ply_line(fig, y_min, y_max, ply)
+    fig = add_ply_line(fig, y_min-1.0, y_max + 1.0, ply)
 
     layout = go.Layout(
         xaxis={'title': 'Ply',
@@ -197,8 +198,11 @@ def ML_graph(data, selected_row):
      Input('position-mode-selector', 'value'),
      Input('pgn-graph-selector', 'value'),
      Input('move-table', 'active_cell'),
+     Input('bottom-tabs', 'value')
      ])
-def update_pgn_graph(data, position_mode, graph_type, active_cell):
+def update_pgn_graph(data, position_mode, graph_type, active_cell, tab):
+    if tab != 'pgn-graphs':
+        return(dash.no_update)
     fig = empty_figure()
     if position_mode != 'pgn' or data is None or position_mode is None or graph_type is None:
         return(fig)

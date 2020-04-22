@@ -73,22 +73,26 @@ tab_selected_style = {
     'padding': '6px'
 }
 
-bottom_tabs = dcc.Tabs(children=[
+bottom_tabs = dcc.Tabs(id='bottom-tabs',
+    children=[
     dcc.Tab(label='Lc0 settings',
             children=[config_container],
             style=tab_style,
             selected_style=tab_selected_style,
+            value='configurations'
             ),
     dcc.Tab(label='pgn graphs',
             children=[pgn_graph_component(),
                       ],
             style=tab_style,
             selected_style=tab_selected_style,
+            value='pgn-graphs'
             )
 ],
-content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
-parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'},
-style={'height': '30px'})
+    content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
+    parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'},
+    style={'height': '30px'},
+    value='configurations')
 
 
 left_container.children = [graph_container, bottom_tabs]#config_container]
