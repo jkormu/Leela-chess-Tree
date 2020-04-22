@@ -20,7 +20,7 @@ def node_info(h, w):
     [State('position-mode-selector', 'value'),
      State('move-table', 'active_cell')])
 def update_hover_board(hover_data, position_mode, active_cell):
-    print('HOVER DATA:', hover_data)
+    #print('HOVER DATA:', hover_data)
     if hover_data is None:
         return(None)
     if position_mode == 'pgn':
@@ -33,7 +33,11 @@ def update_hover_board(hover_data, position_mode, active_cell):
     row = active_cell['row']
     position_id = game_data.get_position_id(row)
     data = tree_data.data[position_id]
-    node_id = hover_data['points'][0]['customdata']
+    try:
+        node_id = hover_data['points'][0]['customdata']
+    except KeyError: #we are not hovering over tree node but on bar chart element
+        return(None)
+
     fen = data[node_id]['fen']
     board = chess.Board()
     board.set_fen(fen)
