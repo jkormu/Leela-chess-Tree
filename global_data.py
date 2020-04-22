@@ -162,7 +162,6 @@ class GameData:
             self.data[i][column_name] = value
 
 
-
 def is_number(s):
     try:
         float(s)
@@ -397,6 +396,13 @@ class TreeData:
             self.G_dict[position_id].append(g)
         else:
             self.G_dict[position_id] = [g]
+
+    def get_ML_range(self):
+        roots = [self.data[position_id]['root'] for position_id in self.data]
+        Ms = [root['visible'][visible]['eval']['M'] for root in roots for visible in root['visible']]
+        M_min = min(Ms)
+        M_max = max(Ms)
+        return(M_min, M_max)
 
     def create_data(self, position_id, moves):
         G_merged, G_list = gt.merge_graphs(self.G_dict[position_id])

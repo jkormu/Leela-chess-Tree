@@ -3,7 +3,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
-#from global_data import tree_data_pgn, tree_data_fen, game_data_pgn, game_data_fen, config_data
+from global_data import tree_data_pgn
 
 from server import app
 
@@ -15,6 +15,7 @@ DRAW_COLOR = 'rgba(255,127,14, 0.5)'
 B_WIN_COLOR = 'rgba(0,128,0, 0.5)'
 EXPECTED_SCORE_COLOR = 'rgb(0,0,0)'
 EXPECTED_SCORE_COLOR_LINE_WIDTH = 1.5
+CURRENT_PLY_COLOR = 'rgb(23,178,207)'
 
 
 def empty_figure():
@@ -60,7 +61,16 @@ def pgn_graph_component():
     container.children = [type_selector, graph]
     return(container)
 
-def WDL_graph(data):
+def add_ply_line(fig, y_min, y_max, ply):
+    #adds vertical line that shows current ply
+    fig.add_trace(go.Scatter(x=[ply, ply], y=[y_min, y_max], mode='lines',
+                             showlegend=False,
+                             line={'width': 1.75, 'color': W_WIN_COLOR, 'dash': 'dash'},
+                             hoverinfo="skip",
+                             ))
+    return(fig)
+
+def WDL_graph(data, selected_row):
     flip_value = {True: 1, False: -1}
     if data is None or 'W' not in data[0] or 'D' not in data[0] or 'L' not in data[0]:
         return(empty_figure())
@@ -95,6 +105,24 @@ def WDL_graph(data):
                              line={'width': EXPECTED_SCORE_COLOR_LINE_WIDTH, 'color': EXPECTED_SCORE_COLOR}
                              ))
 
+    ply = data[selected_row]['ply']
+    fig = add_ply_line(fig, 0, 100, ply)
+
+    #fig.add_shape(
+    #    # Line Vertical
+    #    dict(
+    #        type="line",
+    #        x0=ply,
+    #        y0=0,
+    #        x1=ply,
+    #        y1=100,
+    #        line=dict(
+    #            color="RoyalBlue",
+    #            width=1
+    #        )
+    #    ))
+
+
     layout = go.Layout(
         xaxis={'title': 'Ply',
                'zeroline': False,
@@ -105,9 +133,10 @@ def WDL_graph(data):
                'zeroline': False,
                'showgrid': True,
                'gridcolor': GRID_COLOR},
-        margin={'t': 0, 'b': 0, 'l': 0, 'r': 0},
+        margin={'t': 0, 'b': 0, 'r': 0},
         legend_orientation="h",
         hovermode="x",
+        plot_bgcolor=PLOT_BACKGROUND_COLOR,
         transition={
             'duration': 500,
             'easing': 'cubic-in-out'
@@ -118,11 +147,13 @@ def WDL_graph(data):
 
     return(fig)
 
-def ML_graph(data):
+def ML_graph(data, selected_row):
     if 'M' not in data[0]:
         return(empty_figure())
     plys = [row['ply'] for row in data]
     ML = [row['M'] for row in data]
+
+    y_min, y_max = tree_data_pgn.get_ML_range()
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=plys, y=ML, #fill='tozeroy', mode='none',
@@ -131,21 +162,23 @@ def ML_graph(data):
                              )
                   )
 
+    ply = data[selected_row]['ply']
+    fig = add_ply_line(fig, y_min, y_max, ply)
+
     layout = go.Layout(
         xaxis={'title': 'Ply',
                'zeroline': False,
                'showgrid': False,
                },
         yaxis={'title': 'Predicted half moves left',
-               #'range': [0, 100],
+               'range': [y_min-1, y_max+1],
                'zeroline': False,
                'showgrid': True,
                'gridcolor': GRID_COLOR},
-        margin={'t': 0, 'b': 0,
-                #'l': 0, 'r': 0
-                },
+        margin={'t': 0, 'b': 0, 'r': 0},
         legend_orientation="h",
         hovermode="x",
+        plot_bgcolor=PLOT_BACKGROUND_COLOR,
         transition={
             'duration': 500,
             'easing': 'cubic-in-out'
@@ -154,20 +187,26 @@ def ML_graph(data):
 
     fig['layout'].update(layout)
 
+
+
     return(fig)
 
 @app.callback(
     Output('pgn-graph', 'figure'),
     [Input('move-table', 'data'),
      Input('position-mode-selector', 'value'),
-     Input('pgn-graph-selector', 'value')
+     Input('pgn-graph-selector', 'value'),
+     Input('move-table', 'active_cell'),
      ])
-def update_pgn_graph(data, position_mode, graph_type):
+def update_pgn_graph(data, position_mode, graph_type, active_cell):
     fig = empty_figure()
     if position_mode != 'pgn' or data is None or position_mode is None or graph_type is None:
         return(fig)
+
+    selected_row = active_cell['row']
+
     if graph_type == 'WDL':
-        fig = WDL_graph(data)
+        fig = WDL_graph(data, selected_row)
     elif graph_type == 'ML':
-        fig = ML_graph(data)
+        fig = ML_graph(data, selected_row)
     return(fig)
