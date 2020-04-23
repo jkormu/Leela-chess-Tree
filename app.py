@@ -46,7 +46,7 @@ left_container = html.Div(
 )
 
 graph_container = html.Div(
-    style={'height': f'{GRAPH_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': GRAPH_CONTAINER_BG}
+    style={'height': f'{GRAPH_PANE_HEIGHT}%', 'width': '100%', 'backgroundColor': GRAPH_CONTAINER_BG, 'position': 'relative'}
 )
 
 
@@ -57,7 +57,7 @@ config_container = html.Div(
 
 )
 
-graph_container.children = [graph_component]
+graph_container.children = [graph_component] #node_info('150px', '150px')
 config_container.children = [config_component]
 
 tab_style = {
@@ -96,7 +96,7 @@ bottom_tabs = dcc.Tabs(id='bottom-tabs',
     value='configurations')
 
 
-left_container.children = [node_info('150px', '150px'), graph_container, bottom_tabs]
+left_container.children = [graph_container, bottom_tabs]
 
 right_container = html.Div(
     style={'height': '100%', 'width': f'{RIGHT_PANE_WIDTH}%', 'backgroundColor': RIGHT_CONTAINER_BG,

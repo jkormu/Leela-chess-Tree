@@ -9,7 +9,8 @@ from os.path import isfile, join
 
 from dash_table.Format import Format, Scheme
 
-from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES, ROOT_DIR
+from constants import MAX_NUMBER_OF_CONFIGS, DEFAULT_NODES, ROOT_DIR, SHOW_UNICODE_BOARD
+import time
 import json
 
 BEST_MOVE_COLOR = 'rgb(178,34,34)'
@@ -474,17 +475,20 @@ class TreeData:
             pv_nodes = pt.get_pv_nodes(G)
             miniboard_time = 0
             node_metric_time = 0
+            start = time.time()
             for i, branch in enumerate(pos_list):
                 for node in branch:
                     if node not in data:
                         parent = gt.get_parent(G, node)
                         parent_point = [None, None] if parent is None else pos[parent]
-                        miniboard, fen = pt.get_miniboard_unicode(G, node, self.board, moves)
-                        miniboard = miniboard.replace('\n', '<br>')
+                        miniboard, fen, move = pt.get_miniboard_unicode(G, node, self.board, moves, not SHOW_UNICODE_BOARD)
+                        if miniboard != '':
+                            miniboard = miniboard.replace('\n', '<br>')
                         data[node] = {'point': branch[node],
                                       'parent': parent_point,
                                       'miniboard':  miniboard,
                                       'fen': fen,
+                                      'move': move,
                                       'visible': {}
                                       }
                     node_metrics = pt.get_node_metric_text(G, node)
@@ -501,7 +505,7 @@ class TreeData:
                     if type == 'root':
                         eval = pt.get_node_eval(G, node)
                         data[node]['visible'][owner]['eval'] = eval
-
+            print('Tree process time:', (time.time() - start))
         self.data[position_id] = data
         y_tick_labels, y_tick_values = pt.get_y_ticks(pos)
         y_range = [-1, len(y_tick_values)]

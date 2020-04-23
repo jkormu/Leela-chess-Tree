@@ -14,6 +14,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 EDITED_CELL_COLOR = 'rgba(255,127,14, 0.5)'
 LINE_COLOR = 'rgb(100, 100, 100)'
 
+
 def settings_bar():
     settings_bar = html.Div(style={'display': 'flex',
                                    'justifyContent': 'space-between',

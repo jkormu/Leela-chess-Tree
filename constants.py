@@ -5,6 +5,7 @@ MAX_NODES = 100000
 MAX_NUMBER_OF_CONFIGS = 10
 DEFAULT_NUMBER_OF_CONFIGS = 1
 DEFAULT_NODES = 200
+SHOW_UNICODE_BOARD = False
 
 def root_directory():
     if getattr(sys, 'frozen', False):

@@ -8,6 +8,9 @@ from plotly import subplots
 from global_data import tree_data_pgn, tree_data_fen, game_data_pgn, game_data_fen, config_data
 
 from server import app
+from node_info import node_info
+
+import time
 
 RIGHT_TITLE_SIZE = 15
 FONT_SIZE = 13
@@ -29,6 +32,8 @@ PGN_WIDTH = 100 - GRAPH_WIDTH
 MONO_FONT_FAMILY = 'BundledDejavuSansMono'
 HOVER_FONT_SIZE = 15
 
+NODE_LIMIT_FOR_WEBGL = 2000 #switch to WEBGL above certain nodes
+
 
 def empty_figure():
     figure = subplots.make_subplots(rows=1, cols=2,
@@ -46,7 +51,7 @@ def empty_figure():
                 xref='paper',
                 yref='paper',
                 textangle=90,
-                font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
+                font=dict(family=MONO_FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
             ),
         ],
         xaxis={'title': 'Visit distribution',
@@ -84,6 +89,7 @@ def empty_figure():
 
 
 def get_data(data, visible):
+    start = time.time()
     points_odd, node_text_odd, node_ids_odd = [], [], []
     points_even, node_text_even, node_ids_even = [], [], []
     points_root, node_text_root, node_ids_root = [], [], []
@@ -124,6 +130,8 @@ def get_data(data, visible):
     x_even, y_even = zip(*points_even) if points_even != [] else ([], [])
     x_root, y_root = zip(*points_root) if points_root != [] else ([], [])
 
+    print('Tree plot data fetched in', time.time() - start)
+
     return (x_odd, y_odd, node_text_odd, node_ids_odd,
             x_even, y_even, node_text_even, node_ids_even,
             x_root, y_root, node_text_root, node_ids_root,
@@ -136,13 +144,19 @@ def tree_graph():
                                  style={'height': '5%', 'overflow': 'auto', 'display': 'flex', 'flexDirection': 'column'})
     config_info = html.Div(id='config_info', style={'textAlign': 'center', 'height': '5%', 'overflowY': 'auto'})
     graph_container = html.Div(id='graph-container',
-                           children=[
+                           children=[html.Div( children=[
                                      dcc.Graph(id='graph',
                                                figure={'layout': {'title': ''}},
-                                               style={'height': '87.5%', 'marginTop': '0', 'marginBottom': '25px'},
+                                               style={'height': '100%', 'marginTop': '0'},
                                                config={'displayModeBar': False},
                                                clear_on_unhover=True,
-                                               ),
+                                               ), node_info('12.5%', '12.5%', '0', '0'),
+                           ],
+                               style={'height': '87.5%',
+                                      'marginBottom': '25px',
+                                      'position': 'relative',
+                                      #'border': '5px solid red',
+                                      }),
                                      html.Div(dcc.Slider(id='slider1',
                                                          min=0,
                                                          value=0,
@@ -272,50 +286,62 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     if x_root == []:
         return(empty_figure(), tooltip)
 
+    if len(x_odd) + len(x_even) + 1 >= NODE_LIMIT_FOR_WEBGL:
+        scatter = go.Scattergl#go.Scattergl #go.Scatter
+    else:
+        scatter = go.Scatter
+    #print('node ids', node_ids_odd)
+    trace_node_odd = scatter(x=x_odd,
+                             y=y_odd,
+                             mode='markers',
+                             marker={'color': BRANCH_COLORS[1], 'symbol': "circle", 'size': MARKER_SIZE},
+                             customdata=node_ids_odd,
+                             #text=node_text_odd,
+                             hovertext=node_text_odd,
+                             hoverinfo='text',
+                             textfont={"family": MONO_FONT_FAMILY},
+                             hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
+                             showlegend=False
+                             )
+    trace_node_even = scatter(x=x_even,
+                              y=y_even,
+                              mode='markers',
+                              marker={'color': BRANCH_COLORS[0], 'symbol': "circle", 'size': MARKER_SIZE},
+                              customdata=node_ids_even,
+                              hovertext=node_text_even,
+                              hoverinfo='text',
+                              textfont={"family": MONO_FONT_FAMILY},
+                              hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
+                              showlegend=False
+                              )
 
+    trace_node_root = scatter(x=x_root,
+                              y=y_root,
+                              mode='markers',
+                              marker={'color': ROOT_NODE_COLOR, 'symbol': "circle", 'size': MARKER_SIZE},
+                              customdata=node_ids_root,
+                              hovertext=node_text_root,
+                              hoverinfo='text',
+                              textfont={"family": MONO_FONT_FAMILY},
+                              hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
+                              showlegend=False
+                              )
 
-    trace_node_odd = go.Scatter(dict(x=x_odd, y=y_odd),
-                                mode='markers',
-                                marker={'color': BRANCH_COLORS[1], 'symbol': "circle", 'size': MARKER_SIZE},
-                                customdata=node_ids_odd,
-                                text=node_text_odd,
-                                hoverinfo='text',
-                                textfont={"family": FONT_FAMILY},
-                                hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
-                                showlegend=False
-                                )
-    trace_node_even = go.Scatter(dict(x=x_even, y=y_even),
-                                 mode='markers',
-                                 marker={'color': BRANCH_COLORS[0], 'symbol': "circle", 'size': MARKER_SIZE},
-                                 customdata=node_ids_even,
-                                 text=node_text_even,
-                                 hoverinfo='text',
-                                 textfont={"family": FONT_FAMILY},
-                                 hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
-                                 showlegend=False
-                                 )
+    trace_edge = scatter(x=x_edges,
+                         y=y_edges,
+                         mode='lines',
+                         line=dict(color=EDGE_COLOR, width=0.5),
+                         showlegend=False,
+                         hoverinfo='skip'
+                         )
 
-    trace_node_root = go.Scatter(dict(x=x_root, y=y_root),
-                                 mode='markers',
-                                 marker={'color': ROOT_NODE_COLOR, 'symbol': "circle", 'size': MARKER_SIZE},
-                                 customdata=node_ids_root,
-                                 text=node_text_root,
-                                 hoverinfo='text',
-                                 textfont={"family": FONT_FAMILY},
-                                 hoverlabel=dict(font=dict(family=MONO_FONT_FAMILY, size=HOVER_FONT_SIZE), bgcolor=HOVER_LABEL_COLOR),
-                                 showlegend=False
-                                 )
-
-    trace_edge = go.Scatter(dict(x=x_edges, y=y_edges),
+    trace_edge_pv = scatter(x=x_edges_pv,
+                            y=y_edges_pv,
                             mode='lines',
-                            line=dict(color=EDGE_COLOR, width=0.5),
-                            showlegend=False
+                            line=dict(color=PV_COLOR, width=1.75),
+                            showlegend=False,
+                            hoverinfo='skip'
                             )
-    trace_edge_pv = go.Scatter(dict(x=x_edges_pv, y=y_edges_pv),
-                               mode='lines',
-                               line=dict(color=PV_COLOR, width=1.75),
-                               showlegend=False
-                               )
 
     traces = [trace_edge,
               trace_edge_pv,
@@ -326,7 +352,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
     x_hist, y_hist = tree_data.data_depth[position_id][selected_value]
 
     trace_depth_histogram = go.Bar(x=y_hist, y=x_hist, orientation='h',
-                                   showlegend=False, hoverinfo='none',
+                                   showlegend=False, hoverinfo='skip',
                                    marker=dict(color=BAR_COLOR))
 
     x_range = tree_data.x_range[position_id]
@@ -354,7 +380,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
                                         xref='paper',
                                         yref='paper',
                                         textangle=90,
-                                        font=dict(family=FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
+                                        font=dict(family=MONO_FONT_FAMILY, size=RIGHT_TITLE_SIZE, color=FONT_COLOR)
                                     ),
                                 ],
                        xaxis={'title': 'Visit distribution',
