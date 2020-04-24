@@ -68,6 +68,20 @@ def relabel(G):
 
     return(nx.relabel_nodes(G, mapping, copy=True))
 
+def relabel_new(G, label_dict):
+    def mapping(n):
+        label = "".join(get_moves(G,n))
+        #if label == "":
+        #    id = "root"
+        #else:
+        id = label_dict.get(label, None)
+        if id is None:
+            id = len(label_dict) + 1
+            label_dict[label] = id
+        return(id)
+
+    return(nx.relabel_nodes(G, mapping, copy=True), label_dict)
+
 #maybe useful someday
 def calc_shared_nodes(G1, G2):
     G1 = relabel(G1)
@@ -80,8 +94,16 @@ def calc_shared_nodes(G1, G2):
 def merge_graphs(G_list):
     #takes list of DiGraphs and calculates union of the graphs
     #also unifies the node ids of each graph so that nodes obtained from same move sequence have same id
+    label_dict = {"": "root"}
     G_merged = nx.DiGraph()
-    G_list = [relabel(G) for G in G_list]
+    #G_list = [relabel_new(G, label_dict) for G in G_list]
+    G_list_new = []
+    for G in G_list:
+        g, label_dict = relabel_new(G, label_dict)
+        #print('label_dict', label_dict)
+        G_list_new.append(g)
+    G_list = G_list_new
+
     G_merged.add_node(get_root(G_list[0]))  # add root node to handle case of no edges
 
     for G in G_list:
@@ -103,5 +125,9 @@ def merge_graphs(G_list):
         G_merged_ordered.add_node(n)
     for edge in G_merged.edges():
         G_merged_ordered.add_edge(edge[0], edge[1])
+
+    #print('G list nodes after merge graphs')
+    #for G in G_list:
+    #    print(G.nodes)
         
     return(G_merged_ordered, G_list)

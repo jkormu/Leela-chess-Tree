@@ -132,6 +132,7 @@ def get_data(data, visible):
 
     print('Tree plot data fetched in', time.time() - start)
 
+
     return (x_odd, y_odd, node_text_odd, node_ids_odd,
             x_even, y_even, node_text_even, node_ids_even,
             x_root, y_root, node_text_root, node_ids_root,

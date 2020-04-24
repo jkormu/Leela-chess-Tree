@@ -412,7 +412,11 @@ class TreeData:
         return(M_min, M_max)
 
     def create_data(self, position_id, moves):
+        start = time.time()
         G_merged, G_list = gt.merge_graphs(self.G_dict[position_id])
+        print('graphs merged in', time.time() - start)
+        self.G_dict[position_id] = G_list
+        start = time.time()
         for n in topological_sort(G_merged.reverse()):
             parent = gt.get_parent(G_merged, n)
             if parent is None:
@@ -423,6 +427,7 @@ class TreeData:
                 G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
             else:
                 G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
+        print('N calculation in', time.time() - start)
         pos = pt.get_tree_layout(G_merged)
         pos = pt.adjust_y(pos)
         data = {}
@@ -441,7 +446,7 @@ class TreeData:
                     break
 
         for owner, G in enumerate(G_list):
-
+            start  = time.time()
             #########################
             x_lab = []  # X-label
             G_non_root_nodes = int(G.nodes[gt.get_root(G)]['N']) - 1
@@ -467,10 +472,16 @@ class TreeData:
                 x_lab.append(val)  # X-label
             x_labels.append(x_lab)  # X-label
             #########################
-
+            print('x-axis stuff in', time.time() - start)
+            start = time.time()
             G_pos = pt.get_own_pos(G, pos)
+            print('get_own_pos', time.time() - start)
+            start = time.time()
             pos_list = pt.branch_separation(G, G_pos)
+            print('branch separation', time.time() - start)
+            start = time.time()
             node_counts.append(gt.get_nodes_in_depth(G))
+            print('node depths', time.time() - start)
 
             pv_nodes = pt.get_pv_nodes(G)
             miniboard_time = 0
@@ -481,13 +492,19 @@ class TreeData:
                     if node not in data:
                         parent = gt.get_parent(G, node)
                         parent_point = [None, None] if parent is None else pos[parent]
-                        miniboard, fen, move = pt.get_miniboard_unicode(G, node, self.board, moves, not SHOW_UNICODE_BOARD)
+                        if not SHOW_UNICODE_BOARD:
+                            miniboard = ''
+                        else:
+                            miniboard = pt.get_miniboard_unicode(G, node, self.board, moves)
                         if miniboard != '':
                             miniboard = miniboard.replace('\n', '<br>')
+                        move = pt.get_move(G, node)
+                        if move == "":
+                            move = None
                         data[node] = {'point': branch[node],
                                       'parent': parent_point,
                                       'miniboard':  miniboard,
-                                      'fen': fen,
+                                      #'fen': fen,
                                       'move': move,
                                       'visible': {}
                                       }

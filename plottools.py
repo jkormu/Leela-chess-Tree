@@ -1,6 +1,7 @@
 from graphtools import *
 from buchheim import buchheim
 import time
+from networkx.algorithms.dag import descendants
 
 MOVED_PIECE_COLOR = 'rgb(210,105,30)'
 COLOR_START = '<a href="" style="color: ' + MOVED_PIECE_COLOR + '">'
@@ -42,49 +43,98 @@ def adjust_y(pos):
 
 
 def branch_separation(G, pos):
-    #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
-    
-    #finds the ancestor node on depth 1, i.e. the first node of this branch
+    # separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
+
+    # finds the ancestor node on depth 1, i.e. the first node of this branch
     def get_branch(node):
         if is_root(G, node):
-            return(node)
-        
+            return (node)
+
         while not is_root(G, get_parent(G, node)):
             node = get_parent(G, node)
-        return(node)
-    
-    root = get_root(G)
-    root_children = get_children(G, root)
+        return (node)
 
-    branches = {child: {} for child in root_children}
-    branches[root] = {}
-    
-    #divide pos into branches
-    for n in pos:
-        branch = get_branch(n)
-        branches[branch][n] = pos[n]
-    
+    root = get_root(G)
+    root_children = list(get_children(G, root))
+   # print('root children', list(root_children))
+
+    branches = {child: {child: pos[child]} for child in root_children}
+    branches[root] = {root: pos[root]}
+
+    for child in root_children:
+        sub_tree = descendants(G, child)
+        for node in sub_tree:
+            #print(child, 'node', node)
+            branches[child][node] = pos[node]
+
+    #print('branches', branches)
+
     branch_list = list(branches)
     pos_list = [branches[b] for b in branch_list]
-    
+
     def sort_key(b):
         node = get_branch(list(b)[0])
         if is_root(G, node):
-            return(-9999999)
+            return (-9999999)
         else:
-            return(b[node][0])
+            return (b[node][0])
+
+    pos_list.sort(key=sort_key)
+    return (pos_list)
+
+#def branch_separation2(G, pos):
+    #separates node coordinates into branches for coloring purposes (adjacent branches use different colors)
     
-    pos_list.sort(key = sort_key)
-    return(pos_list)
+    #finds the ancestor node on depth 1, i.e. the first node of this branch
+#    def get_branch(node):
+#        if is_root(G, node):
+#            return(node)
+#
+#        while not is_root(G, get_parent(G, node)):
+#            node = get_parent(G, node)
+#        return(node)
+#
+#    root = get_root(G)
+#    root_children = get_children(G, root)
+#    #print('root children', list(root_children))##
+
+#    branches = {child: {} for child in root_children}
+#    branches[root] = {}
+#
+#    #divide pos into branches
+#    for n in pos:
+#        branch = get_branch(n)
+#        branches[branch][n] = pos[n]
+#
+#    print('branches', branches)
+#
+#    branch_list = list(branches)
+#    pos_list = [branches[b] for b in branch_list]
+#
+#    def sort_key(b):
+#        node = get_branch(list(b)[0])
+#        if is_root(G, node):
+#            return(-9999999)
+#        else:
+#            return(b[node][0])
+#
+#    pos_list.sort(key = sort_key)
+#    return(pos_list)
+
+def get_move(G, n):
+    #print('node', n)
+    move = G.nodes[n]['move']
+    return(move)
 
 def get_moves(G, n):
     #list of moves that lead to this node
     moves = []
-    move = G.nodes[n]['move']
+    move = get_move(G, n)#G.nodes[n]['move']
     while move != "":
         moves.append(move)
         n = get_parent(G, n)
-        move = G.nodes[n]['move']
+        move = get_move(G, n)
+        #move = G.nodes[n]['move']
     return(moves[::-1])
 
 def set_board(moves, board, init_moves):
@@ -98,16 +148,16 @@ def set_board(moves, board, init_moves):
         board.push_uci(m)
     return(board)
 
-def get_miniboard_unicode(G, node, board, init_moves, fen_only):
+def get_miniboard_unicode(G, node, board, init_moves):
     moves = get_moves(G,node)
     board = set_board(moves, board, init_moves)
     fen = board.fen()
 
     if not moves:
         to_move = (['Black to move', 'White to move'][board.turn])
-        return(board.unicode() + '\n' + to_move, fen, None)
-    if fen_only:
-        return('', fen, moves[-1])
+        return(board.unicode() + '\n' + to_move)#, fen, None)
+    #if fen_only:
+    #    return('')#, fen, moves[-1])
     board_uni = board.unicode()
     board.pop()
     board_parent_uni = board.unicode()
@@ -119,7 +169,7 @@ def get_miniboard_unicode(G, node, board, init_moves, fen_only):
             p0 = COLOR_START + p0 + COLOR_END
         new_board += p0
     #new_board = new_board.replace('.', 'O')
-    return(new_board, fen, moves[-1])
+    return(new_board)#, fen, moves[-1])
 
 def get_best_edge(G, edges):
         node_counts = [int(G.nodes[e[1]]['N']) for e in edges]
