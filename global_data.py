@@ -417,16 +417,16 @@ class TreeData:
         print('graphs merged in', time.time() - start)
         self.G_dict[position_id] = G_list
         start = time.time()
-        for n in topological_sort(G_merged.reverse()):
-            parent = gt.get_parent(G_merged, n)
-            if parent is None:
-                break
-            if 'N' not in G_merged.nodes[n]:
-                G_merged.nodes[n]['N'] = 1
-            if 'N' not in G_merged.nodes[parent]:
-                G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
-            else:
-                G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
+        #for n in topological_sort(G_merged.reverse()):
+        #    parent = gt.get_parent(G_merged, n)
+        #    if parent is None:
+        #        break
+        #    if 'N' not in G_merged.nodes[n]:
+        #        G_merged.nodes[n]['N'] = 1
+        #    if 'N' not in G_merged.nodes[parent]:
+        #        G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
+        #    else:
+        #        G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
         print('N calculation in', time.time() - start)
         pos = pt.get_tree_layout(G_merged)
         pos = pt.adjust_y(pos)

@@ -1,4 +1,6 @@
 import networkx as nx
+from networkx.algorithms.dag import topological_sort
+import time
 
 def get_root(G):
     for n in G:
@@ -82,6 +84,30 @@ def relabel_new(G, label_dict):
 
     return(nx.relabel_nodes(G, mapping, copy=True), label_dict)
 
+def add_ids(G, label_dict, running_id):
+
+    new_ids = {}
+    node_move_chain = {}
+    for n in topological_sort(G):
+        parent = get_parent(G, n)
+        if parent is None:
+            chain = ''
+        else:
+            chain = node_move_chain[parent] + G.nodes[n]['move']
+
+        node_move_chain[n] = chain
+        id = label_dict.get(chain, None)
+        if id is None:
+            id = running_id
+            running_id += 1
+            label_dict[chain] = id
+        new_ids[n] = id
+    #print('IDs',new_ids)
+    G = nx.relabel_nodes(G, new_ids, copy=True)
+    return(G, label_dict, running_id)
+
+
+
 #maybe useful someday
 def calc_shared_nodes(G1, G2):
     G1 = relabel(G1)
@@ -94,40 +120,70 @@ def calc_shared_nodes(G1, G2):
 def merge_graphs(G_list):
     #takes list of DiGraphs and calculates union of the graphs
     #also unifies the node ids of each graph so that nodes obtained from same move sequence have same id
+
+    start = time.time()
     label_dict = {"": "root"}
+    running_id = 0
     G_merged = nx.DiGraph()
     #G_list = [relabel_new(G, label_dict) for G in G_list]
+
     G_list_new = []
+    #for G in G_list:
+    #    g, label_dict = relabel_new(G, label_dict)
+    #    #print('label_dict', label_dict)
+    #    G_list_new.append(g)
+    #G_list = G_list_new
+
     for G in G_list:
-        g, label_dict = relabel_new(G, label_dict)
-        #print('label_dict', label_dict)
-        G_list_new.append(g)
+        G, label_dict, running_id = add_ids(G, label_dict, running_id)
+        G_list_new.append(G)
     G_list = G_list_new
 
     G_merged.add_node(get_root(G_list[0]))  # add root node to handle case of no edges
 
+    print('Merging - relabel', time.time() - start)
+    start = time.time()
     for G in G_list:
         for edge in G.edges():
             if edge not in G_merged.edges():
                 G_merged.add_edge(edge[0], edge[1])
+    print('Merging - 1st merged', time.time() - start)
+    start = time.time()
+    for n in topological_sort(G_merged.reverse()):
+        parent = get_parent(G_merged, n)
+        if parent is None:
+            break
+        if 'N' not in G_merged.nodes[n]:
+            G_merged.nodes[n]['N'] = 1
+        if 'N' not in G_merged.nodes[parent]:
+            G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
+        else:
+            G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
+
+    visits_and_nodes = [(G_merged.nodes[node]['N'], node) for node in G_merged]
+    #visits, nodes = zip(*visits_and_nodes)
+    visits, nodes = zip(*sorted(visits_and_nodes, reverse=True))
+    print('Merging - calc visits', time.time() - start)
     
-    visits = []
-    nodes = []
-    for n in G_merged:
-        visits.append(get_subtree_node_count(G_merged, n))
-        nodes.append(n)
-    visits, nodes = zip(*sorted(zip(visits, nodes), reverse=True))
+    #visits = []
+    #nodes = []
+    #for n in G_merged:
+    #    visits.append(get_subtree_node_count(G_merged, n))
+    #    nodes.append(n)
+    #visits, nodes = zip(*sorted(zip(visits, nodes), reverse=True))
 
     #reconstruct by adding nodes in order of visit counts for prettier layout result from buchheim algorithm
     # -> node heavy branches will be aligned left
+    start = time.time()
     G_merged_ordered = nx.DiGraph()
     for n in nodes:
-        G_merged_ordered.add_node(n)
+        G_merged_ordered.add_node(n, N=G_merged.nodes[n]['N'])
     for edge in G_merged.edges():
         G_merged_ordered.add_edge(edge[0], edge[1])
 
     #print('G list nodes after merge graphs')
     #for G in G_list:
     #    print(G.nodes)
+    print('Merging - 2d merged', time.time() - start)
         
     return(G_merged_ordered, G_list)
