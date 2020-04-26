@@ -66,18 +66,29 @@ def settings_bar():
 
 
     reset_button = html.Button(id='reset_defaults_button',
-                               children='Reset',
+                               children='Reset to deterministic defaults',
+                               style={'width': '100%', 'height': '100%'})
+
+    reset_engine_defaults_button = html.Button(id='reset_engine_defaults_button',
+                               children=['Reset to engine defaults',html.Br(),'(smart pruning excluded)'],
                                style={'width': '100%', 'height': '100%'})
 
     reset_button_clicked_indicator = html.Div(id='reset_button_clicked_indicator',
                                               style={'display': 'none'})
 
+    reset_engine_defaults_button_clicked_indicator = html.Div(id='reset_engine_defaults_button_clicked_indicator',
+                                              style={'display': 'none'})
+
     reset_button_container = html.Div(children=[reset_button, reset_button_clicked_indicator],
+                                      style={'flex': 1})
+
+    reset_engine_defaults_button_container = html.Div(children=[reset_engine_defaults_button,
+                                                                reset_engine_defaults_button_clicked_indicator],
                                       style={'flex': 1})
 
     separator_div1 = html.Div(style={'flex': 1})
 
-    settings_bar.children = [number_of_configs_input, nodes_selector, net_selector, separator_div1, reset_button_container]
+    settings_bar.children = [number_of_configs_input, nodes_selector, net_selector, separator_div1, reset_engine_defaults_button_container, reset_button_container]
 
     return(settings_bar)
 
@@ -151,12 +162,15 @@ def copy_table(data):
      Output("slider1", "style"),
      Output("slider1", "value")],
     [Input("number-of-configs-input", "value"),
-     Input("reset_button_clicked_indicator", "children")
+     Input("reset_button_clicked_indicator", "children"),
+     Input("reset_engine_defaults_button_clicked_indicator", "children")
      ],
     [State("config-table", "dropdown"),
      State("slider1", "value")]
 )
-def update_rows(nr_of_rows, reset_button_clicked, dd, slider_value):
+def update_rows(nr_of_rows, reset_button_clicked,
+                reset_engine_defaults_button_clicked,
+                dd, slider_value):
     try:
         nr_of_rows = int(nr_of_rows)
         nr_of_rows = min(MAX_NUMBER_OF_CONFIGS, nr_of_rows)
@@ -194,7 +208,17 @@ def set_nodes_and_net_mode(nodes_mode, net_mode):
     [Input('reset_defaults_button', 'n_clicks_timestamp')],
 )
 def reset_data(n_clicks_timestamp):
-    config_data.construct_config_data()
+    config_data.construct_config_data(True)
+    return(str(n_clicks_timestamp))
+
+@app.callback(
+    Output('reset_engine_defaults_button_clicked_indicator', 'children'),
+    [Input('reset_engine_defaults_button', 'n_clicks_timestamp')],
+)
+def reset_data_to_engine_defaults(n_clicks_timestamp):
+    if n_clicks_timestamp is None or n_clicks_timestamp == -1:
+        return(dash.no_update)
+    config_data.construct_config_data(False)
     return(str(n_clicks_timestamp))
 
 #for debugging datatable data
