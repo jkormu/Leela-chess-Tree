@@ -222,10 +222,14 @@ def generate_data(n_clicks_all_timestamp, n_clicks_selected_timestamp, marks, ac
     board = game_data.board
     if not is_analyze_selected:
         tree_data.G_dict = {}
+        tree_data.merged_graphs = {}
         tree_data.data = {}
+        tree_data.heatmap_data = {}
     else:
         for position_id in position_indices:
             tree_data.G_dict.pop(position_id, None)  # clear graph data for this position
+            tree_data.merged_graphs.pop(position_id, None)
+            tree_data.heatmap_data.pop(position_id, None)
     for config_i in range(len(marks)):
         nodes = config_data.get_nodes(config_i, nodes_mode, global_nodes)
         for position_id in position_indices:

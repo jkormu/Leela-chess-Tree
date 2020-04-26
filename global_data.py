@@ -193,7 +193,7 @@ class ConfigData:
         self.weight_files = []
         self.weight_paths = []
         self.find_weights()
-        self.construct_config_data()
+        self.construct_config_data(True)
 
     def find_weights(self):
         root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
@@ -204,7 +204,7 @@ class ConfigData:
         self.weight_files = weight_files
         self.weight_paths = weight_paths
 
-    def construct_config_data(self):
+    def construct_config_data(self, use_deterministic_defaults):
         self.data_row = {}
         self.columns = []
         self.columns_with_min = []
@@ -217,7 +217,7 @@ class ConfigData:
             option = lc0.options[opt]
             if opt not in filter_out_options:
                 group = GROUP_PER_COLUMN.get(opt, 'Misc')
-                self.add_column(option, group)
+                self.add_column(option, group, use_deterministic_defaults)
 
         self.columns.sort(key=lambda x: COLUMN_ORDER.index(x['name'][1]) if x['name'][1] in COLUMN_ORDER else 999999)
 
@@ -225,7 +225,7 @@ class ConfigData:
         #df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
         self.data = [self.data_row for _ in range(MAX_NUMBER_OF_CONFIGS)]
 
-    def add_column(self, option, category):
+    def add_column(self, option, category, use_deterministic_defaults):
         option_type = option.type
         default = option.default
         if option_type == 'check':
@@ -233,7 +233,7 @@ class ConfigData:
         elif option_type != "spin":
             default = try_to_round(default, 3)  # TODO: don't round here, rather edit datatable formatting
         name = option.name
-        if name in deterministic_defaults:
+        if use_deterministic_defaults and name in deterministic_defaults:
             self.data_row[name] = deterministic_defaults[name]
         elif name in other_defaults:
             self.data_row[name] = other_defaults[name]
@@ -327,9 +327,12 @@ def linspace(a, b, n):
     return([diff * i + a  for i in range(n)])
 
 class TreeData:
-    def __init__(self, lc0):
+    def __init__(self, lc0, type):
         self.lc0 = lc0
+        self.type = type  # 'pgn' or 'fen'
         self.G_dict = {} #{position_id1: [], position_id2: []....}
+        self.merged_graphs = {} #{position_id: merger_graph...}
+        self.heatmap_data = {} #{position_id: [{(color, piece, depth): z}, ... ]}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -344,6 +347,8 @@ class TreeData:
 
     def reset_data(self):
         self.G_dict = {}
+        self.merged_graphs = {}
+        self.heatmap_data = {}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -524,6 +529,7 @@ class TreeData:
                         data[node]['visible'][owner]['eval'] = eval
             print('Tree process time:', (time.time() - start))
         self.data[position_id] = data
+        self.merged_graphs[position_id] = G_merged
         y_tick_labels, y_tick_values = pt.get_y_ticks(pos)
         y_range = [-1, len(y_tick_values)]
         x_range = pt.get_x_range(pos)
@@ -541,10 +547,82 @@ class TreeData:
         self.x_tick_labels[position_id] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_id] = x_label_vals
 
+    def calculate_heatmap_helpers(self, position_id):
+        G = self.merged_graphs[position_id]
+        if self.type == 'pgn':
+            game_data = game_data_pgn
+        else:
+            game_data = game_data_fen
+        fen = game_data.get_value_by_position_id('fen', position_id)
+        initial_board = chess.Board(fen)
+        boards = {}
+
+        nodes = {}
+        depths = {}
+
+        x_map = {letter: index for index, letter in enumerate('abcdefgh')}
+        y_map = {letter: index for index, letter in enumerate('12345678')}
+
+        #map first letter of long algebraic notation to piece
+        letter_to_piece = {letter: 'p' for letter in 'abcdefgh'} #pawn moves
+        letter_to_piece['O'] = 'k' #castling considered as king move
+        letter_to_piece.update({letter: letter.lower() for letter in 'NBRQK'})
+
+        turn_map = {True: 'white', False: 'black'}
+
+        for node in topological_sort(G):
+            parent = gt.get_parent(G, node)
+            if parent is None:
+                boards[node] = initial_board
+                depths[node] = 0
+            else:
+                board = boards[parent].copy(stack=False)
+                move_uci = G.nodes[node]['move']
+                move = chess.Move.from_uci(move_uci)
+                piece = board.lan(move)[0]
+                piece = letter_to_piece[piece]
+
+                turn = turn_map[board.turn]
+
+                x_origin, y_origin = move_uci[:2]
+                x_origin = x_map[x_origin]
+                y_origin = y_map[y_origin]
+                x_destination, y_destination = move_uci[2:4]
+                x_destination = x_map[x_destination]
+                y_destination = y_map[y_destination]
+
+                board.push(move)
+                boards[node] = board
+                depth = 1 + depths[parent]
+                depths[node] = depth
+
+                key = (turn, piece, depth)
+                value = {'origin': (x_origin, y_origin), 'destination': (x_destination, y_destination)}
+                nodes[node] = (key, value)
+
+        data = []
+        for G in self.G_dict[position_id]:
+            z_data = {}
+            for node in G:
+                if node == 'root':
+                    continue
+                key, value = nodes[node]
+                x_origin, y_origin = value['origin']
+                x_destination, y_destination = value['destination']
+                if key not in z_data:
+                    z_data[key] = {'origin': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
+                                'destination': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
+                z_data[key]['origin'][y_origin][x_origin] += 1
+                z_data[key]['destination'][y_destination][x_destination] += 1
+            data.append(z_data)
+
+        self.heatmap_data[position_id] = data
+
+
 lc0 = leela_engine(None)
 
-tree_data_pgn = TreeData(lc0)
-tree_data_fen = TreeData(lc0)
+tree_data_pgn = TreeData(lc0, 'pgn')
+tree_data_fen = TreeData(lc0, 'fen')
 
 game_data_pgn = GameData('pgn')
 game_data_fen = GameData('fen')

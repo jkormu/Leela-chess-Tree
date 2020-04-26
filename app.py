@@ -7,7 +7,7 @@ import dash_html_components as html
 from graph import tree_graph
 import dash_core_components as dcc
 from pgn_graphs import pgn_graph_component
-from node_info import node_info
+from heatmaps import heatmap_component
 
 DEBUG = False
 
@@ -61,9 +61,10 @@ graph_container.children = [graph_component] #node_info('150px', '150px')
 config_container.children = [config_component]
 
 tab_style = {
-    #'borderBottom': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
     'padding': '6px',
-    'fontWeight': 'bold'
+    'fontWeight': 'bold',
+    'zIndex': 99999999
 }
 
 tab_selected_style = {
@@ -71,29 +72,38 @@ tab_selected_style = {
     'borderBottom': '1px solid #d6d6d6',
     'backgroundColor': '#119DFF',
     'color': 'white',
-    'padding': '6px'
+    'padding': '6px',
+    'zIndex': 99999999
 }
 
 bottom_tabs = dcc.Tabs(id='bottom-tabs',
     children=[
-    dcc.Tab(label='Lc0 settings',
-            children=[config_container],
-            style=tab_style,
-            selected_style=tab_selected_style,
-            value='configurations'
-            ),
-    dcc.Tab(label='pgn graphs',
-            children=[pgn_graph_component(),
-                      ],
-            style=tab_style,
-            selected_style=tab_selected_style,
-            value='pgn-graphs'
-            )
+        dcc.Tab(label='Lc0 settings',
+                children=[config_container],
+                style=tab_style,
+                selected_style=tab_selected_style,
+                value='configurations'
+                ),
+        dcc.Tab(label='pgn graphs',
+                children=[pgn_graph_component(),
+                          ],
+                style=tab_style,
+                selected_style=tab_selected_style,
+                value='pgn-graphs'
+                ),
+         dcc.Tab(label='heatmaps',
+                children=[heatmap_component(),
+                          ],
+                style=tab_style,
+                selected_style=tab_selected_style,
+                value='heatmaps'
+                )
 ],
     content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
     parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'},
-    style={'height': '30px'},
-    value='configurations')
+    #style={'height': '30px'},
+    value='configurations',
+                       )
 
 
 left_container.children = [graph_container, bottom_tabs]

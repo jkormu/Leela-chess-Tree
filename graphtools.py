@@ -106,10 +106,16 @@ def merge_graphs(G_list):
 
     print('Merging - relabel', time.time() - start)
     start = time.time()
+
+    moves = {'root': None}
     for G in G_list:
         for edge in G.edges():
             if edge not in G_merged.edges():
                 G_merged.add_edge(edge[0], edge[1])
+
+                node = edge[1]
+                if node not in moves:
+                    moves[node] = G.nodes[node]['move']
     print('Merging - 1st merged', time.time() - start)
     start = time.time()
     for n in topological_sort(G_merged.reverse()):
@@ -132,7 +138,9 @@ def merge_graphs(G_list):
     start = time.time()
     G_merged_ordered = nx.DiGraph()
     for n in nodes:
-        G_merged_ordered.add_node(n, N=G_merged.nodes[n]['N'])
+        G_merged_ordered.add_node(n,
+                                  N=G_merged.nodes[n]['N'], #visits is needed for layout sorting
+                                  move=moves[n]) #move is needed for heatmap graphs
     for edge in G_merged.edges():
         G_merged_ordered.add_edge(edge[0], edge[1])
 
