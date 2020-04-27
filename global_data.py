@@ -332,7 +332,8 @@ class TreeData:
         self.type = type  # 'pgn' or 'fen'
         self.G_dict = {} #{position_id1: [], position_id2: []....}
         self.merged_graphs = {} #{position_id: merger_graph...}
-        self.heatmap_data = {} #{position_id: [{(color, piece, depth): z}, ... ]}
+        self.heatmap_data_for_moves = {} #{position_id: [{(color, piece, depth): z}, ... ]}
+        self.heatmap_data_for_board_states = {}  # {position_id: [{(color, piece, depth): z}, ... ]}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -348,7 +349,8 @@ class TreeData:
     def reset_data(self):
         self.G_dict = {}
         self.merged_graphs = {}
-        self.heatmap_data = {}
+        self.heatmap_data_for_moves = {}
+        self.heatmap_data_for_board_states = {}
         self.data = {}
         self.data_depth = {}
         self.board = chess.Board()
@@ -563,12 +565,20 @@ class TreeData:
         x_map = {letter: index for index, letter in enumerate('abcdefgh')}
         y_map = {letter: index for index, letter in enumerate('12345678')}
 
+        X = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        Y = ['1', '2', '3', '4', '5', '6', '7', '8']
+        pychess_square_table = {8 * Y.index(y) + X.index(x): x + y for y in Y for x in X}
+
+        letters = 'abcdefgh'
+        numbers = '12345678'
+        coordinate_map = {x+y: (x_ind, y_ind) for x_ind, x in enumerate(letters) for y_ind, y in enumerate(numbers)}
+
         #map first letter of long algebraic notation to piece
         letter_to_piece = {letter: 'p' for letter in 'abcdefgh'} #pawn moves
         letter_to_piece['O'] = 'k' #castling considered as king move
         letter_to_piece.update({letter: letter.lower() for letter in 'NBRQK'})
 
-        turn_map = {True: 'white', False: 'black'}
+        color_map = {True: 'white', False: 'black'}
 
         for node in topological_sort(G):
             parent = gt.get_parent(G, node)
@@ -582,14 +592,19 @@ class TreeData:
                 piece = board.lan(move)[0]
                 piece = letter_to_piece[piece]
 
-                turn = turn_map[board.turn]
+                turn = color_map[board.turn]
 
-                x_origin, y_origin = move_uci[:2]
-                x_origin = x_map[x_origin]
-                y_origin = y_map[y_origin]
-                x_destination, y_destination = move_uci[2:4]
-                x_destination = x_map[x_destination]
-                y_destination = y_map[y_destination]
+                #x_origin, y_origin = move_uci[:2]
+                #x_origin = x_map[x_origin]
+                #y_origin = y_map[y_origin]
+
+                x_origin, y_origin = coordinate_map[move_uci[:2]]
+
+                #x_destination, y_destination = move_uci[2:4]
+                #x_destination = x_map[x_destination]
+                #y_destination = y_map[y_destination]
+
+                x_destination, y_destination = coordinate_map[move_uci[2:4]]
 
                 board.push(move)
                 boards[node] = board
@@ -598,25 +613,51 @@ class TreeData:
 
                 key = (turn, piece, depth)
                 value = {'origin': (x_origin, y_origin), 'destination': (x_destination, y_destination)}
+
+
+                occupied = []
+                pieces_on_board = board.piece_map()
+                for position, piece in pieces_on_board.items():
+                    piece = str(piece)
+                    piece_color = color_map[not piece.islower()] #lower case pieces are black
+                    piece = piece.lower()
+                    x, y = coordinate_map[pychess_square_table[position]]
+                    occupied.append((piece_color, piece, x, y))
+
+                value['occupied'] = occupied
+
                 nodes[node] = (key, value)
 
-        data = []
+        data_moves = []
+        data_board_states = []
         for G in self.G_dict[position_id]:
-            z_data = {}
+            move_related_data = {}
+            board_state_related_data = {}
             for node in G:
                 if node == 'root':
                     continue
                 key, value = nodes[node]
                 x_origin, y_origin = value['origin']
                 x_destination, y_destination = value['destination']
-                if key not in z_data:
-                    z_data[key] = {'origin': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
+                if key not in move_related_data:
+                    move_related_data[key] = {'origin': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
                                 'destination': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
-                z_data[key]['origin'][y_origin][x_origin] += 1
-                z_data[key]['destination'][y_destination][x_destination] += 1
-            data.append(z_data)
+                move_related_data[key]['origin'][y_origin][x_origin] += 1
+                move_related_data[key]['destination'][y_destination][x_destination] += 1
 
-        self.heatmap_data[position_id] = data
+                depth = key[2]
+                for piece in value['occupied']:
+                    color, piece, x, y = piece
+                    key = (color, piece, depth)
+                    if key not in board_state_related_data:
+                        board_state_related_data[key] = {'occupied': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
+                    board_state_related_data[key]['occupied'][y][x] += 1
+
+            data_moves.append(move_related_data)
+            data_board_states.append((board_state_related_data))
+
+        self.heatmap_data_for_moves[position_id] = data_moves
+        self.heatmap_data_for_board_states[position_id] = data_board_states
 
 
 lc0 = leela_engine(None)

@@ -717,14 +717,16 @@ def data_row_delete(data, position_mode):
         game_data_fen.data_previous = None
         tree_data_fen.data = {}
         tree_data_fen.G_dict = {}
-        tree_data_fen.heatmap_data = {}
+        tree_data_fen.heatmap_data_for_moves = {}
+        tree_data_fen.heatmap_data_for_board_states = {}
         return(deleted_row)
 
     if deleted_row is None:
         return (dash.no_update)
     tree_data_fen.data.pop(deleted_position_id, None) #try to delete corresponding tree data
     tree_data_fen.G_dict.pop(deleted_position_id, None)
-    tree_data_fen.heatmap_data.pop(deleted_position_id, None)
+    tree_data_fen.heatmap_data_for_moves.pop(deleted_position_id, None)
+    tree_data_fen.heatmap_data_for_board_states.pop(deleted_position_id, None)
     #print('Delete triggered for row_id:', deleted_row)
     #print('before deleting:')
     #print(game_data_fen.data)
