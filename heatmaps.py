@@ -9,6 +9,8 @@ from pgn_graphs import empty_figure
 from server import app
 import time
 
+from colors import custom_color_scale
+
 
 
 def heatmap_component():
@@ -135,7 +137,6 @@ def update_depth_filter_info_text(depth_filter, max_allowed):
 def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, slider_value,
                    color_filter, piece_filter, depth_filter):
     depth_filter_min, depth_filter_max = depth_filter
-    #print('entered heatmap')
     def key_filter(key):
         if color_filter != 'both' and key[0] != color_filter:
             return(False)
@@ -191,7 +192,7 @@ def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, sli
         z=z,
         x=[0,1,2,3,4,5,6,7],
         y=[0,1,2,3,4,5,6,7],
-        colorscale='Viridis',#'Cividis',#'Bluered',#'Inferno',#'Viridis',
+        colorscale=custom_color_scale,#'Cividis', #'Viridis',#'Cividis',#'Bluered',#'Inferno',#'Viridis',
         xgap=2,
         ygap=2,
         zmin=0,
