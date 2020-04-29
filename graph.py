@@ -8,7 +8,7 @@ from plotly import subplots
 from global_data import tree_data_pgn, tree_data_fen, game_data_pgn, game_data_fen, config_data
 
 from server import app
-from node_info import node_info
+from miniboard import node_info
 
 import time
 
