@@ -205,8 +205,10 @@ def get_node_eval(G, node):
     return({'Q': Q, 'W': W, 'D': D, 'L': L, 'M': M})
 
 #for Dash implementation
-def get_node_metric_text(G, node):
-    t = '\n \n'
+def get_node_metric_text(G, node, start_with_newrows):
+    t = ''
+    if start_with_newrows:
+        t += '\n \n'
     t += 'Move: ' + G.nodes[node]['move'] + '\n'
     t += 'N: ' + G.nodes[node]['N'] + '\n'
     if node == 'root':
