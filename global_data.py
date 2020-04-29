@@ -515,7 +515,7 @@ class TreeData:
                                       'move': move,
                                       'visible': {}
                                       }
-                    node_metrics = pt.get_node_metric_text(G, node)
+                    node_metrics = pt.get_node_metric_text(G, node, SHOW_UNICODE_BOARD)
                     edge_type = ''
                     if node in pv_nodes:
                         edge_type = 'pv'
