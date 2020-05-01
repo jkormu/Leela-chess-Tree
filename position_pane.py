@@ -77,8 +77,8 @@ ARROW_COLORS = {
     'p': (183, 0, 255), #purple
     'n': (0, 166, 255),
     'q': (255, 0, 0),
-    'ml_low': (0, 255, 255),
-    'ml_high': (0, 255, 255)}
+    'ml_low': (255, 51, 153),
+    'ml_high': (255, 51, 153)}
 
 
 def get_score_bar_figure(W, D, B):
@@ -410,8 +410,13 @@ def get_arrows(position_id, slider_value, type, nr_of_arrows, position_mode):
 
         if type == 'q':
             saturation_factor = ((1+metric)/(1+best_metric))**1.618
-        elif type == 'ml_low':
-            saturation_factor = ((1+best_metric)/(1+metric))**1.618
+        elif type == 'ml_low' or type == 'ml_high':
+            #saturation_factor = ((1+best_metric)/(1+metric))**1.618
+            worst_metric = metrics[-1]
+            if worst_metric == best_metric:
+                saturation_factor = 1.0
+            else:
+                saturation_factor = (metric - worst_metric)/(best_metric - worst_metric)
         else:
             saturation_factor = (metric / best_metric) ** 0.618
         r,g,b = rgb_adjust_saturation(saturation_factor, r, g, b)
