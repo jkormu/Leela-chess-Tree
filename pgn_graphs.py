@@ -171,7 +171,7 @@ def ML_graph(data, selected_row):
                'zeroline': False,
                'showgrid': False,
                },
-        yaxis={'title': 'Predicted half moves left',
+        yaxis={'title': 'Predicted moves left',
                'range': [y_min-1, y_max+1],
                'zeroline': False,
                'showgrid': True,
