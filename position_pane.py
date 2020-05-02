@@ -37,6 +37,13 @@ SHOW_BOARD_COORDINATES = False
 
 FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "13.5%"
 
+ARROW_COLORS = {
+    'p': (183, 0, 255), #purple
+    'n': (0, 166, 255),
+    'q': (255, 0, 0),
+    'ml_low': (255, 51, 153),
+    'ml_high': (255, 51, 153)}
+
 PGN_MODE_COLUMNS = [#{"name": '', "id": 'dummy_left'},
     {"name": 'ply', "id": 'ply'},
     {"name": 'move', "id": 'move'},
@@ -72,13 +79,6 @@ PGN_COMPONENT_STYLE = {
                 'flexDirection': 'column',
             }
 FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%'}#'display': 'flex',
-
-ARROW_COLORS = {
-    'p': (183, 0, 255), #purple
-    'n': (0, 166, 255),
-    'q': (255, 0, 0),
-    'ml_low': (255, 51, 153),
-    'ml_high': (255, 51, 153)}
 
 
 def get_score_bar_figure(W, D, B):
