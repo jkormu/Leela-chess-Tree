@@ -204,7 +204,7 @@ def update_pgn_graph(data, position_mode, graph_type, active_cell, tab):
     if tab != 'pgn-graphs':
         return(dash.no_update)
     fig = empty_figure()
-    if position_mode != 'pgn' or data is None or position_mode is None or graph_type is None:
+    if position_mode != 'pgn' or data is None or data == [] or position_mode is None or graph_type is None:
         return(fig)
 
     selected_row = active_cell['row']

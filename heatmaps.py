@@ -10,6 +10,7 @@ from server import app
 import time
 
 from colors import custom_color_scale
+import dash_table
 
 
 
@@ -88,8 +89,19 @@ def heatmap_component():
 
     container_right.children = [graph]
 
-    dummy_spacer = html.Div(style={'flex': 1})
-    container.children = [container_left, container_right, dummy_spacer]
+    move_count_container = html.Div(style={'flex': 1})
+    move_count_table = dash_table.DataTable(id='move-count-table',
+                                            columns=[{"name": 'piece', "id": 'piece'},
+                                                     {"name": 'white', "id": 'white'},
+                                                     {"name": 'black', "id": 'black'},
+                                                     {"name": 'both', "id": 'both'},],
+                                            style_header={
+                                                'backgroundColor': 'rgb(230, 230, 230)',
+                                                'fontWeight': 'bold'},
+                                            )
+    move_count_container.children = [move_count_table]
+
+    container.children = [container_left, container_right, move_count_container]#dummy_spacer
     return(container)
 
 @app.callback(
@@ -122,6 +134,42 @@ def update_depth_selector_max(active_cell, position_mode, selected_depths, curre
     selected_depths = [selected_min_depth, selected_max_depth]
     return(new_max, selected_depths)
 
+def move_counts_data(heatmap_data, min_depth, max_depth):
+    def count_moves(piece, turn, min_depth, max_depth):
+        count = 0
+        for depth in range(min_depth, max_depth):
+            count += heatmap_data.get((turn, piece, depth), {'move_count': 0})['move_count']
+        return(count)
+    pieces = 'pnbrqk'
+    turns = ('white', 'black')
+    counts = {}
+    for piece in pieces:
+        both = 0
+        for turn in turns:
+            if heatmap_data is not None:
+                count = count_moves(piece, turn, min_depth, max_depth)
+            else:
+                count = 0
+            both += count
+            counts[(turn, piece)] = count
+        counts[('both', piece)] = both
+
+    white_total = 0
+    black_total = 0
+    for piece in pieces:
+        white_total += counts.get(('white', piece), 0)
+        black_total += counts.get(('black', piece), 0)
+
+    data = [{'piece': 'pawn', 'white': counts[('white', 'p')], 'black': counts[('black', 'p')], 'both': counts[('both','p')]},
+            {'piece': 'bishop', 'white': counts[('white', 'b')], 'black': counts[('black', 'b')], 'both': counts[('both','b')]},
+            {'piece': 'knight', 'white': counts[('white', 'n')], 'black': counts[('black', 'n')], 'both': counts[('both','n')]},
+            {'piece': 'rook', 'white': counts[('white', 'r')], 'black': counts[('black', 'r')], 'both': counts[('both','r')]},
+            {'piece': 'queen', 'white': counts[('white', 'q')], 'black': counts[('black', 'q')], 'both': counts[('both','q')]},
+            {'piece': 'king/castling', 'white': counts[('white', 'k')], 'black': counts[('black', 'k')], 'both': counts[('both','k')]},
+            {'piece': 'all', 'white': white_total, 'black': black_total, 'both': white_total + black_total},
+            ]
+    return(data)
+
 @app.callback(
     Output('depth-filter-info', 'children'),
     [Input('depth-selector', 'value'),
@@ -139,7 +187,8 @@ def update_depth_filter_info_text(depth_filter, max_allowed):
     return(text)
 
 @app.callback(
-    Output('heatmap', 'figure'),
+    [Output('heatmap', 'figure'),
+     Output('move-count-table', 'data')],
     [Input('heatmap-selector', 'value'),
      Input('position-mode-selector', 'value'),
      Input('move-table', 'active_cell'),
@@ -149,7 +198,7 @@ def update_depth_filter_info_text(depth_filter, max_allowed):
      Input('piece-selector', 'value'),
      Input('depth-selector', 'value')
      ])
-def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, slider_value,
+def update_heatmap(heatmap_type, position_mode, active_cell, active_tab, slider_value,
                    color_filter, piece_filter, depth_filter):
     depth_filter_min, depth_filter_max = depth_filter
     def key_filter(key):
@@ -163,7 +212,7 @@ def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, sli
 
 
     if heatmap_type is None or active_tab != 'heatmaps':
-        return(empty_figure())
+        return(empty_figure(), move_counts_data(None, depth_filter_min, depth_filter_max))
 
     start = time.time()
     if position_mode == 'pgn':
@@ -186,7 +235,9 @@ def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, sli
         else:
             heatmap_data = tree_data.heatmap_data_for_board_states[position_id][slider_value]
     else:
-        return(empty_figure())
+        return(empty_figure(), move_counts_data(None, depth_filter_min, depth_filter_max))
+
+    move_counts = move_counts_data(heatmap_data, depth_filter_min, depth_filter_max)
 
     print('heatmap data retrieved in', time.time() - start)
     start = time.time()
@@ -240,70 +291,4 @@ def update_heatmap_old(heatmap_type, position_mode, active_cell, active_tab, sli
 
     fig['layout'].update(layout)
     fig['layout']['autosize'] = True
-    return(fig)
-
-
-def destination_origin_figure(heatmap_type, heatmap_data, color_filter, piece_filter, depth_filter):
-    depth_filter_min, depth_filter_max = depth_filter
-    def key_filter(key):
-        if color_filter != 'both' and key[0] != color_filter:
-            return(False)
-        if piece_filter != 'all' and key[1] != piece_filter:
-            return(False)
-        if key[2] < depth_filter_min or key[2] >= depth_filter_max:
-            return(False)
-        return(True)
-
-    start = time.time()
-
-    Zs = [heatmap_data[key][heatmap_type] for key in heatmap_data if key_filter(key)]
-    if Zs != []:
-        #print('Zs', Zs)
-        flat_Zs = [[element for row in z for element in row] for z in Zs]
-        #print('flat', flat_Zs)
-        z = list(sum(l) for l in zip(*flat_Zs))
-        #print('z', z)
-        z = [z[i * 8:(i + 1) * 8] for i in range(8)]
-    else:
-        z = [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]
-    #print('z', z)
-    print('heatmap data processed in', time.time() - start)
-
-    fig = go.Figure(data=go.Heatmap(
-        z=z,
-        x=[0,1,2,3,4,5,6,7],
-        y=[0,1,2,3,4,5,6,7],
-        colorscale='Viridis',#'Cividis',#'Bluered',#'Inferno',#'Viridis',
-        xgap=2,
-        ygap=2,
-        zmin=0,
-        ),
-    )
-
-    layout = go.Layout(
-        autosize=False,
-        xaxis={'title': None,
-               'range': [-0.5, 7.5],
-               'zeroline': False,
-               'showgrid': False,
-               'scaleanchor':'y',
-               'constrain': 'domain',
-               'constraintoward': 'right',
-               'ticktext': [letter for letter in 'abcdefgh'],
-               'tickvals': [0,1,2,3,4,5,6,7]
-               },
-        yaxis={'title': None,
-               'range': [-0.5, 7.5],
-               'zeroline': False,
-               'showgrid': False,
-               'ticktext': [letter for letter in '12345678'],
-               'tickvals': [0, 1, 2, 3, 4, 5, 6, 7],
-               'constrain': 'domain'
-               # 'gridcolor': GRID_COLOR
-               },
-        margin={'t': 0, 'b': 0, 'r': 0, 'l': 0},
-    )
-
-    fig['layout'].update(layout)
-    fig['layout']['autosize'] = True
-    return(fig)
+    return(fig, move_counts)

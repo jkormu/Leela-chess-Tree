@@ -599,6 +599,7 @@ class TreeData:
                 #y_origin = y_map[y_origin]
 
                 x_origin, y_origin = coordinate_map[move_uci[:2]]
+                is_castling = move_uci[0] == 'O'
 
                 #x_destination, y_destination = move_uci[2:4]
                 #x_destination = x_map[x_destination]
@@ -626,7 +627,7 @@ class TreeData:
 
                 value['occupied'] = occupied
 
-                nodes[node] = (key, value)
+                nodes[node] = (key, value, is_castling)
 
         data_moves = []
         data_board_states = []
@@ -636,14 +637,20 @@ class TreeData:
             for node in G:
                 if node == 'root':
                     continue
-                key, value = nodes[node]
+                key, value, is_castling = nodes[node]
                 x_origin, y_origin = value['origin']
                 x_destination, y_destination = value['destination']
                 if key not in move_related_data:
                     move_related_data[key] = {'origin': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
-                                'destination': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
+                                              'destination': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
+                                              'move_count': 0}
                 move_related_data[key]['origin'][y_origin][x_origin] += 1
                 move_related_data[key]['destination'][y_destination][x_destination] += 1
+                #if is_castling:
+                #    move_related_data[(key[0], 'k', key[2])]['move_count'] += 1
+                #    move_related_data[(key[0], 'r', key[2])]['move_count'] += 1
+                #else:
+                move_related_data[key]['move_count'] += 1
 
                 depth = key[2]
                 for piece in value['occupied']:
