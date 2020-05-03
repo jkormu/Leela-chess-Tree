@@ -104,7 +104,7 @@ def merge_graphs(G_list):
 
     G_merged.add_node(get_root(G_list[0]))  # add root node to handle case of no edges
 
-    print('Merging - relabel', time.time() - start)
+    #print('Merging - relabel', time.time() - start)
     start = time.time()
 
     moves = {'root': None}
@@ -116,7 +116,7 @@ def merge_graphs(G_list):
                 node = edge[1]
                 if node not in moves:
                     moves[node] = G.nodes[node]['move']
-    print('Merging - 1st merged', time.time() - start)
+    #print('Merging - 1st merged', time.time() - start)
     start = time.time()
     for n in topological_sort(G_merged.reverse()):
         parent = get_parent(G_merged, n)
@@ -131,7 +131,7 @@ def merge_graphs(G_list):
 
     visits_and_nodes = [(G_merged.nodes[node]['N'], node) for node in G_merged]
     visits, nodes = zip(*sorted(visits_and_nodes, reverse=True))
-    print('Merging - calc visits', time.time() - start)
+    #print('Merging - calc visits', time.time() - start)
 
     #reconstruct by adding nodes in order of visit counts for prettier layout result from buchheim algorithm
     # -> node heavy branches will be aligned left
@@ -144,6 +144,6 @@ def merge_graphs(G_list):
     for edge in G_merged.edges():
         G_merged_ordered.add_edge(edge[0], edge[1])
 
-    print('Merging - 2d merged', time.time() - start)
+    #print('Merging - 2d merged', time.time() - start)
         
     return(G_merged_ordered, G_list)
