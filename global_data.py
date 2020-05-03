@@ -193,7 +193,7 @@ class ConfigData:
         self.weight_files = []
         self.weight_paths = []
         self.find_weights()
-        self.construct_config_data(True)
+        self.construct_config_data(False)
 
     def find_weights(self):
         root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
@@ -216,13 +216,10 @@ class ConfigData:
         for opt in self.lc0.options:
             option = lc0.options[opt]
             if opt not in filter_out_options:
-                group = GROUP_PER_COLUMN.get(opt, 'Misc')
+                group = GROUP_PER_COLUMN.get(opt, '')
                 self.add_column(option, group, use_deterministic_defaults)
 
         self.columns.sort(key=lambda x: COLUMN_ORDER.index(x['name'][1]) if x['name'][1] in COLUMN_ORDER else 999999)
-
-        #df = pd.DataFrame(self.df_dict)
-        #df = pd.concat([df] * MAX_NUMBER_OF_CONFIGS, ignore_index=True)
         self.data = [self.data_row for _ in range(MAX_NUMBER_OF_CONFIGS)]
 
     def add_column(self, option, category, use_deterministic_defaults):
@@ -421,7 +418,7 @@ class TreeData:
     def create_data(self, position_id, moves):
         start = time.time()
         G_merged, G_list = gt.merge_graphs(self.G_dict[position_id])
-        print('graphs merged in', time.time() - start)
+        #print('graphs merged in', time.time() - start)
         self.G_dict[position_id] = G_list
         start = time.time()
         #for n in topological_sort(G_merged.reverse()):
@@ -434,7 +431,7 @@ class TreeData:
         #        G_merged.nodes[parent]['N'] = 1 + G_merged.nodes[n]['N']
         #    else:
         #        G_merged.nodes[parent]['N'] += G_merged.nodes[n]['N']
-        print('N calculation in', time.time() - start)
+        #print('N calculation in', time.time() - start)
         pos = pt.get_tree_layout(G_merged)
         pos = pt.adjust_y(pos)
         data = {}
@@ -479,16 +476,16 @@ class TreeData:
                 x_lab.append(val)  # X-label
             x_labels.append(x_lab)  # X-label
             #########################
-            print('x-axis stuff in', time.time() - start)
+            #print('x-axis stuff in', time.time() - start)
             start = time.time()
             G_pos = pt.get_own_pos(G, pos)
-            print('get_own_pos', time.time() - start)
+            #print('get_own_pos', time.time() - start)
             start = time.time()
             pos_list = pt.branch_separation(G, G_pos)
-            print('branch separation', time.time() - start)
+            #print('branch separation', time.time() - start)
             start = time.time()
             node_counts.append(gt.get_nodes_in_depth(G))
-            print('node depths', time.time() - start)
+            #print('node depths', time.time() - start)
 
             pv_nodes = pt.get_pv_nodes(G)
             miniboard_time = 0
@@ -529,7 +526,7 @@ class TreeData:
                     if type == 'root':
                         eval = pt.get_node_eval(G, node)
                         data[node]['visible'][owner]['eval'] = eval
-            print('Tree process time:', (time.time() - start))
+            #print('Tree process time:', (time.time() - start))
         self.data[position_id] = data
         self.merged_graphs[position_id] = G_merged
         y_tick_labels, y_tick_values = pt.get_y_ticks(pos)
@@ -549,7 +546,7 @@ class TreeData:
         self.x_tick_labels[position_id] = {i: x_label_list for i, x_label_list in enumerate(x_labels)}
         self.x_tick_values[position_id] = x_label_vals
 
-    def calculate_heatmap_helpers(self, position_id):
+    def calculate_heatmap_data(self, position_id, type):
         G = self.merged_graphs[position_id]
         if self.type == 'pgn':
             game_data = game_data_pgn
@@ -562,9 +559,6 @@ class TreeData:
         nodes = {}
         depths = {}
 
-        x_map = {letter: index for index, letter in enumerate('abcdefgh')}
-        y_map = {letter: index for index, letter in enumerate('12345678')}
-
         X = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         Y = ['1', '2', '3', '4', '5', '6', '7', '8']
         pychess_square_table = {8 * Y.index(y) + X.index(x): x + y for y in Y for x in X}
@@ -572,13 +566,33 @@ class TreeData:
         letters = 'abcdefgh'
         numbers = '12345678'
         coordinate_map = {x+y: (x_ind, y_ind) for x_ind, x in enumerate(letters) for y_ind, y in enumerate(numbers)}
+        coordinate_map[('white', 'O-O-O')] = (4, 0,  # king origin
+                                              0, 0,  # rook origin
+                                              2, 0,  # king destination
+                                              3, 0)  # rook destination
+        coordinate_map[('white', 'O-O')] = (4, 0,    # king origin
+                                            7, 0,    # rook origin
+                                            6, 0,    # king destination
+                                            5, 0)    # rook destination
+        coordinate_map[('black', 'O-O-O')] = (4, 7,  # king origin
+                                              0, 7,  # rook origin
+                                              2, 7,  # king destination
+                                              3, 7)  # rook destination
+        coordinate_map[('black', 'O-O')] = (4, 7,    # king origin
+                                            7, 7,    # rook origin
+                                            6, 7,    # king destination
+                                            5, 7)    # rook destination
+        #x_origin, y_origin, x_origin2, y_origin2, x_destination, y_destination, x_destination2, y_destination2
 
         #map first letter of long algebraic notation to piece
         letter_to_piece = {letter: 'p' for letter in 'abcdefgh'} #pawn moves
-        letter_to_piece['O'] = 'k' #castling considered as king move
+        #letter_to_piece['O'] = 'k' #castling considered as king move
         letter_to_piece.update({letter: letter.lower() for letter in 'NBRQK'})
 
         color_map = {True: 'white', False: 'black'}
+
+        #don't calculate heat maps related to board states if such heatmap type is not visible
+        calc_board_state_related_data = type not in ('origin', 'destination')
 
         for node in topological_sort(G):
             parent = gt.get_parent(G, node)
@@ -589,23 +603,23 @@ class TreeData:
                 board = boards[parent].copy(stack=False)
                 move_uci = G.nodes[node]['move']
                 move = chess.Move.from_uci(move_uci)
-                piece = board.lan(move)[0]
-                piece = letter_to_piece[piece]
-
+                move_lan = board.lan(move)
+                piece = move_lan[0]
                 turn = color_map[board.turn]
 
-                #x_origin, y_origin = move_uci[:2]
-                #x_origin = x_map[x_origin]
-                #y_origin = y_map[y_origin]
-
-                x_origin, y_origin = coordinate_map[move_uci[:2]]
-                is_castling = move_uci[0] == 'O'
-
-                #x_destination, y_destination = move_uci[2:4]
-                #x_destination = x_map[x_destination]
-                #y_destination = y_map[y_destination]
-
-                x_destination, y_destination = coordinate_map[move_uci[2:4]]
+                if piece != 'O':
+                    #print('piece', piece)
+                    piece = letter_to_piece[piece]
+                    x_origin, y_origin = coordinate_map[move_uci[:2]]
+                    x_destination, y_destination = coordinate_map[move_uci[2:4]]
+                    piece2 = None
+                    #x_origin2, y_origin2, x_destination2, y_destination2 = None, None, None, None
+                else: #castling has destination/origin for two pieces
+                    #print('casting move', move_lan, 'lan move', piece)
+                    piece, piece2 = 'k', 'r'
+                    if move_lan[-1] != 'O': #remove symbol + or #
+                        move_lan = move_lan[:-1]
+                    x_origin, y_origin, x_origin2, y_origin2, x_destination, y_destination, x_destination2, y_destination2 = coordinate_map[(turn, move_lan)]
 
                 board.push(move)
                 boards[node] = board
@@ -615,19 +629,25 @@ class TreeData:
                 key = (turn, piece, depth)
                 value = {'origin': (x_origin, y_origin), 'destination': (x_destination, y_destination)}
 
+                if piece2 != None:
+                    key2 = (turn, piece2, depth)
+                    value2 = {'origin': (x_origin2, y_origin2), 'destination': (x_destination2, y_destination2)}
+                else:
+                    key2, value2 = None, None
 
-                occupied = []
-                pieces_on_board = board.piece_map()
-                for position, piece in pieces_on_board.items():
-                    piece = str(piece)
-                    piece_color = color_map[not piece.islower()] #lower case pieces are black
-                    piece = piece.lower()
-                    x, y = coordinate_map[pychess_square_table[position]]
-                    occupied.append((piece_color, piece, x, y))
+                if calc_board_state_related_data:
+                    occupied = []
+                    pieces_on_board = board.piece_map()
+                    for position, piece in pieces_on_board.items():
+                        piece = str(piece)
+                        piece_color = color_map[not piece.islower()] #lower case pieces are black
+                        piece = piece.lower()
+                        x, y = coordinate_map[pychess_square_table[position]]
+                        occupied.append((piece_color, piece, x, y))
 
-                value['occupied'] = occupied
+                    value['occupied'] = occupied
 
-                nodes[node] = (key, value, is_castling)
+                nodes[node] = (key, value, key2, value2)
 
         data_moves = []
         data_board_states = []
@@ -637,7 +657,7 @@ class TreeData:
             for node in G:
                 if node == 'root':
                     continue
-                key, value, is_castling = nodes[node]
+                key, value, key2, value2 = nodes[node]
                 x_origin, y_origin = value['origin']
                 x_destination, y_destination = value['destination']
                 if key not in move_related_data:
@@ -646,25 +666,35 @@ class TreeData:
                                               'move_count': 0}
                 move_related_data[key]['origin'][y_origin][x_origin] += 1
                 move_related_data[key]['destination'][y_destination][x_destination] += 1
-                #if is_castling:
-                #    move_related_data[(key[0], 'k', key[2])]['move_count'] += 1
-                #    move_related_data[(key[0], 'r', key[2])]['move_count'] += 1
-                #else:
                 move_related_data[key]['move_count'] += 1
 
-                depth = key[2]
-                for piece in value['occupied']:
-                    color, piece, x, y = piece
-                    key = (color, piece, depth)
-                    if key not in board_state_related_data:
-                        board_state_related_data[key] = {'occupied': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
-                    board_state_related_data[key]['occupied'][y][x] += 1
+                if key2 is not None:
+                    x_origin, y_origin = value2['origin']
+                    x_destination, y_destination = value2['destination']
+                    if key2 not in move_related_data:
+                        move_related_data[key2] = {'origin': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
+                                                  'destination': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)],
+                                                  'move_count': 0}
+                    move_related_data[key2]['origin'][y_origin][x_origin] += 1
+                    move_related_data[key2]['destination'][y_destination][x_destination] += 1
+                    #move_related_data[key2]['move_count'] += 1
+
+                if calc_board_state_related_data:
+                    depth = key[2]
+                    for piece in value['occupied']:
+                        color, piece, x, y = piece
+                        key = (color, piece, depth)
+                        if key not in board_state_related_data:
+                            board_state_related_data[key] = {'occupied': [[0, 0, 0, 0, 0, 0, 0, 0] for _ in range(8)]}
+                        board_state_related_data[key]['occupied'][y][x] += 1
 
             data_moves.append(move_related_data)
-            data_board_states.append((board_state_related_data))
+            if calc_board_state_related_data:
+                data_board_states.append((board_state_related_data))
 
         self.heatmap_data_for_moves[position_id] = data_moves
-        self.heatmap_data_for_board_states[position_id] = data_board_states
+        if calc_board_state_related_data:
+            self.heatmap_data_for_board_states[position_id] = data_board_states
 
 
 lc0 = leela_engine(None)
