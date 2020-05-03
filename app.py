@@ -84,6 +84,13 @@ bottom_tabs = dcc.Tabs(id='bottom-tabs',
                 selected_style=tab_selected_style,
                 value='configurations'
                 ),
+        dcc.Tab(label='heatmaps',
+                children=[heatmap_component(),
+                          ],
+                style=tab_style,
+                selected_style=tab_selected_style,
+                value='heatmaps'
+                ),
         dcc.Tab(label='pgn graphs',
                 children=[pgn_graph_component(),
                           ],
@@ -91,13 +98,6 @@ bottom_tabs = dcc.Tabs(id='bottom-tabs',
                 selected_style=tab_selected_style,
                 value='pgn-graphs'
                 ),
-         dcc.Tab(label='heatmaps',
-                children=[heatmap_component(),
-                          ],
-                style=tab_style,
-                selected_style=tab_selected_style,
-                value='heatmaps'
-                )
 ],
     content_style={'width': '100%', 'height': '100%', 'display': 'flex', 'flexDirection': 'column', 'flex': 1},
     parent_style={'width': '100%', 'height': f'{CONFIG_PANE_HEIGHT}%', 'display': 'flex', 'flexDirection': 'column'},

@@ -20,6 +20,12 @@
     flex-direction: column;
 }
 
+#move-count-table table {
+    --accent: #e1e1e1 !important;
+    --selected-background: #FFFFFF !important;
+    --selected-color: #3C3C3C !important;
+}
+
 body {
   margin: 0;
   padding: 0;
