@@ -67,7 +67,7 @@ def settings_bar():
 
     reset_button = html.Button(id='reset_defaults_button',
                                children='Reset to deterministic defaults',
-                               style={'width': '100%', 'height': '100%'})
+                               style={'width': '100%', 'height': '100%', 'marginLeft': '5px'})
 
     reset_engine_defaults_button = html.Button(id='reset_engine_defaults_button',
                                children=['Reset to engine defaults',html.Br(),'(smart pruning excluded)'],
