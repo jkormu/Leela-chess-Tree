@@ -12,7 +12,11 @@ import time
 from colors import custom_color_scale
 import dash_table
 
-
+MOVE_COUNT_HEADER = 'move count in tree'
+MOVE_COUNT_TABLE_COLUMNS = [{"name": ['', 'piece'], "id": 'piece'},
+                                                     {"name": [MOVE_COUNT_HEADER,'white'], "id": 'white'},
+                                                     {"name": [MOVE_COUNT_HEADER,'black'], "id": 'black'},
+                                                     {"name": [MOVE_COUNT_HEADER,'both'], "id": 'both'},]
 
 def heatmap_component():
     container = html.Div(style={#'flex': 1,
@@ -20,13 +24,14 @@ def heatmap_component():
                                 'flexDirection': 'row',
                                 'marginTop': '3px'})
     container_left = html.Div(style={'flex': 1,
-                                'display': 'flex',
-                                'flexDirection': 'column',
-                                'marginTop': '3px'})
-    container_right = html.Div(style={'flex': 1,
-                                #'display': 'flex',
-                                #'flexDirection': 'column',
-                                'marginTop': '3px'})
+                                     'display': 'flex',
+                                     'flexDirection': 'column',
+                                     #'JustifyContent': 'space-between',
+                                     'marginTop': '3px'})
+    container_middle = html.Div(style={'flex': 1,
+                                      'display': 'flex',
+                                      'flexDirection': 'column',
+                                      'marginTop': '3px'})
 
     type_selector = dcc.Dropdown(id='heatmap-selector',
                                  options=[
@@ -77,31 +82,52 @@ def heatmap_component():
     graph = dcc.Graph(id='heatmap',
                       figure=empty_figure(),
                       config={'displayModeBar': False})
-    container_left.children = [html.Label('Heatmap type:'),
-                               type_selector,
-                               html.Label('Filter by moved piece:', style={'marginTop': '5px'}),
-                               piece_selector,
-                               html.Label('Filter by player:', style={'marginTop': '5px'}),
-                               color_selector,
-                               html.Label('Filter by search depth:', style={'marginTop': '5px'}),
+    container_left.children = [html.Div(children=[html.Label('Heatmap type:', style={'fontWeight': 'bold'}),
+                               type_selector], style={'flex': 1}),
+                               html.Div(children=[html.Label('Filter by moved piece:', style={'fontWeight': 'bold'}),
+                               piece_selector], style={'flex': 1}),
+                               html.Div(children=[html.Label('Filter by player:', style={'fontWeight': 'bold'}),
+                               color_selector], style={'flex': 1}),
+                               html.Div(children=[html.Label('Filter by search depth:', style={'fontWeight': 'bold'}),
                                depth_selector,
-                               html.Label(id='depth-filter-info')]
+                               html.Div(id='depth-filter-info', style={'width': '50%',
+                                                                         'margin': '0 auto'})],
+                                        style={'flex': 1})]
 
-    container_right.children = [graph]
+    container_middle.children = [graph]
 
-    move_count_container = html.Div(style={'flex': 1})
+    container_right = html.Div(style={'flex': 1})
     move_count_table = dash_table.DataTable(id='move-count-table',
-                                            columns=[{"name": 'piece', "id": 'piece'},
-                                                     {"name": 'white', "id": 'white'},
-                                                     {"name": 'black', "id": 'black'},
-                                                     {"name": 'both', "id": 'both'},],
+                                            columns=MOVE_COUNT_TABLE_COLUMNS,
                                             style_header={
                                                 'backgroundColor': 'rgb(230, 230, 230)',
                                                 'fontWeight': 'bold'},
+                                            style_cell_conditional=[
+                                                {
+                                                    'if': {'column_id': 'piece'},
+                                                    'textAlign': 'left'
+                                                },
+                                            ],
+                                            style_header_conditional=[
+                                                {
+                                                    'if': {'header_index': 0},
+                                                    'textAlign': 'center'
+                                                }
+                                                ,
+                                                {
+                                                    'if': {'header_index': 1},
+                                                    'textAlign': 'right'
+                                                },
+                                                {
+                                                    'if': {'column_id': 'piece'},
+                                                    'textAlign': 'left'
+                                                }
+                                            ],
+                                            merge_duplicate_headers=True,
                                             )
-    move_count_container.children = [move_count_table]
+    container_right.children = [move_count_table]
 
-    container.children = [container_left, container_right, move_count_container]#dummy_spacer
+    container.children = [container_left, container_middle, container_right]#dummy_spacer
     return(container)
 
 @app.callback(
@@ -138,7 +164,8 @@ def move_counts_data(heatmap_data, min_depth, max_depth):
     def count_moves(piece, turn, min_depth, max_depth):
         count = 0
         for depth in range(min_depth, max_depth):
-            count += heatmap_data.get((turn, piece, depth), {'move_count': 0})['move_count']
+            data = heatmap_data.get((turn, piece, depth), {'move_count': 0})
+            count += data.get('move_count', 0)
         return(count)
     pieces = 'pnbrqk'
     turns = ('white', 'black')
@@ -171,7 +198,8 @@ def move_counts_data(heatmap_data, min_depth, max_depth):
     return(data)
 
 @app.callback(
-    Output('depth-filter-info', 'children'),
+    [Output('depth-filter-info', 'children'),
+     Output('move-count-table', 'columns')],
     [Input('depth-selector', 'value'),
      Input('depth-selector', 'max')])
 def update_depth_filter_info_text(depth_filter, max_allowed):
@@ -180,11 +208,19 @@ def update_depth_filter_info_text(depth_filter, max_allowed):
     text = ''
     if min_depth == 1 and max_depth == max_allowed - 1:
         text = f'No depth filter applied'
+        column_text = ''
     elif min_depth < max_depth:
         text = f'Depths from {min_depth} to {max_depth}'
+        column_text = f'(depths {min_depth}-{max_depth})'
     elif min_depth == max_depth:
         text = f'Depth {min_depth} only'
-    return(text)
+        column_text = f'(depth {min_depth})'
+
+    columns = MOVE_COUNT_TABLE_COLUMNS
+    for ind, col in enumerate(columns[1:]):
+        col['name'][0] = f'{MOVE_COUNT_HEADER} {column_text}'
+        columns[ind + 1] = col
+    return(text, columns)
 
 @app.callback(
     [Output('heatmap', 'figure'),
@@ -211,7 +247,7 @@ def update_heatmap(heatmap_type, position_mode, active_cell, active_tab, slider_
         return(True)
 
 
-    if heatmap_type is None or active_tab != 'heatmaps':
+    if heatmap_type is None or active_tab != 'heatmaps' or active_cell is None:
         return(empty_figure(), move_counts_data(None, depth_filter_min, depth_filter_max))
 
     start = time.time()
@@ -223,13 +259,16 @@ def update_heatmap(heatmap_type, position_mode, active_cell, active_tab, slider_
         game_data = game_data_fen
     selected_row = active_cell['row']
     position_id = game_data.get_position_id(selected_row)
-    #tree_data.calculate_heatmap_helpers(position_id)
+    #tree_data.calculate_heatmap_data(position_id)
     if position_id in tree_data.G_dict:
         try:
-            heatmap_data = tree_data.heatmap_data_for_moves[position_id][slider_value]
+            if heatmap_type in ('origin', 'destination'):
+                heatmap_data = tree_data.heatmap_data_for_moves[position_id][slider_value]
+            else:
+                heatmap_data = tree_data.heatmap_data_for_board_states[position_id][slider_value]
         except KeyError:
             print('generating heat map data')
-            tree_data.calculate_heatmap_helpers(position_id)
+            tree_data.calculate_heatmap_data(position_id, heatmap_type)
         if heatmap_type in ('origin', 'destination'):
             heatmap_data = tree_data.heatmap_data_for_moves[position_id][slider_value]
         else:
@@ -266,7 +305,7 @@ def update_heatmap(heatmap_type, position_mode, active_cell, active_tab, slider_
     )
 
     layout = go.Layout(
-        autosize=False,
+        #autosize=False,
         xaxis={'title': None,
                'range': [-0.5, 7.5],
                'zeroline': False,
