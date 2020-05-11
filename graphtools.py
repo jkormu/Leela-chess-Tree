@@ -121,6 +121,8 @@ def merge_graphs(G_list):
     for n in topological_sort(G_merged.reverse()):
         parent = get_parent(G_merged, n)
         if parent is None:
+            if 'N' not in G_merged.nodes[n]: #this happens only if tree contains exactly 1 node
+                G_merged.nodes[n]['N'] = 1
             break
         if 'N' not in G_merged.nodes[n]:
             G_merged.nodes[n]['N'] = 1
