@@ -29,8 +29,6 @@ def node_info(h, w, right, bottom):
      State('move-table', 'active_cell'),
      State('slider1', 'value')])
 def update_hover_board(hover_data, position_mode, active_cell, slider_value):
-    #print('HOVER TRIGGERED')
-    #print('HOVER DATA:', hover_data)
     if hover_data is None:
         return(None, None)
     if position_mode == 'pgn':
@@ -53,30 +51,13 @@ def update_hover_board(hover_data, position_mode, active_cell, slider_value):
     except KeyError: #we are not hovering over tree node but on bar chart element
         return(None, None)
 
-    #print('node_id', node_id)
-    #print('position_id', position_id)
-    #print('slider_value', slider_value)
-    #print(tree_data.G_dict[position_id][slider_value].nodes)
-    #print('--')
-    #for G in tree_data.G_dict[0]:
-    #    print(G.nodes)
-
-    #if node_id == 'root':
-    #    moves = []
-    #else:
     moves = pt.get_moves(tree_data.G_dict[position_id][slider_value], node_id)
     board = chess.Board()
     start_fen = game_data.get_value_by_position_id('fen', position_id)
     board = pt.set_board(moves, board, start_fen)
 
-
-    #fen = data[node_id]['fen']
     move = data[node_id]['move']
-    #board = chess.Board()
-    #board.set_fen(fen)
-    #print('MOOOOOOOOOOOOOOOOOOOOOVEEEEEEEEEEEEEEEE', move)
-    #print(move is None)
-    #print(type(move))
+
     if move is not None:
         last_move = chess.Move.from_uci(move)
     else:

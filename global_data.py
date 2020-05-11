@@ -163,7 +163,6 @@ class GameData:
             self.data[i][column_name] = value
 
     def add_fen(self, fen):
-        print('adding fen')
         self.board.set_fen(fen)
         data = self.data
         if data is None:
@@ -217,11 +216,10 @@ class ConfigData:
         self.construct_config_data(False)
 
     def find_weights(self):
-        root = ROOT_DIR#os.path.dirname(os.path.abspath(__file__))#os.getcwd()
+        root = ROOT_DIR
         weights_folder = os.path.join(root, 'weights')
         weight_files = [f.split(".")[0] for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
         weight_paths = [os.path.relpath(join(weights_folder, f)) for f in os.listdir(weights_folder) if isfile(join(weights_folder, f))]
-        #print('WEIGHT PATHS', weight_paths)
         self.weight_files = weight_files
         self.weight_paths = weight_paths
 
@@ -629,14 +627,12 @@ class TreeData:
                 turn = color_map[board.turn]
 
                 if piece != 'O':
-                    #print('piece', piece)
                     piece = letter_to_piece[piece]
                     x_origin, y_origin = coordinate_map[move_uci[:2]]
                     x_destination, y_destination = coordinate_map[move_uci[2:4]]
                     piece2 = None
                     #x_origin2, y_origin2, x_destination2, y_destination2 = None, None, None, None
                 else: #castling has destination/origin for two pieces
-                    #print('casting move', move_lan, 'lan move', piece)
                     piece, piece2 = 'k', 'r'
                     if move_lan[-1] != 'O': #remove symbol + or #
                         move_lan = move_lan[:-1]

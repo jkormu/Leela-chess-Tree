@@ -488,8 +488,6 @@ def update_board_image(active_cell, slider_value, arrow_type, nr_of_arrows, posi
     if position_mode == 'pgn':
         for i in range(1, selected_row_id + 1):
             move = game_data.get_value_by_row_id('move', i) #game_data.data['move'][i]
-            #print('SAN MOVE:', move)
-            #print(board.fen())
             last_move = board.push_san(move)
     else:
         game_data.set_board_position(position_id)
@@ -556,13 +554,7 @@ def update_datatable(text, slider_state, position_mode, fen_added):
         game_data = game_data_fen
     data = game_data.data
     if (text is None and fen_added is None) or data is None:
-        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-        #data = pd.DataFrame(columns=columns)
-        #dummy = {'ply': [0], 'move': ['-']}
-        #return(pd.DataFrame(data).to_dict('records'))
         return([])
-    #print('UPDATING MOVE-DATA TO')
-    #print(data)
     return(data)
 
 @app.callback([
@@ -576,7 +568,6 @@ def update_datatable(text, slider_state, position_mode, fen_added):
      ],
     [State('move-table', 'active_cell')])
 def reset_selected_cells(arg1, arg2, fen_added, position_mode, active_cell): # data_deleted
-    #print('RSET SELECTED CELLS TRIGGERED...................................')
     triggerers = dash.callback_context.triggered
     triggered_by_fen = False
     triggered_by_position_mode = False
@@ -590,9 +581,7 @@ def reset_selected_cells(arg1, arg2, fen_added, position_mode, active_cell): # d
             break
         elif triggerer['prop_id'] == 'data-deleted-indicator.children':
             triggered_by_delete = True
-    #print('TRIGGERES',triggerers)
     if triggered_by_fen:
-        #print('ADDED FEN AND SETTING FOCUS:')
         row_of_new_fen = len(game_data_fen.data) - 1
         active_cell = {'row': row_of_new_fen, 'column': 0}
     elif active_cell is None or triggered_by_position_mode or triggered_by_delete:
@@ -629,9 +618,6 @@ def update_score_bar(value, active_cell, position_mode):
         game_data = game_data_fen
     style = {'width': '100%', 'height': '100%', 'position': 'absolute', 'left': 0, 'visibility': 'visible'}
 
-    #print('Active cell', active_cell['row'] if active_cell is not None else active_cell)
-    #print('Corresponding position id', game_data.get_position_id(active_cell['row']) if active_cell is not None else active_cell)
-    #print('tree data keys', tree_data.data.keys())
     if active_cell is None or game_data.data is None or game_data.get_position_id(active_cell['row']) not in tree_data.data:
         style['visibility'] = 'hidden'
         return(dash.no_update, style)
@@ -657,12 +643,10 @@ def set_position_upload_mode(mode):
     fen_style = copy.copy(FEN_COMPONENT_STYLE)
     pgn_style = copy.copy(PGN_COMPONENT_STYLE)
     if mode == 'fen':
-        #print('position mode set to: FEN')
         columns = FEN_MODE_COLUMNS
         pgn_style['display'] = 'none'
         row_deletable = True
     elif mode =='pgn':
-        #print('position mode set to: PGN')
         columns = PGN_MODE_COLUMNS
         fen_style['display'] = 'none'
         row_deletable = False
@@ -688,7 +672,6 @@ def set_position_upload_mode(mode):
 def add_fen(n_clicks_fen, n_clicks_startpos, click_data, fen, position_mode, active_cell, slider_value, click_mode):
 
     if position_mode != 'fen' or (n_clicks_fen is None and n_clicks_startpos is None):
-        print('blaa', 1)
         return(dash.no_update, dash.no_update, dash.no_update)
 
     triggerers = dash.callback_context.triggered
@@ -710,16 +693,12 @@ def add_fen(n_clicks_fen, n_clicks_startpos, click_data, fen, position_mode, act
         game_data = game_data_fen
         row = active_cell['row']
         position_id = game_data.get_position_id(row)
-        #data = tree_data.data[position_id]
         node_id = click_data['points'][0]['customdata']
         moves = pt.get_moves(tree_data.G_dict[position_id][slider_value], node_id)
-        #print('moves', moves)
         board = chess.Board()
         start_fen = game_data.get_value_by_position_id('fen', position_id)
-        #print('click_mode', click_mode)
         if click_mode == ['add-also-parents']: #add also positions of intermediate nodes between clicked and root node
             for i in range(len(moves)):
-                #print(moves[:i+1])
                 board = pt.set_board(moves[:i+1], board, start_fen)
                 fens.append(board.fen())
         else:
@@ -745,24 +724,6 @@ def add_fen(n_clicks_fen, n_clicks_startpos, click_data, fen, position_mode, act
             fen_id = game_data_fen.add_fen(fen)
     else:
         fen_id = game_data_fen.add_fen(fen)
-
-    #data = game_data_fen.data
-    #if data is None:
-    #    #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-    #    data = []#pd.DataFrame(columns=columns)
-#
-#    row = {}
-#    side_to_move = {1: 'W', 0: 'B'}
-#    fen_id = game_data_fen.get_running_fen_id()
-#    row['ply'] = fen_id
-#    row['fen'] = fen
-#    row['turn'] = game_data_fen.board.turn
-#    row['move'] = side_to_move[game_data_fen.board.turn]
-#    row['dummy_left'] = ''
-#    row['dummy_right'] = ''
-#    data.append(row)
-#    game_data_fen.data = data
-#    game_data_fen.data_previous = data
     return (dash.no_update, '', fen_id)
 
 
@@ -772,20 +733,15 @@ def add_fen(n_clicks_fen, n_clicks_startpos, click_data, fen, position_mode, act
 def data_row_delete(data, position_mode):
     if position_mode != 'fen':
         return(dash.no_update)
-    #print('ACTIVE CELL IN DELETE', print(active))
     previous_data = game_data_fen.data_previous
     if data is None or previous_data is None:
         return(dash.no_update)
     deleted_row = None
 
-    #print('Data from table right after delete:', data)
-    #print('Previous data:', previous_data)
-    #print(pd.DataFrame(data)['ply'] if data != [] else [])
 
     position_ids_in_table = [d['ply'] for d in data]
     position_ids_in_previous_table = [d['ply'] for d in previous_data]
     for row_index, position_id in enumerate(position_ids_in_previous_table):
-        #print(row_index, position_id)
         if position_id not in position_ids_in_table:
             deleted_row = row_index
             deleted_position_id = position_id
@@ -806,13 +762,7 @@ def data_row_delete(data, position_mode):
     tree_data_fen.G_dict.pop(deleted_position_id, None)
     tree_data_fen.heatmap_data_for_moves.pop(deleted_position_id, None)
     tree_data_fen.heatmap_data_for_board_states.pop(deleted_position_id, None)
-    #print('Delete triggered for row_id:', deleted_row)
-    #print('before deleting:')
-    #print(game_data_fen.data)
-    #game_data_fen.data = game_data_fen.data.drop(deleted_row)
     game_data_fen.data.pop(deleted_row)
-    #print('after deleting')
-    #print(game_data_fen.data)
     game_data_fen.data_previous = game_data_fen.data
     return(deleted_row)
 

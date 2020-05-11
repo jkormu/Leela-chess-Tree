@@ -81,7 +81,6 @@ def empty_figure():
                 'range': [-1, 10]},
         hovermode='closest',
         plot_bgcolor=PLOT_BACKGROUND_COLOR,
-        # height=900,
         margin={'t': 0, 'b': 0}
     )
     figure['layout'].update(layout)
@@ -130,7 +129,7 @@ def get_data(data, visible):
     x_even, y_even = zip(*points_even) if points_even != [] else ([], [])
     x_root, y_root = zip(*points_root) if points_root != [] else ([], [])
 
-    print('Tree plot data fetched in', time.time() - start)
+    print('Tree plot data fetched in', time.time() - start, 's')
 
 
     return (x_odd, y_odd, node_text_odd, node_ids_odd,
@@ -276,9 +275,7 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
         return (empty_figure(), tooltip)
     else:
         position_id = active_cell['row']
-        #print('ACTIVE CELL', position_id)
         position_id = game_data.data[position_id]['ply']
-        #print('FEN ID', position_id)
 
     #Show empty graph if position is not yet analyzed
     if position_id not in tree_data.data:
@@ -297,7 +294,6 @@ def update_data(selected_value, active_cell, net_mode, config_changed, global_ne
         scatter = go.Scattergl#go.Scattergl #go.Scatter
     else:
         scatter = go.Scatter
-    #print('node ids', node_ids_odd)
     trace_node_odd = scatter(x=x_odd,
                              y=y_odd,
                              mode='markers',
@@ -445,9 +441,7 @@ def update_game_evals(visible, title, position_mode):
     else:
         tree_data = tree_data_fen
         game_data = game_data_fen
-    #print('GAME-DATA:')
-    #if game_data.data is not None:
-    #    print(game_data.data['Q'])
+
     Q_values = []
     W_values = []
     D_values = []
