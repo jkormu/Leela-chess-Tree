@@ -25,7 +25,7 @@ icon = join(ROOT_DIR, 'assets')
 icon = join(icon, 'favicon.ico')
 
 setup(name="LcT",
-        version="0.1",
+        version="0.3",
         packages=find_packages(),
         description="Leela chess Tree",
         options={"build_exe": build_exe_options},
