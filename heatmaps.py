@@ -19,7 +19,7 @@ MOVE_COUNT_TABLE_COLUMNS = [{"name": ['', 'piece'], "id": 'piece'},
                                                      {"name": [MOVE_COUNT_HEADER,'both'], "id": 'both'},]
 
 def heatmap_component():
-    container = html.Div(style={#'flex': 1,
+    container = html.Div(style={'flex': 1,
                                 'display': 'flex',
                                 'flexDirection': 'row',
                                 'marginTop': '3px'})
@@ -32,6 +32,8 @@ def heatmap_component():
                                       'display': 'flex',
                                       'flexDirection': 'column',
                                       'marginTop': '3px'})
+
+    container_right = html.Div(style={'flex': 1})
 
     type_selector = dcc.Dropdown(id='heatmap-selector',
                                  options=[
@@ -81,7 +83,8 @@ def heatmap_component():
     #button = html.Button(id='button_for_testing', children=['calc'])
     graph = dcc.Graph(id='heatmap',
                       figure=empty_figure(),
-                      config={'displayModeBar': False})
+                      config={'displayModeBar': False},
+                      style={'height': '100%'})
     container_left.children = [html.Div(children=[html.Label('Heatmap type:', style={'fontWeight': 'bold'}),
                                type_selector], style={'flex': 1}),
                                html.Div(children=[html.Label('Filter by moved piece:', style={'fontWeight': 'bold'}),
@@ -96,7 +99,7 @@ def heatmap_component():
 
     container_middle.children = [graph]
 
-    container_right = html.Div(style={'flex': 1})
+
     move_count_table = dash_table.DataTable(id='move-count-table',
                                             columns=MOVE_COUNT_TABLE_COLUMNS,
                                             style_header={
@@ -131,7 +134,8 @@ def heatmap_component():
     return(container)
 
 @app.callback(
-    [Output('depth-selector', 'max'),
+    [Output('depth-selector', 'marks'),
+     Output('depth-selector', 'max'),
      Output('depth-selector', 'value')],
     [Input('move-table', 'active_cell'),
      Input('position-mode-selector', 'value')],
@@ -139,7 +143,7 @@ def heatmap_component():
      State('depth-selector', 'max')])
 def update_depth_selector_max(active_cell, position_mode, selected_depths, current_max):
     if active_cell is None or position_mode is None:
-        return(dash.no_update, dash.no_update)
+        return(dash.no_update, dash.no_update, dash.no_update)
     selected_min_depth, selected_max_depth = selected_depths
     if position_mode == 'pgn':
         tree_data = tree_data_pgn
@@ -151,14 +155,14 @@ def update_depth_selector_max(active_cell, position_mode, selected_depths, curre
     try:
         new_max = max(tree_data.y_range[position_id])
     except KeyError:
-        return(dash.no_update, dash.no_update)
-
+        return(dash.no_update, dash.no_update, dash.no_update)
+    marks = {i: str(i) if i % 2 == 0 else '' for i in range(new_max)}
     if selected_max_depth == current_max or selected_max_depth > new_max:
         selected_max_depth = new_max
     selected_min_depth = min(selected_min_depth, selected_max_depth - 1)
 
     selected_depths = [selected_min_depth, selected_max_depth]
-    return(new_max, selected_depths)
+    return(marks, new_max, selected_depths)
 
 def move_counts_data(heatmap_data, min_depth, max_depth):
     def count_moves(piece, turn, min_depth, max_depth):
