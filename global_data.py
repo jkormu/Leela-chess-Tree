@@ -162,6 +162,27 @@ class GameData:
         for i, value in enumerate(values):
             self.data[i][column_name] = value
 
+    def add_fen(self, fen):
+        print('adding fen')
+        self.board.set_fen(fen)
+        data = self.data
+        if data is None:
+            # columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+            data = []  # pd.DataFrame(columns=columns)
+        row = {}
+        side_to_move = {1: 'W', 0: 'B'}
+        fen_id = self.get_running_fen_id()
+        row['ply'] = fen_id
+        row['fen'] = fen
+        row['turn'] = self.board.turn
+        row['move'] = side_to_move[self.board.turn]
+        row['dummy_left'] = ''
+        row['dummy_right'] = ''
+        data.append(row)
+        self.data = data
+        self.data_previous = data
+        return(fen_id)
+
 
 def is_number(s):
     try:

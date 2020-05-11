@@ -17,6 +17,8 @@ from server import app
 from global_data import tree_data_pgn, tree_data_fen, game_data_fen, game_data_pgn
 from dash_table.Format import Format, Symbol, Scheme
 
+import plottools as pt
+
 from colors import rgb_adjust_saturation
 
 from quit import quit_button
@@ -35,7 +37,7 @@ BAR_LINE_WIDTH = 1
 RELATIVE_HEIGHT_OF_SCORE_BAR = "7.5%"
 SHOW_BOARD_COORDINATES = False
 
-FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "13.5%"
+FEN_PGN_COMPONENT_RELATIVE_HEIGHT = "20%"#"13.5%"
 
 ARROW_COLORS = {
     'p': (183, 0, 255), #purple
@@ -78,7 +80,7 @@ PGN_COMPONENT_STYLE = {
                 'display': 'flex',
                 'flexDirection': 'column',
             }
-FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%'}#'display': 'flex',
+FEN_COMPONENT_STYLE = {'position': 'absolute', 'left': 0, 'height': '100%', 'width': '97%'}#97% width since firefox sux and overflows with 100%
 
 
 def get_score_bar_figure(W, D, B):
@@ -160,14 +162,26 @@ def fen_component():
     fen_component = html.Div(id='fen-component', style=FEN_COMPONENT_STYLE)
     add_button = html.Button(id='add-fen',
                              children=['Add fen'],
-                             style={'marginRight': '5px'})
+                             style={'marginRight': '5px', 'marginBottom': '3px'})
     fen_input = dcc.Input(id='fen-input',
                           type='text',
-                          size="70",#"92",
+                          #size="70",#"92", #"70"
                           autoComplete="off",
-                          style={'font-size': '12px'}
+                          style={'font-size': '12px', 'width': '100%'}
                           #style={'flex': 1},
                           )
+
+    click_mode = dcc.Checklist(id='click-mode',
+                                      options=[{'label': 'Add also parents of clicked node',
+                                                'value': 'add-also-parents'}],
+                                      value=['add-also-parents'])
+
+    add_startpos = html.Button(id='add-startpos',
+                             children=['Add start position'],
+                             style={'marginRight': '5px', 'marginBottom': '3px'}) #, 'marginTop': '5px'
+
+    add_buttons = html.Div(children=[add_button, add_startpos],
+                           style={'display': 'flex'})
 
     upload = dcc.Upload(
             id='upload-pgn',
@@ -185,7 +199,7 @@ def fen_component():
 
     fen_added_indicator = html.Div(id='fen-added', style={'display': 'none'})
     fen_deleted_indicator = html.Div(id='data-deleted-indicator', style={'display': 'none'})
-    fen_component.children = [add_button, fen_input, fen_added_indicator, fen_deleted_indicator]
+    fen_component.children = [add_buttons, fen_input, click_mode, fen_added_indicator, fen_deleted_indicator]
     fen_pgn_container.children = [fen_component, upload]
     return(fen_pgn_container)
 
@@ -662,33 +676,93 @@ def set_position_upload_mode(mode):
 @app.callback([Output('fen-input', "value"),
                Output('fen-input', 'placeholder'),
                Output('fen-added', 'children')],
-    [Input('add-fen', 'n_clicks')],
-    [State('fen-input', 'value')])
-def add_fen(n_clicks, fen):
-    if fen is None or n_clicks is None:
+    [Input('add-fen', 'n_clicks'),
+     Input('add-startpos', 'n_clicks'),
+     Input('graph', 'clickData')],
+    [State('fen-input', 'value'),
+     State('position-mode-selector', 'value'),
+     State('move-table', 'active_cell'),
+     State('slider1', 'value'),
+     State('click-mode', 'value')
+     ])
+def add_fen(n_clicks_fen, n_clicks_startpos, click_data, fen, position_mode, active_cell, slider_value, click_mode):
+
+    if position_mode != 'fen' or (n_clicks_fen is None and n_clicks_startpos is None):
+        print('blaa', 1)
+        return(dash.no_update, dash.no_update, dash.no_update)
+
+    triggerers = dash.callback_context.triggered
+    add_fen = False
+    add_startpos = False
+    add_from_node = False
+    for triggerer in triggerers:
+        if triggerer['prop_id'] == 'add-fen.n_clicks':
+            add_fen = True
+        elif triggerer['prop_id'] == 'add-startpos.n_clicks':
+            add_startpos = True
+
+        elif triggerer['prop_id'] == 'graph.clickData':
+            add_from_node = True
+
+    fens = []
+    if add_from_node:
+        tree_data = tree_data_fen
+        game_data = game_data_fen
+        row = active_cell['row']
+        position_id = game_data.get_position_id(row)
+        #data = tree_data.data[position_id]
+        node_id = click_data['points'][0]['customdata']
+        moves = pt.get_moves(tree_data.G_dict[position_id][slider_value], node_id)
+        #print('moves', moves)
+        board = chess.Board()
+        start_fen = game_data.get_value_by_position_id('fen', position_id)
+        #print('click_mode', click_mode)
+        if click_mode == ['add-also-parents']: #add also positions of intermediate nodes between clicked and root node
+            for i in range(len(moves)):
+                #print(moves[:i+1])
+                board = pt.set_board(moves[:i+1], board, start_fen)
+                fens.append(board.fen())
+        else:
+            board = pt.set_board(moves, board, start_fen)
+            fen = board.fen()
+
+    elif add_startpos:
+        if n_clicks_startpos is None:
+            return (dash.no_update, dash.no_update, dash.no_update)
+        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
+    if add_fen and (fen is None or n_clicks_fen is None):
         return (dash.no_update, dash.no_update, dash.no_update)
-    try:
-        game_data_fen.board.set_fen(fen)
-    except ValueError:
-        return('', 'not a valid fen', dash.no_update)
 
-    data = game_data_fen.data
-    if data is None:
-        #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
-        data = []#pd.DataFrame(columns=columns)
+    if fens == []:
+        try:
+            game_data_fen.board.set_fen(fen)
+        except ValueError:
+            return('', 'not a valid fen', dash.no_update)
 
-    row = {}
-    side_to_move = {1: 'W', 0: 'B'}
-    fen_id = game_data_fen.get_running_fen_id()
-    row['ply'] = fen_id
-    row['fen'] = fen
-    row['turn'] = game_data_fen.board.turn
-    row['move'] = side_to_move[game_data_fen.board.turn]
-    row['dummy_left'] = ''
-    row['dummy_right'] = ''
-    data.append(row)
-    game_data_fen.data = data
-    game_data_fen.data_previous = data
+    if fens != []:
+        for fen in fens:
+            fen_id = game_data_fen.add_fen(fen)
+    else:
+        fen_id = game_data_fen.add_fen(fen)
+
+    #data = game_data_fen.data
+    #if data is None:
+    #    #columns = ['ply', 'fen', 'turn', 'move', 'dummy_left', 'dummy_right']
+    #    data = []#pd.DataFrame(columns=columns)
+#
+#    row = {}
+#    side_to_move = {1: 'W', 0: 'B'}
+#    fen_id = game_data_fen.get_running_fen_id()
+#    row['ply'] = fen_id
+#    row['fen'] = fen
+#    row['turn'] = game_data_fen.board.turn
+#    row['move'] = side_to_move[game_data_fen.board.turn]
+#    row['dummy_left'] = ''
+#    row['dummy_right'] = ''
+#    data.append(row)
+#    game_data_fen.data = data
+#    game_data_fen.data_previous = data
     return (dash.no_update, '', fen_id)
 
 

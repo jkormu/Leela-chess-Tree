@@ -44,7 +44,10 @@ def update_hover_board(hover_data, position_mode, active_cell, slider_value):
     position_id = game_data.get_position_id(row)
     if position_id is None:
         return(None, None)
-    data = tree_data.data[position_id]
+    try:
+        data = tree_data.data[position_id]
+    except: #when user has clicked node to set position, hover board callback may trigger while the selected position has already been changed
+        return(None, None)
     try:
         node_id = hover_data['points'][0]['customdata']
     except KeyError: #we are not hovering over tree node but on bar chart element
