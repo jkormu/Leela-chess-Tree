@@ -91,10 +91,14 @@ def heatmap_component():
                                piece_selector], style={'flex': 1}),
                                html.Div(children=[html.Label('Filter by player:', style={'fontWeight': 'bold'}),
                                color_selector], style={'flex': 1}),
-                               html.Div(children=[html.Label('Filter by search depth:', style={'fontWeight': 'bold'}),
-                               depth_selector,
-                               html.Div(id='depth-filter-info', style={'width': '50%',
-                                                                         'margin': '0 auto'})],
+                               html.Div(children=[html.Label(children='Filter by search depth ', style={'fontWeight': 'bold'}),
+                                                  html.Label(id='depth-filter-info',
+                                                             children=[''],
+                                                             ),
+                                                  depth_selector,
+                               #html.Div(id='depth-filter-info', style={'width': '50%',
+                               #                                          'margin': '0 auto'})
+                                                  ],
                                         style={'flex': 1})]
 
     container_middle.children = [graph]
@@ -156,7 +160,7 @@ def update_depth_selector_max(active_cell, position_mode, selected_depths, curre
         new_max = max(tree_data.y_range[position_id])
     except KeyError:
         return(dash.no_update, dash.no_update, dash.no_update)
-    marks = {i: str(i) if i % 2 == 0 else '' for i in range(new_max)}
+    marks = {i: str(i) if i % 2 == 0 else '' for i in range(new_max + 1)}
     if selected_max_depth == current_max or selected_max_depth > new_max:
         selected_max_depth = new_max
     selected_min_depth = min(selected_min_depth, selected_max_depth - 1)
@@ -224,6 +228,8 @@ def update_depth_filter_info_text(depth_filter, max_allowed):
     for ind, col in enumerate(columns[1:]):
         col['name'][0] = f'{MOVE_COUNT_HEADER} {column_text}'
         columns[ind + 1] = col
+
+    text = f'({text})'
     return(text, columns)
 
 @app.callback(
