@@ -61,23 +61,29 @@ filter_out_options = [
     'ImmediateTimeUse',
     'LogFile',
     'SmartPruningMinimumBatches',
-    'TimeManager']
+    'TimeManager',
+    'SearchLogFile',
+    'LogLiveStats',
+    'MaxTreeNodes',
+    'MaxTreeVisits',
+    'ReducedMemoryMode']
 
 #dictionary of option categorys and option names user can edit
 #this this dict also determines order of the groups and parameters (dicts are ordered in python 3.7)
 COLUMNS_PER_GROUP = {
     'Nodes': ['Nodes'],
     'Net': ['WeightsFile'],
-    'Cpuct': ['CPuct',
-              'CPuctFactor',
+    'Cpuct': ['CPuct', 'CPUCT',
+              'CPuctFactor', 'CPUCTFactor',
               'CPuctBase',
-              'CPuctAtRoot',
+              'CPuctAtRoot', 'CPUCTAtRoot',
               'CPuctFactorAtRoot',
-              'CPuctBaseAtRoot'],
+              'CPuctBaseAtRoot',
+              ],
     'Fpu': ['FpuStrategy',
-            'FpuValue',
+            'FpuValue', 'FPU',
             'FpuStrategyAtRoot',
-            'FpuValueAtRoot'],
+            'FpuValueAtRoot', 'FPUAtRoot'],
     'Policy temp': ['PolicyTemperature'],
     'Moves left': ['MovesLeftThreshold',
                    'MovesLeftMaxEffect',
