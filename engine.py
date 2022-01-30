@@ -10,21 +10,27 @@ from constants import ROOT_DIR
 class Engine:
     def __init__(self, engine_path=None):
         self.error = None
+        self.is_lc0 = False
+        self.is_ceres = False
         if engine_path is None:
             engine_path = self.find_engine()
             net = self.find_net()
+            print('E', engine_path)
+            print('N', net)
         if net is not None and engine_path is not None:
             engine_path = [engine_path]#, '--weights=' + net]  # '--logfile=lc0_log.txt']
             try:
-                self.lc0 = chess.engine.SimpleEngine.popen_uci(engine_path)
+                self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+                print('OK')
             except:
+                print('NOK')
                 self.error = f'{datetime.now()}: Could not launch lc0_tree engine with command "{"".join(engine_path)}"'
             try:
                 self.set_net(net)
             finally:
                 self.error = f'{datetime.now()}: Could not set net "{"".join(engine_path)}"'
         else:
-            self.lc0 = None
+            self.engine = None
             self.error = ''
             if net is None:
                 self.error += f'{datetime.now()}: Could not find any weight files in "weights"-folder. Add at least one weight file. \n'
@@ -48,11 +54,28 @@ class Engine:
 
     def find_engine(self):
         root = ROOT_DIR
-        for r, d, files in os.walk(root):
-            for f in files:
-                if f.startswith('lc0') and isfile(join(r, f)):
-                    return(join(r, f))
-        return(None)
+        def find_engine_by_name(name):
+            for r, d, files in os.walk(root):
+                for f in files:
+                    if f.startswith(name) and isfile(join(r, f)) and not f.endswith(('.dll', '.json', '.pdb')):
+                        return (join(r, f))
+            return(None)
+
+        engine = find_engine_by_name('Ceres')
+        self.is_ceres = engine is not None
+        if not engine:
+            engine = find_engine_by_name('lc0')
+            self.is_lc0 = engine is not None
+        #if not engine:
+        #    self.is_ceres = False
+        #    engine = find_engine_by_name('lc0')
+        #else:
+        #    self.is_ceres = True
+        #if not engine:
+        #    self.is_lc0 = False
+        #else:
+        #    self.is_lc0 = True
+        return(engine)
 
     def find_net(self):
         root = ROOT_DIR
@@ -65,17 +88,20 @@ class Engine:
         return(net_path)
 
     def set_net(self, net):
-        self.lc0.configure({'WeightsFile': net})
+        self.engine.configure({'WeightsFile': net})
 
     def play(self, board, nodes):
         self.analyzed_count += 1
         start = time.time()
         try:
-            self.lc0.play(board, chess.engine.Limit(nodes=nodes), game=self.analyzed_count)
+            self.engine.play(board, chess.engine.Limit(nodes=nodes), game=self.analyzed_count)
         except chess.engine.EngineError:#ValueError:
             #we have hit terminal and lc0 responded "a1a1" as null move, python chess expects 0000
             #we can safely carry on reading the tree file with just one node
             pass
+        if self.is_ceres:
+            self.engine.protocol.send_line("save-tree")
+            _ = self.engine.ping()
         print('search completed in time: ', time.time() - start)
         g = nx.readwrite.gml.read_gml('tree.gml', label='id')
         os.remove('tree.gml')
@@ -107,13 +133,13 @@ class Engine:
                 self.configuration[opt] = options[opt]
                 changed = True
         if changed:
-            #print('CONFIGURING:', options)
-            #print('setting parameters:', self.configuration)
-            self.lc0.configure(self.configuration)
+            print('CONFIGURING:', options)
+            print('setting parameters:', self.configuration)
+            self.engine.configure(self.configuration)
 
     def quit(self):
-        self.lc0.quit()
+        self.engine.quit()
 
 
     def get_options(self):
-        return(self.lc0.options)
+        return(self.engine.options)

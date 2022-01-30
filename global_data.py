@@ -4,6 +4,7 @@ import plottools as pt
 import chess
 import chess.engine
 from leela import leela_engine
+from engine import Engine
 import os
 from os.path import isfile, join
 
@@ -343,8 +344,8 @@ def linspace(a, b, n):
     return([diff * i + a  for i in range(n)])
 
 class TreeData:
-    def __init__(self, lc0, type):
-        self.lc0 = lc0
+    def __init__(self, engine, type):
+        self.engine = engine
         self.type = type  # 'pgn' or 'fen'
         self.G_dict = {} #{position_id1: [], position_id2: []....}
         self.merged_graphs = {} #{position_id: merger_graph...}
@@ -420,8 +421,8 @@ class TreeData:
         return(moves, metrics)
 
     def run_search(self, position_id, parameters, board, nodes):
-        self.lc0.configure(parameters)
-        g = self.lc0.play(board, nodes)
+        self.engine.configure(parameters)
+        g = self.engine.play(board, nodes)
         if position_id in self.G_dict:
             self.G_dict[position_id].append(g)
         else:
@@ -714,7 +715,7 @@ class TreeData:
             self.heatmap_data_for_board_states[position_id] = data_board_states
 
 
-lc0 = leela_engine(None)
+lc0 = Engine(None)
 
 tree_data_pgn = TreeData(lc0, 'pgn')
 tree_data_fen = TreeData(lc0, 'fen')
